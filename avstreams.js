@@ -1,449 +1,589 @@
-crypto = require 'crypto'
-fs = require 'fs'
-path = require 'path'
+/*
+ * decaffeinate suggestions:
+ * DS101: Remove unnecessary use of Array.from
+ * DS102: Remove unnecessary code created because of implicit returns
+ * DS103: Rewrite code to no longer use __guard__
+ * DS201: Simplify complex destructure assignments
+ * DS205: Consider reworking code to avoid use of IIFEs
+ * DS207: Consider shorter variations of null checks
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 
-h264 = require './h264'
-aac = require './aac'
-mp4 = require './mp4'
-Bits = require './bits'
-EventEmitterModule = require './event_emitter'
-logger = require './logger'
+const h264 = require('./h264');
+const aac = require('./aac');
+const mp4 = require('./mp4');
+const Bits = require('./bits');
+const EventEmitterModule = require('./event_emitter');
+const logger = require('./logger');
 
-createStreamId = ->
-  try
-    buf = crypto.randomBytes 256
-  catch e
-    logger.error "crypto.randomBytes() failed: #{e}"
-    buf = crypto.pseudoRandomBytes 256
+const createStreamId = function() {
+  let buf;
+  try {
+    buf = crypto.randomBytes(256);
+  } catch (e) {
+    logger.error(`crypto.randomBytes() failed: ${e}`);
+    buf = crypto.pseudoRandomBytes(256);
+  }
 
-  shasum = crypto.createHash 'sha512'
-  shasum.update buf
-  return shasum.digest('hex')[0..7]
+  const shasum = crypto.createHash('sha512');
+  shasum.update(buf);
+  return shasum.digest('hex').slice(0, 8);
+};
 
-# Generates stream upon request
-class AVStreamGenerator
-  constructor: (methods) ->
-    if methods?.generate?
-      @generate = methods.generate
-    if methods?.teardown?
-      @teardown = methods.teardown
-    if methods?.pause?
-      @pause = methods.pause
-    if methods?.resume?
-      @resume = methods.resume
-    if methods?.seek?
-      @seek = methods.seek
-    if methods?.sendVideoPacketsSinceLastKeyFrame?
-      @sendVideoPacketsSinceLastKeyFrame = methods.sendVideoPacketsSinceLastKeyFrame
-    if methods?.getCurrentPlayTime?
-      @getCurrentPlayTime = methods.getCurrentPlayTime
-    if methods?.isPaused?
-      @isPaused = methods.isPaused
+// Generates stream upon request
+class AVStreamGenerator {
+  constructor(methods) {
+    if ((methods != null ? methods.generate : undefined) != null) {
+      this.generate = methods.generate;
+    }
+    if ((methods != null ? methods.teardown : undefined) != null) {
+      this.teardown = methods.teardown;
+    }
+    if ((methods != null ? methods.pause : undefined) != null) {
+      this.pause = methods.pause;
+    }
+    if ((methods != null ? methods.resume : undefined) != null) {
+      this.resume = methods.resume;
+    }
+    if ((methods != null ? methods.seek : undefined) != null) {
+      this.seek = methods.seek;
+    }
+    if ((methods != null ? methods.sendVideoPacketsSinceLastKeyFrame : undefined) != null) {
+      this.sendVideoPacketsSinceLastKeyFrame = methods.sendVideoPacketsSinceLastKeyFrame;
+    }
+    if ((methods != null ? methods.getCurrentPlayTime : undefined) != null) {
+      this.getCurrentPlayTime = methods.getCurrentPlayTime;
+    }
+    if ((methods != null ? methods.isPaused : undefined) != null) {
+      this.isPaused = methods.isPaused;
+    }
 
-    methods?.init?()
+    __guardMethod__(methods, 'init', o => o.init());
+  }
 
-  generate: ->
+  generate() {}
 
-  teardown: ->
+  teardown() {}
+}
 
-class AVStream extends EventEmitterModule
-  constructor: (id) ->
-    super()
-    @id = id  # string
-    @initAVParams()
+class AVStream extends EventEmitterModule {
+  constructor(id) {
+    super();
+    this.id = id;  // string
+    this.initAVParams();
+  }
 
-  initAVParams: ->
-    @audioClockRate      = null  # int
-    @audioSampleRate     = null  # int
-    @audioChannels       = null  # int
-    @audioPeriodSize     = 1024  # TODO: detect this from stream?
-    @audioObjectType     = null  # int
-    @videoWidth          = null  # int
-    @videoHeight         = null  # int
-    @videoProfileLevelId = null  # string (e.g. '42C01F')
-    @videoFrameRate      = 30.0  # float  # TODO: default value
-    @videoAVCLevel       = null  # int
-    @videoAVCProfile     = null  # int
-    @isVideoStarted      = false # boolean
-    @isAudioStarted      = false # boolean
-    @timeAtVideoStart    = null  # milliseconds since the epoch
-    @timeAtAudioStart    = null  # milliseconds since the epoch
-    @spsString           = ''    # string
-    @ppsString           = ''    # string
-    @spsNALUnit          = null  # buffer
-    @ppsNALUnit          = null  # buffer
-    @spropParameterSets  = ''    # string
-    @type                = null  # string ('live' or 'recorded')
+  initAVParams() {
+    this.audioClockRate      = null;  // int
+    this.audioSampleRate     = null;  // int
+    this.audioChannels       = null;  // int
+    this.audioPeriodSize     = 1024;  // TODO: detect this from stream?
+    this.audioObjectType     = null;  // int
+    this.videoWidth          = null;  // int
+    this.videoHeight         = null;  // int
+    this.videoProfileLevelId = null;  // string (e.g. '42C01F')
+    this.videoFrameRate      = 30.0;  // float  # TODO: default value
+    this.videoAVCLevel       = null;  // int
+    this.videoAVCProfile     = null;  // int
+    this.isVideoStarted      = false; // boolean
+    this.isAudioStarted      = false; // boolean
+    this.timeAtVideoStart    = null;  // milliseconds since the epoch
+    this.timeAtAudioStart    = null;  // milliseconds since the epoch
+    this.spsString           = '';    // string
+    this.ppsString           = '';    // string
+    this.spsNALUnit          = null;  // buffer
+    this.ppsNALUnit          = null;  // buffer
+    this.spropParameterSets  = '';    // string
+    return this.type                = null;  // string ('live' or 'recorded')
+  }
 
-  destroy: ->
-    logger.debug "[stream:#{@id}] destroy"
-    @spsNALUnit = null
-    @ppsNALUnit = null
-    @emit 'destroy'
+  destroy() {
+    logger.debug(`[stream:${this.id}] destroy`);
+    this.spsNALUnit = null;
+    this.ppsNALUnit = null;
+    return this.emit('destroy');
+  }
 
-  isRecorded: ->
-    return @type is api.STREAM_TYPE_RECORDED
+  isRecorded() {
+    return this.type === api.STREAM_TYPE_RECORDED;
+  }
 
-  reset: ->
-    logger.debug "[stream:#{@id}] reset"
-    @initAVParams()
-    @emit 'reset'
+  reset() {
+    logger.debug(`[stream:${this.id}] reset`);
+    this.initAVParams();
+    return this.emit('reset');
+  }
 
-  updateSpropParam: (buf) ->
-    nalUnitType = buf[0] & 0x1f
-    if nalUnitType is 7  # SPS packet
-      @spsString = buf.toString 'base64'
-      @videoProfileLevelId = buf[1..3].toString('hex').toUpperCase()
-    else if nalUnitType is 8  # PPS packet
-      @ppsString = buf.toString 'base64'
+  updateSpropParam(buf) {
+    const nalUnitType = buf[0] & 0x1f;
+    if (nalUnitType === 7) {  // SPS packet
+      this.spsString = buf.toString('base64');
+      this.videoProfileLevelId = buf.slice(1, 4).toString('hex').toUpperCase();
+    } else if (nalUnitType === 8) {  // PPS packet
+      this.ppsString = buf.toString('base64');
+    }
 
-    @spropParameterSets = @spsString + ',' + @ppsString
+    return this.spropParameterSets = this.spsString + ',' + this.ppsString;
+  }
 
-  resetFrameRate: ->
-    @frameRateCalcBasePTS = null
-    @frameRateCalcNumFrames = null
-    @videoFrameRate = 30.0  # TODO: What value should we use as a default frame rate?
+  resetFrameRate() {
+    this.frameRateCalcBasePTS = null;
+    this.frameRateCalcNumFrames = null;
+    return this.videoFrameRate = 30.0;  // TODO: What value should we use as a default frame rate?
+  }
 
-  calcFrameRate: (pts) ->
-    if @frameRateCalcBasePTS?
-      diffMs = (pts - @frameRateCalcBasePTS) / 90
-      if pts isnt @lastPTS
-        @frameRateCalcNumFrames++
-        @lastPTS = pts
-      if (@frameRateCalcNumFrames >= 150) or (diffMs >= 5000)
-        frameRate = @frameRateCalcNumFrames * 1000 / diffMs
-        if frameRate isnt @videoFrameRate
-          logger.debug "[stream:#{@id}] frame rate: #{@videoFrameRate}"
-          @videoFrameRate = frameRate
-          @emit 'update_frame_rate', frameRate
-        @frameRateCalcBasePTS = pts
-        @frameRateCalcNumFrames = 0
-        @lastPTS = null
-    else
-      @frameRateCalcBasePTS = pts
-      @frameRateCalcNumFrames = 0
-      @lastPTS = null
+  calcFrameRate(pts) {
+    if (this.frameRateCalcBasePTS != null) {
+      const diffMs = (pts - this.frameRateCalcBasePTS) / 90;
+      if (pts !== this.lastPTS) {
+        this.frameRateCalcNumFrames++;
+        this.lastPTS = pts;
+      }
+      if ((this.frameRateCalcNumFrames >= 150) || (diffMs >= 5000)) {
+        const frameRate = (this.frameRateCalcNumFrames * 1000) / diffMs;
+        if (frameRate !== this.videoFrameRate) {
+          logger.debug(`[stream:${this.id}] frame rate: ${this.videoFrameRate}`);
+          this.videoFrameRate = frameRate;
+          this.emit('update_frame_rate', frameRate);
+        }
+        this.frameRateCalcBasePTS = pts;
+        this.frameRateCalcNumFrames = 0;
+        return this.lastPTS = null;
+      }
+    } else {
+      this.frameRateCalcBasePTS = pts;
+      this.frameRateCalcNumFrames = 0;
+      return this.lastPTS = null;
+    }
+  }
 
-  updateConfig: (obj) ->
-    isConfigUpdated = false
-    for name, value of obj
-      if @[name] isnt value
-        @[name] = value
-        if value instanceof Buffer
-          logger.debug "[stream:#{@id}] update #{name}: Buffer=<0x#{value.toString 'hex'}>"
-        else if typeof(value) is 'object'
-          logger.debug "[stream:#{@id}] update #{name}:"
-          logger.debug value
-        else
-          logger.debug "[stream:#{@id}] update #{name}: #{value}"
-        if name is 'audioASCInfo'
-          if value?.sbrPresentFlag is 1
-            if value?.psPresentFlag is 1
-              logger.debug "[stream:#{@id}] audio: HE-AAC v2"
-            else
-              logger.debug "[stream:#{@id}] audio: HE-AAC v1"
-        isConfigUpdated = true
-    if isConfigUpdated
-      @emit 'updateConfig'
+  updateConfig(obj) {
+    let isConfigUpdated = false;
+    for (let name in obj) {
+      const value = obj[name];
+      if (this[name] !== value) {
+        this[name] = value;
+        if (value instanceof Buffer) {
+          logger.debug(`[stream:${this.id}] update ${name}: Buffer=<0x${value.toString('hex')}>`);
+        } else if (typeof(value) === 'object') {
+          logger.debug(`[stream:${this.id}] update ${name}:`);
+          logger.debug(value);
+        } else {
+          logger.debug(`[stream:${this.id}] update ${name}: ${value}`);
+        }
+        if (name === 'audioASCInfo') {
+          if ((value != null ? value.sbrPresentFlag : undefined) === 1) {
+            if ((value != null ? value.psPresentFlag : undefined) === 1) {
+              logger.debug(`[stream:${this.id}] audio: HE-AAC v2`);
+            } else {
+              logger.debug(`[stream:${this.id}] audio: HE-AAC v1`);
+            }
+          }
+        }
+        isConfigUpdated = true;
+      }
+    }
+    if (isConfigUpdated) {
+      return this.emit('updateConfig');
+    }
+  }
 
-  # nal_unit_type 7
-  updateSPS: (nalUnit) ->
-    if (not @spsNALUnit?) or (nalUnit.compare(@spsNALUnit) isnt 0)
-      @spsNALUnit = nalUnit
-      @updateSpropParam nalUnit
-      try
-        sps = h264.readSPS nalUnit
-      catch e
-        logger.error "[stream:#{@id}] video data error: failed to read SPS"
-        logger.error e.stack
-        return
-      frameSize = h264.getFrameSize sps
-      isConfigUpdated = false
-      if @videoWidth isnt frameSize.width
-        @videoWidth = frameSize.width
-        logger.debug "[stream:#{@id}] video width: #{@videoWidth}"
-        isConfigUpdated = true
-      if @videoHeight isnt frameSize.height
-        @videoHeight = frameSize.height
-        logger.debug "[stream:#{@id}] video height: #{@videoHeight}"
-        isConfigUpdated = true
-      if @videoAVCLevel isnt sps.level_idc
-        @videoAVCLevel = sps.level_idc
-        logger.debug "[stream:#{@id}] video avclevel: #{@videoAVCLevel}"
-        isConfigUpdated = true
-      if @videoAVCProfile isnt sps.profile_idc
-        @videoAVCProfile = sps.profile_idc
-        logger.debug "[stream:#{@id}] video avcprofile: #{@videoAVCProfile}"
-        isConfigUpdated = true
-      if isConfigUpdated
-        logger.debug "[stream:#{@id}] updated SPS: 0x#{nalUnit.toString 'hex'}"
-        @emit 'updateConfig'
+  // nal_unit_type 7
+  updateSPS(nalUnit) {
+    if (((this.spsNALUnit == null)) || (nalUnit.compare(this.spsNALUnit) !== 0)) {
+      let sps;
+      this.spsNALUnit = nalUnit;
+      this.updateSpropParam(nalUnit);
+      try {
+        sps = h264.readSPS(nalUnit);
+      } catch (e) {
+        logger.error(`[stream:${this.id}] video data error: failed to read SPS`);
+        logger.error(e.stack);
+        return;
+      }
+      const frameSize = h264.getFrameSize(sps);
+      let isConfigUpdated = false;
+      if (this.videoWidth !== frameSize.width) {
+        this.videoWidth = frameSize.width;
+        logger.debug(`[stream:${this.id}] video width: ${this.videoWidth}`);
+        isConfigUpdated = true;
+      }
+      if (this.videoHeight !== frameSize.height) {
+        this.videoHeight = frameSize.height;
+        logger.debug(`[stream:${this.id}] video height: ${this.videoHeight}`);
+        isConfigUpdated = true;
+      }
+      if (this.videoAVCLevel !== sps.level_idc) {
+        this.videoAVCLevel = sps.level_idc;
+        logger.debug(`[stream:${this.id}] video avclevel: ${this.videoAVCLevel}`);
+        isConfigUpdated = true;
+      }
+      if (this.videoAVCProfile !== sps.profile_idc) {
+        this.videoAVCProfile = sps.profile_idc;
+        logger.debug(`[stream:${this.id}] video avcprofile: ${this.videoAVCProfile}`);
+        isConfigUpdated = true;
+      }
+      if (isConfigUpdated) {
+        logger.debug(`[stream:${this.id}] updated SPS: 0x${nalUnit.toString('hex')}`);
+        return this.emit('updateConfig');
+      }
+    }
+  }
 
-  # nal_unit_type 8
-  updatePPS: (nalUnit) ->
-    if (not @ppsNALUnit?) or (nalUnit.compare(@ppsNALUnit) isnt 0)
-      logger.debug "[stream:#{@id}] updated PPS: 0x#{nalUnit.toString 'hex'}"
-      @ppsNALUnit = nalUnit
-      @updateSpropParam nalUnit
-      @emit 'updateConfig'
+  // nal_unit_type 8
+  updatePPS(nalUnit) {
+    if (((this.ppsNALUnit == null)) || (nalUnit.compare(this.ppsNALUnit) !== 0)) {
+      logger.debug(`[stream:${this.id}] updated PPS: 0x${nalUnit.toString('hex')}`);
+      this.ppsNALUnit = nalUnit;
+      this.updateSpropParam(nalUnit);
+      return this.emit('updateConfig');
+    }
+  }
 
-  toString: ->
-    str = "#{@id}: "
-    if @videoWidth?
-      str += "video: #{@videoWidth}x#{@videoHeight} profile=#{@videoAVCProfile} level=#{@videoAVCLevel}"
-    else
-      str += "video: (waiting for data)"
-    if @audioSampleRate?
-      str += "; audio: samplerate=#{@audioSampleRate} channels=#{@audioChannels} objecttype=#{@audioObjectType}"
-    else
-      str += "; audio: (waiting for data)"
-    return str
+  toString() {
+    let str = `${this.id}: `;
+    if (this.videoWidth != null) {
+      str += `video: ${this.videoWidth}x${this.videoHeight} profile=${this.videoAVCProfile} level=${this.videoAVCLevel}`;
+    } else {
+      str += "video: (waiting for data)";
+    }
+    if (this.audioSampleRate != null) {
+      str += `; audio: samplerate=${this.audioSampleRate} channels=${this.audioChannels} objecttype=${this.audioObjectType}`;
+    } else {
+      str += "; audio: (waiting for data)";
+    }
+    return str;
+  }
+}
 
-class MP4Stream extends AVStream
-  @create: (filename) ->
-    try
-      mp4File = new mp4.MP4File filename
-    catch err
-      logger.error "error opening MP4 file #{filename}: #{err}"
-      return null
-    streamId = api.createNewStreamId()
-    mp4Stream = new MP4Stream streamId
-    logger.debug "created stream #{streamId} from file #{filename}"
-    api.emit 'new', mp4Stream
-    api.add mp4Stream
+class MP4Stream extends AVStream {
+  static create(filename) {
+    let mp4File;
+    try {
+      mp4File = new mp4.MP4File(filename);
+    } catch (err) {
+      logger.error(`error opening MP4 file ${filename}: ${err}`);
+      return null;
+    }
+    const streamId = api.createNewStreamId();
+    const mp4Stream = new MP4Stream(streamId);
+    logger.debug(`created stream ${streamId} from file ${filename}`);
+    api.emit('new', mp4Stream);
+    api.add(mp4Stream);
 
-    mp4Stream.type = api.STREAM_TYPE_RECORDED
-    mp4File.on 'audio_data', (data, pts) ->
-      mp4Stream.emit 'audio_data', data, pts
-    mp4File.on 'video_data', (nalUnits, pts, dts) ->
-      mp4Stream.emit 'video_data', nalUnits, pts, dts
-    mp4File.on 'eof', ->
-      mp4Stream.emit 'end'
-    mp4File.parse()
-    if mp4File.hasVideo()
-      mp4Stream.updateSPS mp4File.getSPS()
-      mp4Stream.updatePPS mp4File.getPPS()
-    if mp4File.hasAudio()
-      ascBuf = mp4File.getAudioSpecificConfig()
-      bits = new Bits ascBuf
-      ascInfo = aac.readAudioSpecificConfig bits
-      mp4Stream.updateConfig
-        audioSpecificConfig: ascBuf
-        audioASCInfo: ascInfo
-        audioSampleRate: ascInfo.samplingFrequency
-        audioClockRate: 90000
-        audioChannels: ascInfo.channelConfiguration
+    mp4Stream.type = api.STREAM_TYPE_RECORDED;
+    mp4File.on('audio_data', (data, pts) => mp4Stream.emit('audio_data', data, pts));
+    mp4File.on('video_data', (nalUnits, pts, dts) => mp4Stream.emit('video_data', nalUnits, pts, dts));
+    mp4File.on('eof', () => mp4Stream.emit('end'));
+    mp4File.parse();
+    if (mp4File.hasVideo()) {
+      mp4Stream.updateSPS(mp4File.getSPS());
+      mp4Stream.updatePPS(mp4File.getPPS());
+    }
+    if (mp4File.hasAudio()) {
+      const ascBuf = mp4File.getAudioSpecificConfig();
+      const bits = new Bits(ascBuf);
+      const ascInfo = aac.readAudioSpecificConfig(bits);
+      mp4Stream.updateConfig({
+        audioSpecificConfig: ascBuf,
+        audioASCInfo: ascInfo,
+        audioSampleRate: ascInfo.samplingFrequency,
+        audioClockRate: 90000,
+        audioChannels: ascInfo.channelConfiguration,
         audioObjectType: ascInfo.audioObjectType
-    mp4Stream.durationSeconds = mp4File.getDurationSeconds()
-    mp4Stream.lastTagTimestamp = mp4File.getLastTimestamp()
-    mp4Stream.mp4File = mp4File
-    mp4File.fillBuffer ->
-      if mp4File.hasAudio()
-        mp4Stream.emit 'audio_start'
-        mp4Stream.isAudioStarted = true
-      if mp4File.hasVideo()
-        mp4Stream.emit 'video_start'
-        mp4Stream.isVideoStarted = true
-    return mp4Stream
+      });
+    }
+    mp4Stream.durationSeconds = mp4File.getDurationSeconds();
+    mp4Stream.lastTagTimestamp = mp4File.getLastTimestamp();
+    mp4Stream.mp4File = mp4File;
+    mp4File.fillBuffer(function() {
+      if (mp4File.hasAudio()) {
+        mp4Stream.emit('audio_start');
+        mp4Stream.isAudioStarted = true;
+      }
+      if (mp4File.hasVideo()) {
+        mp4Stream.emit('video_start');
+        return mp4Stream.isVideoStarted = true;
+      }
+    });
+    return mp4Stream;
+  }
 
-  play: ->
-    @mp4File.play()
+  play() {
+    return this.mp4File.play();
+  }
 
-  pause: ->
-    @mp4File.pause()
+  pause() {
+    return this.mp4File.pause();
+  }
 
-  resume: ->
-    return @mp4File.resume()
+  resume() {
+    return this.mp4File.resume();
+  }
 
-  seek: (seekSeconds, callback) ->
-    actualStartTime = @mp4File.seek seekSeconds
-    callback null, actualStartTime
+  seek(seekSeconds, callback) {
+    const actualStartTime = this.mp4File.seek(seekSeconds);
+    return callback(null, actualStartTime);
+  }
 
-  sendVideoPacketsSinceLastKeyFrame: (endSeconds, callback) ->
-    @mp4File.sendVideoPacketsSinceLastKeyFrame endSeconds, callback
+  sendVideoPacketsSinceLastKeyFrame(endSeconds, callback) {
+    return this.mp4File.sendVideoPacketsSinceLastKeyFrame(endSeconds, callback);
+  }
 
-  teardown: ->
-    logger.debug "[mp4stream:#{@id}] teardown"
-    @mp4File.close()
-    @destroy()
+  teardown() {
+    logger.debug(`[mp4stream:${this.id}] teardown`);
+    this.mp4File.close();
+    return this.destroy();
+  }
 
-  getCurrentPlayTime: ->
-    return @mp4File.currentPlayTime
+  getCurrentPlayTime() {
+    return this.mp4File.currentPlayTime;
+  }
 
-  isPaused: ->
-    return @mp4File.isPaused()
+  isPaused() {
+    return this.mp4File.isPaused();
+  }
+}
 
 
-eventListeners = {}
-streams = {}
-streamGenerators = {}
-recordedAppToDir = {}
+const eventListeners = {};
+let streams = {};
+const streamGenerators = {};
+const recordedAppToDir = {};
 
-api =
-  STREAM_TYPE_LIVE: 'live'
-  STREAM_TYPE_RECORDED: 'recorded'
+var api = {
+  STREAM_TYPE_LIVE: 'live',
+  STREAM_TYPE_RECORDED: 'recorded',
 
-  AVStream: AVStream
-  MP4Stream: MP4Stream
-  AVStreamGenerator: AVStreamGenerator
+  AVStream,
+  MP4Stream,
+  AVStreamGenerator,
 
-  emit: (name, data...) ->
-    if eventListeners[name]?
-      for listener in eventListeners[name]
-        listener data...
-    return
+  emit(name, ...data) {
+    if (eventListeners[name] != null) {
+      for (let listener of Array.from(eventListeners[name])) {
+        listener(...Array.from(data || []));
+      }
+    }
+  },
 
-  on: (name, listener) ->
-    if eventListeners[name]?
-      eventListeners[name].push listener
-    else
-      eventListeners[name] = [ listener ]
+  on(name, listener) {
+    if (eventListeners[name] != null) {
+      return eventListeners[name].push(listener);
+    } else {
+      return eventListeners[name] = [ listener ];
+    }
+  },
 
-  removeListener: (name, listener) ->
-    if eventListeners[name]?
-      for _listener, i in eventListeners[name]
-        if _listener is listener
-          eventListeners[i..i] = []  # remove element at index i
-    return
+  removeListener(name, listener) {
+    if (eventListeners[name] != null) {
+      for (let i = 0; i < eventListeners[name].length; i++) {
+        const _listener = eventListeners[name][i];
+        if (_listener === listener) {
+          eventListeners.splice(i, i - i + 1, ...[].concat([]));  // remove element at index i
+        }
+      }
+    }
+  },
 
-  getAll: ->
-    return streams
+  getAll() {
+    return streams;
+  },
 
-  exists: (streamId) ->
-    return streams[streamId]?
+  exists(streamId) {
+    return (streams[streamId] != null);
+  },
 
-  get: (streamId) ->
-    if streams[streamId]? # existing stream
-      return streams[streamId]
-    else if streamGenerators[streamId]? # generator
-      stream = streamGenerators[streamId].generate()
-      if stream?
-        stream.teardown = streamGenerators[streamId].teardown
-        stream.pause = streamGenerators[streamId].pause
-        stream.resume = ->
-          stream.resetFrameRate()
-          return streamGenerators[streamId].resume.apply this, arguments
-        stream.seek = ->
-          stream.resetFrameRate()
-          streamGenerators[streamId].seek.apply this, arguments
-        stream.getCurrentPlayTime = streamGenerators[streamId].getCurrentPlayTime
+  get(streamId) {
+    let stream;
+    if (streams[streamId] != null) { // existing stream
+      return streams[streamId];
+    } else if (streamGenerators[streamId] != null) { // generator
+      stream = streamGenerators[streamId].generate();
+      if (stream != null) {
+        stream.teardown = streamGenerators[streamId].teardown;
+        stream.pause = streamGenerators[streamId].pause;
+        stream.resume = function() {
+          stream.resetFrameRate();
+          return streamGenerators[streamId].resume.apply(this, arguments);
+        };
+        stream.seek = function() {
+          stream.resetFrameRate();
+          return streamGenerators[streamId].seek.apply(this, arguments);
+        };
+        stream.getCurrentPlayTime = streamGenerators[streamId].getCurrentPlayTime;
         stream.sendVideoPacketsSinceLastKeyFrame =
-          streamGenerators[streamId].sendVideoPacketsSinceLastKeyFrame
-        stream.isPaused = streamGenerators[streamId].isPaused
-        logger.debug "created stream #{stream.id}"
-      return stream
-    else # recorded dir
-      for app, dir of recordedAppToDir
-        if streamId[0..app.length] is app + '/'
-          filename = streamId[app.length+1..]
+          streamGenerators[streamId].sendVideoPacketsSinceLastKeyFrame;
+        stream.isPaused = streamGenerators[streamId].isPaused;
+        logger.debug(`created stream ${stream.id}`);
+      }
+      return stream;
+    } else { // recorded dir
+      for (let app in recordedAppToDir) {
+        const dir = recordedAppToDir[app];
+        if (streamId.slice(0, +app.length + 1 || undefined) === (app + '/')) {
+          var filetype, match;
+          let filename = streamId.slice(app.length+1);
 
-          # Strip "filetype:" from "filetype:filename"
-          if (match = /^(\w*?):(.*)$/.exec filename)?
-            filetype = match[1]
-            filename = match[2]
-          else
-            filetype = 'mp4'  # default extension
+          // Strip "filetype:" from "filetype:filename"
+          if ((match = /^(\w*?):(.*)$/.exec(filename)) != null) {
+            filetype = match[1];
+            filename = match[2];
+          } else {
+            filetype = 'mp4';  // default extension
+          }
 
-          filename = path.normalize filename
+          filename = path.normalize(filename);
 
-          # Check that filename is legitimate
-          pathSep = path.sep
-          if pathSep is '\\'  # Windows
-            pathSep = '\\' + pathSep  # Escape '\' for regex
-          if (filename is '.') or
-          new RegExp("(^|#{pathSep})..(#{pathSep}|$)").test filename
-            logger.warn "rejected request to stream: #{streamId}"
-            break
+          // Check that filename is legitimate
+          let pathSep = path.sep;
+          if (pathSep === '\\') {  // Windows
+            pathSep = `\\${pathSep}`;  // Escape '\' for regex
+          }
+          if ((filename === '.') ||
+          new RegExp(`(^|${pathSep})..(${pathSep}|$)`).test(filename)) {
+            logger.warn(`rejected request to stream: ${streamId}`);
+            break;
+          }
 
-          try
-            fs.accessSync "#{dir}/#{filename}", fs.R_OK
-          catch e
-            # Add extension to the end and try again
-            try
-              fs.accessSync "#{dir}/#{filename}.#{filetype}", fs.R_OK
-              filename = "#{filename}.#{filetype}"
-            catch e
-              logger.error "error: failed to read #{dir}/#{filename} or #{dir}/#{filename}.#{filetype}: #{e}"
-              return null
-          stream = MP4Stream.create "#{dir}/#{filename}"
-          logger.info "created stream #{stream.id} from #{dir}/#{filename}"
-          return stream
-      return null
+          try {
+            fs.accessSync(`${dir}/${filename}`, fs.R_OK);
+          } catch (e) {
+            // Add extension to the end and try again
+            try {
+              fs.accessSync(`${dir}/${filename}.${filetype}`, fs.R_OK);
+              filename = `${filename}.${filetype}`;
+            } catch (error) {
+              e = error;
+              logger.error(`error: failed to read ${dir}/${filename} or ${dir}/${filename}.${filetype}: ${e}`);
+              return null;
+            }
+          }
+          stream = MP4Stream.create(`${dir}/${filename}`);
+          logger.info(`created stream ${stream.id} from ${dir}/${filename}`);
+          return stream;
+        }
+      }
+      return null;
+    }
+  },
 
-  attachRecordedDirToApp: (dir, appName) ->
-    if recordedAppToDir[appName]?
-      logger.warn "warning: avstreams.attachRecordedDirToApp: overwriting existing app: #{appName}"
-    recordedAppToDir[appName] = dir
+  attachRecordedDirToApp(dir, appName) {
+    if (recordedAppToDir[appName] != null) {
+      logger.warn(`warning: avstreams.attachRecordedDirToApp: overwriting existing app: ${appName}`);
+    }
+    return recordedAppToDir[appName] = dir;
+  },
 
-  addGenerator: (streamId, generator) ->
-    if streamGenerators[streamId]?
-      logger.warn "warning: avstreams.addGenerator(): overwriting generator: #{streamId}"
-    streamGenerators[streamId] = generator
+  addGenerator(streamId, generator) {
+    if (streamGenerators[streamId] != null) {
+      logger.warn(`warning: avstreams.addGenerator(): overwriting generator: ${streamId}`);
+    }
+    return streamGenerators[streamId] = generator;
+  },
 
-  removeGenerator: (streamId) ->
-    if streamGenerators[streamId]?
-      streamGenerators[streamId].teardown()
-    delete streamGenerators[streamId]
+  removeGenerator(streamId) {
+    if (streamGenerators[streamId] != null) {
+      streamGenerators[streamId].teardown();
+    }
+    return delete streamGenerators[streamId];
+  },
 
-  createNewStreamId: ->
-    retryCount = 0
-    loop
-      id = createStreamId()
-      if not api.exists id
-        return id
-      retryCount++
-      if retryCount >= 100
-        throw new Error "avstreams.createNewStreamId: Failed to create new stream id"
+  createNewStreamId() {
+    let retryCount = 0;
+    while (true) {
+      const id = createStreamId();
+      if (!api.exists(id)) {
+        return id;
+      }
+      retryCount++;
+      if (retryCount >= 100) {
+        throw new Error("avstreams.createNewStreamId: Failed to create new stream id");
+      }
+    }
+  },
 
-  # Creates a new stream.
-  # If streamId is not given, a unique id will be generated.
-  create: (streamId) ->
-    if not streamId?
-      streamId = api.createNewStreamId()
-    stream = new AVStream streamId
-    logger.debug "created stream #{streamId}"
-    api.emit 'new', stream
-    api.add stream
-    return stream
+  // Creates a new stream.
+  // If streamId is not given, a unique id will be generated.
+  create(streamId) {
+    if ((streamId == null)) {
+      streamId = api.createNewStreamId();
+    }
+    const stream = new AVStream(streamId);
+    logger.debug(`created stream ${streamId}`);
+    api.emit('new', stream);
+    api.add(stream);
+    return stream;
+  },
 
-  getOrCreate: (streamId) ->
-    stream = streams[streamId]
-    if not stream?
-      stream = api.create streamId
-    return stream
+  getOrCreate(streamId) {
+    let stream = streams[streamId];
+    if ((stream == null)) {
+      stream = api.create(streamId);
+    }
+    return stream;
+  },
 
-  add: (stream) ->
-    if streams[stream.id]?
-      logger.warn "warning: overwriting stream: #{stream.id}"
-    streams[stream.id] = stream
-    api.emit 'add_stream', stream
-    stream._onAnyListener = ((stream) ->
-      (eventName, data...) ->
-        api.emit eventName, stream, data...
-        if eventName is 'destroy'
-          api.remove stream.id
-    )(stream)
-    stream.onAny stream._onAnyListener
+  add(stream) {
+    if (streams[stream.id] != null) {
+      logger.warn(`warning: overwriting stream: ${stream.id}`);
+    }
+    streams[stream.id] = stream;
+    api.emit('add_stream', stream);
+    stream._onAnyListener = (stream =>
+      function(eventName, ...data) {
+        api.emit(eventName, stream, ...Array.from(data));
+        if (eventName === 'destroy') {
+          return api.remove(stream.id);
+        }
+      }
+    )(stream);
+    return stream.onAny(stream._onAnyListener);
+  },
 
-  remove: (streamId) ->
-    if typeof(streamId) is 'object'
-      # streamId argument might be stream object
-      stream = streamId
-      streamId = stream?.id
-    else
-      stream = streams[streamId]
-    if stream?
-      stream.offAny stream._onAnyListener
-      api.emit 'remove_stream', stream
-    delete streams[streamId]
+  remove(streamId) {
+    let stream;
+    if (typeof(streamId) === 'object') {
+      // streamId argument might be stream object
+      stream = streamId;
+      streamId = stream != null ? stream.id : undefined;
+    } else {
+      stream = streams[streamId];
+    }
+    if (stream != null) {
+      stream.offAny(stream._onAnyListener);
+      api.emit('remove_stream', stream);
+    }
+    return delete streams[streamId];
+  },
 
-  clear: ->
-    streams = {}
-    api.emit 'clear_streams'
+  clear() {
+    streams = {};
+    return api.emit('clear_streams');
+  },
 
-  dump: ->
-    logger.raw "[streams: #{Object.keys(streams).length}]"
-    for streamId, stream of streams
-      logger.raw " " + stream.toString()
+  dump() {
+    logger.raw(`[streams: ${Object.keys(streams).length}]`);
+    return (() => {
+      const result = [];
+      for (let streamId in streams) {
+        const stream = streams[streamId];
+        result.push(logger.raw(` ${stream.toString()}`));
+      }
+      return result;
+    })();
+  }
+};
 
-module.exports = api
+module.exports = api;
+
+function __guardMethod__(obj, methodName, transform) {
+  if (typeof obj !== 'undefined' && obj !== null && typeof obj[methodName] === 'function') {
+    return transform(obj, methodName);
+  } else {
+    return undefined;
+  }
+}

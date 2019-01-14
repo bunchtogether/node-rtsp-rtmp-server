@@ -1,8 +1,16 @@
-# EventEmitter with support for catch-all listeners and mixin
-# TODO: Write tests
+/*
+ * decaffeinate suggestions:
+ * DS101: Remove unnecessary use of Array.from
+ * DS102: Remove unnecessary code created because of implicit returns
+ * DS201: Simplify complex destructure assignments
+ * DS207: Consider shorter variations of null checks
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+// EventEmitter with support for catch-all listeners and mixin
+// TODO: Write tests
 
-###
-# Usage
+/*
+* Usage
 
 Extend EventEmitterModule class to use its features.
 
@@ -25,7 +33,7 @@ an existing class with `mixin`.
 
     class MyClass
 
-    # Add EventEmitterModule features to MyClass
+    * Add EventEmitterModule features to MyClass
     EventEmitterModule.mixin MyClass
 
     obj = new MyClass
@@ -46,70 +54,95 @@ an object, but with slightly worse performance.
       console.log "received testevent"
 
     obj.emit 'testevent'
-###
+*/
 
-class EventEmitterModule
-  # Apply EventEmitterModule to the class
-  @mixin: (cls) ->
-    proto = EventEmitterModule.prototype
-    for name in Object.getOwnPropertyNames(proto)
-      if name is 'constructor'
-        continue
-      try
-        cls::[name] = proto[name]
-      catch e
-        throw new Error "Call EventEmitterModule.mixin() after the class definition"
-    return
+class EventEmitterModule {
+  // Apply EventEmitterModule to the class
+  static mixin(cls) {
+    const proto = EventEmitterModule.prototype;
+    for (let name of Array.from(Object.getOwnPropertyNames(proto))) {
+      if (name === 'constructor') {
+        continue;
+      }
+      try {
+        cls.prototype[name] = proto[name];
+      } catch (e) {
+        throw new Error("Call EventEmitterModule.mixin() after the class definition");
+      }
+    }
+  }
 
-  # Inject EventEmitterModule into the object
-  @inject: (obj) ->
-    proto = EventEmitterModule.prototype
-    for name in Object.getOwnPropertyNames(proto)
-      if name is 'constructor'
-        continue
-      obj[name] = proto[name]
-    obj.eventListeners = {}
-    obj.catchAllEventListeners = []
-    return
+  // Inject EventEmitterModule into the object
+  static inject(obj) {
+    const proto = EventEmitterModule.prototype;
+    for (let name of Array.from(Object.getOwnPropertyNames(proto))) {
+      if (name === 'constructor') {
+        continue;
+      }
+      obj[name] = proto[name];
+    }
+    obj.eventListeners = {};
+    obj.catchAllEventListeners = [];
+  }
 
-  emit: (name, data...) ->
-    if @eventListeners?[name]?
-      for listener in @eventListeners[name]
-        listener data...
-    if @catchAllEventListeners?
-      for listener in @catchAllEventListeners
-        listener name, data...
-    return
+  emit(name, ...data) {
+    let listener;
+    if ((this.eventListeners != null ? this.eventListeners[name] : undefined) != null) {
+      for (listener of Array.from(this.eventListeners[name])) {
+        listener(...Array.from(data || []));
+      }
+    }
+    if (this.catchAllEventListeners != null) {
+      for (listener of Array.from(this.catchAllEventListeners)) {
+        listener(name, ...Array.from(data));
+      }
+    }
+  }
 
-  onAny: (listener) ->
-    if @catchAllEventListeners?
-      @catchAllEventListeners.push listener
-    else
-      @catchAllEventListeners = [ listener ]
+  onAny(listener) {
+    if (this.catchAllEventListeners != null) {
+      return this.catchAllEventListeners.push(listener);
+    } else {
+      return this.catchAllEventListeners = [ listener ];
+    }
+  }
 
-  offAny: (listener) ->
-    if @catchAllEventListeners?
-      for _listener, i in @catchAllEventListeners
-        if _listener is listener
-          @catchAllEventListeners[i..i] = []  # remove element at index i
-    return
+  offAny(listener) {
+    if (this.catchAllEventListeners != null) {
+      for (let i = 0; i < this.catchAllEventListeners.length; i++) {
+        const _listener = this.catchAllEventListeners[i];
+        if (_listener === listener) {
+          this.catchAllEventListeners.splice(i, i - i + 1, ...[].concat([]));  // remove element at index i
+        }
+      }
+    }
+  }
 
-  on: (name, listener) ->
-    if not @eventListeners?
-      @eventListeners = {}
-    if @eventListeners[name]?
-      @eventListeners[name].push listener
-    else
-      @eventListeners[name] = [ listener ]
+  on(name, listener) {
+    if ((this.eventListeners == null)) {
+      this.eventListeners = {};
+    }
+    if (this.eventListeners[name] != null) {
+      return this.eventListeners[name].push(listener);
+    } else {
+      return this.eventListeners[name] = [ listener ];
+    }
+  }
 
-  removeListener: (name, listener) ->
-    if @eventListeners?[name]?
-      for _listener, i in @eventListeners[name]
-        if _listener is listener
-          @eventListeners[i..i] = []  # remove element at index i
-    return
+  removeListener(name, listener) {
+    if ((this.eventListeners != null ? this.eventListeners[name] : undefined) != null) {
+      for (let i = 0; i < this.eventListeners[name].length; i++) {
+        const _listener = this.eventListeners[name][i];
+        if (_listener === listener) {
+          this.eventListeners.splice(i, i - i + 1, ...[].concat([]));  // remove element at index i
+        }
+      }
+    }
+  }
 
-  off: (name, listener) ->
-    @removeListener arguments...
+  off(name, listener) {
+    return this.removeListener(...arguments);
+  }
+}
 
-module.exports = EventEmitterModule
+module.exports = EventEmitterModule;

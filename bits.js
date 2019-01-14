@@ -1,11 +1,21 @@
-# Utility for Buffer operations
+/*
+ * decaffeinate suggestions:
+ * DS101: Remove unnecessary use of Array.from
+ * DS102: Remove unnecessary code created because of implicit returns
+ * DS202: Simplify dynamic range loops
+ * DS205: Consider reworking code to avoid use of IIFEs
+ * DS206: Consider reworking classes to avoid initClass
+ * DS207: Consider shorter variations of null checks
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+// Utility for Buffer operations
 
-###
-# Usage
+/*
+* Usage
 
     Bits = require './bits'
     
-    # Reader
+    * Reader
     buf = new Buffer [
       0b11010001
       0b11110000
@@ -14,21 +24,21 @@
     ]
     myBits = new Bits buf  # A Bits instance holds a cursor
     console.log myBits.read_bit()
-    # => 1
+    * => 1
     console.log myBits.read_bits 2
-    # => 2
+    * => 2
     myBits.skip_bits 5
     console.log myBits.read_byte()  # Returns a number
-    # => 240
+    * => 240
     console.log myBits.read_bytes 2  # Returns a Buffer instance
-    # => <Buffer 7f ff>
+    * => <Buffer 7f ff>
     myBits.push_back_bytes 2  # Move the cursor two bytes back
     console.log myBits.read_int 32
-    # => 2147483647
+    * => 2147483647
     console.log myBits.read_int 32
-    # => -2147483648
+    * => -2147483648
     
-    # Writer
+    * Writer
     myBits = new Bits()
     myBits.create_buf()
     myBits.add_bit 1         # 0b1_______
@@ -38,481 +48,627 @@
     resultArray = myBits.get_created_buf()  # Returns an array
     resultBuf = new Buffer resultArray
     Bits.printBinary resultBuf
-    # => 10100011 11111111 
-###
+    * => 10100011 11111111 
+*/
 
-try
-  buffertools = require 'buffertools'
-catch e
-  # buffertools is not available
+let buffertools;
+try {
+  buffertools = require('buffertools');
+} catch (e) {}
+  // buffertools is not available
 
-class Bits
-  constructor: (buffer) ->
-    @buf = null
-    @byte_index = 0
-    @bit_index = 0
+class Bits {
+  static initClass() {
+  
+    this.DISABLE_BUFFER_INDEXOF = false;
+  }
+  constructor(buffer) {
+    this.buf = null;
+    this.byte_index = 0;
+    this.bit_index = 0;
 
-    @stash_buf = []
-    @stash_byte_index = []
-    @stash_bit_index = []
+    this.stash_buf = [];
+    this.stash_byte_index = [];
+    this.stash_bit_index = [];
 
-    @c_buf = null
-    @c_byte_index = 0
-    @c_bit_index = 0
+    this.c_buf = null;
+    this.c_byte_index = 0;
+    this.c_bit_index = 0;
 
-    if buffer?
-      @set_data buffer
+    if (buffer != null) {
+      this.set_data(buffer);
+    }
+  }
 
-  @DISABLE_BUFFER_INDEXOF: false
+  static set_warning_fatal(is_fatal) {
+    return Bits.is_warning_fatal = is_fatal;
+  }
 
-  @set_warning_fatal: (is_fatal) ->
-    Bits.is_warning_fatal = is_fatal
+  create_buf() {
+    this.c_buf = [];
+    this.c_byte_index = 0;
+    return this.c_bit_index = 0;
+  }
 
-  create_buf: ->
-    @c_buf = []
-    @c_byte_index = 0
-    @c_bit_index = 0
+  add_bit(value) {
+    return this.add_bits(1, value);
+  }
 
-  add_bit: (value) ->
-    @add_bits 1, value
+  // @param  numBits (int) number of bits to fill with 1
+  fill_bits_with_1(numBits) {
+    if (numBits > 32) {
+      throw new Error("numBits must be <= 32");
+    }
+    const value = Math.pow(2, numBits) - 1;
+    return this.add_bits(numBits, value);
+  }
 
-  # @param  numBits (int) number of bits to fill with 1
-  fill_bits_with_1: (numBits) ->
-    if numBits > 32
-      throw new Error "numBits must be <= 32"
-    value = Math.pow(2, numBits) - 1
-    @add_bits numBits, value
+  // value is up to 32-bit unsigned integer
+  add_bits(numBits, value) {
+    if (value > 0xffffffff) {
+      throw new Error("value must be <= 0xffffffff (uint32)");
+    }
+    if (value < 0) {
+      throw new Error("value must be >= 0 (uint32)");
+    }
+    let remaining_len = numBits;
+    return (() => {
+      const result = [];
+      while (remaining_len > 0) {
+        if ((this.c_buf[this.c_byte_index] == null)) {  // not initialized
+          this.c_buf[this.c_byte_index] = 0x00;  // initialize
+        }
+        const available_len = 8 - this.c_bit_index;
+        if (remaining_len <= available_len) {  // fits into current byte
+          this.c_buf[this.c_byte_index] |= value << (available_len - remaining_len);
+          this.c_bit_index += remaining_len;
+          remaining_len = 0;
+          if (this.c_bit_index === 8) {
+            this.c_byte_index++;
+            result.push(this.c_bit_index = 0);
+          } else {
+            result.push(undefined);
+          }
+        } else {
+          const this_value = (value >>> (remaining_len - available_len)) & 0xff;
+          this.c_buf[this.c_byte_index] |= this_value;
+          remaining_len -= available_len;
+          this.c_byte_index++;
+          result.push(this.c_bit_index = 0);
+        }
+      }
+      return result;
+    })();
+  }
 
-  # value is up to 32-bit unsigned integer
-  add_bits: (numBits, value) ->
-    if value > 0xffffffff
-      throw new Error "value must be <= 0xffffffff (uint32)"
-    if value < 0
-      throw new Error "value must be >= 0 (uint32)"
-    remaining_len = numBits
-    while remaining_len > 0
-      if not @c_buf[@c_byte_index]?  # not initialized
-        @c_buf[@c_byte_index] = 0x00  # initialize
-      available_len = 8 - @c_bit_index
-      if remaining_len <= available_len  # fits into current byte
-        @c_buf[@c_byte_index] |= value << (available_len - remaining_len)
-        @c_bit_index += remaining_len
-        remaining_len = 0
-        if @c_bit_index is 8
-          @c_byte_index++
-          @c_bit_index = 0
-      else
-        this_value = (value >>> (remaining_len - available_len)) & 0xff
-        @c_buf[@c_byte_index] |= this_value
-        remaining_len -= available_len
-        @c_byte_index++
-        @c_bit_index = 0
+  // TODO: This method needs a better name, since it returns an array.
+  // @return array
+  get_created_buf() {
+    return this.c_buf;
+  }
 
-  # TODO: This method needs a better name, since it returns an array.
-  # @return array
-  get_created_buf: ->
-    return @c_buf
-
-  current_position: ->
+  current_position() {
     return {
-      byte: @byte_index
-      bit : @bit_index
+      byte: this.byte_index,
+      bit : this.bit_index
+    };
+  }
+
+  print_position() {
+    const remaining_bits = this.get_remaining_bits();
+    return console.log(`byteIndex=${this.byte_index+1} bitIndex=${this.bit_index} remaining_bits=${remaining_bits}`);
+  }
+
+  peek() {
+    console.log(this.buf.slice(this.byte_index));
+    const remainingBits = this.get_remaining_bits();
+    return console.log(`bit=${this.bit_index} bytes_read=${this.byte_index} remaining=${remainingBits} bits (${Math.ceil(remainingBits/8)} bytes)`);
+  }
+
+  skip_bits(len) {
+    this.bit_index += len;
+    while (this.bit_index >= 8) {
+      this.byte_index++;
+      this.bit_index -= 8;
+    }
+  }
+
+  skip_bytes(len) {
+    return this.byte_index += len;
+  }
+
+  // Returns the number of skipped bytes
+  skip_bytes_equal_to(value) {
+    let count = 0;
+    while (true) {
+      const byte = this.read_byte();
+      if (byte !== value) {
+        this.push_back_byte();
+        return count;
+      }
+      count++;
+    }
+  }
+
+  read_uint32() {
+    return (this.read_byte() * Math.pow(256, 3)) +
+           (this.read_byte() << 16) +
+           (this.read_byte() << 8) +
+           this.read_byte();
+  }
+
+  // Read a signed number represented by two's complement.
+  // bits argument is the length of the signed number including
+  // the sign bit.
+  read_int(bits) {
+    if (bits < 0) {
+      throw new Error(`read_int: bits argument must be positive: ${bits}`);
+    }
+    if (bits === 1) {
+      return this.read_bit();
+    }
+    const sign_bit = this.read_bit();
+    const value = this.read_bits(bits - 1);
+    if (sign_bit === 1) {  // negative number
+      return -Math.pow(2, bits - 1) + value;
+    } else {  // positive number
+      return value;
+    }
+  }
+
+  // unsigned integer Exp-Golomb-coded syntax element
+  // see clause 9.1
+  read_ue() {
+    return this.read_exp_golomb();
+  }
+
+  // signed integer Exp-Golomb-coded syntax element
+  read_se() {
+    const value = this.read_exp_golomb();
+    return Math.pow(-1, value + 1) * Math.ceil(value / 2);
+  }
+
+  read_exp_golomb() {
+    let leadingZeroBits = -1;
+    let b = 0;
+    while (b === 0) {
+      b = this.read_bit();
+      leadingZeroBits++;
+    }
+    return (Math.pow(2, leadingZeroBits) - 1) + this.read_bits(leadingZeroBits);
+  }
+
+  // Return an instance of Buffer
+  read_bytes(len, suppress_boundary_warning) {
+    if (suppress_boundary_warning == null) { suppress_boundary_warning = 0; }
+    if (this.bit_index !== 0) {
+      throw new Error("read_bytes: bit_index must be 0");
     }
 
-  print_position: ->
-    remaining_bits = @get_remaining_bits()
-    console.log "byteIndex=#{@byte_index+1} bitIndex=#{@bit_index} remaining_bits=#{remaining_bits}"
+    if ((!suppress_boundary_warning) && ((this.byte_index + len) > this.buf.length)) {
+      const errmsg = `read_bytes exceeded boundary: ${this.byte_index+len} > ${this.buf.length}`;
+      if (Bits.is_warning_fatal) {
+        throw new Error(errmsg);
+      } else {
+        console.log(`warning: bits.read_bytes: ${errmsg}`);
+      }
+    }
 
-  peek: ->
-    console.log @buf[@byte_index..]
-    remainingBits = @get_remaining_bits()
-    console.log "bit=#{@bit_index} bytes_read=#{@byte_index} remaining=#{remainingBits} bits (#{Math.ceil(remainingBits/8)} bytes)"
+    const range = this.buf.slice(this.byte_index, this.byte_index+len);
+    this.byte_index += len;
+    return range;
+  }
 
-  skip_bits: (len) ->
-    @bit_index += len
-    while @bit_index >= 8
-      @byte_index++
-      @bit_index -= 8
-    return
+  read_bytes_sum(len) {
+    let sum = 0;
+    for (let i = len, asc = len <= 0; asc ? i < 0 : i > 0; asc ? i++ : i--) {
+      sum += this.read_byte();
+    }
+    return sum;
+  }
 
-  skip_bytes: (len) ->
-    @byte_index += len
+  read_byte() {
+    let value;
+    if (this.bit_index === 0) {
+      if (this.byte_index >= this.buf.length) {
+        throw new Error("read_byte error: no more data");
+      }
+      value = this.buf[this.byte_index++];
+    } else {
+      value = this.read_bits(8);
+    }
+    return value;
+  }
 
-  # Returns the number of skipped bytes
-  skip_bytes_equal_to: (value) ->
-    count = 0
-    loop
-      byte = @read_byte()
-      if byte isnt value
-        @push_back_byte()
-        return count
-      count++
+  read_bits(len) {
+    if (len === 0) {
+      return 0;
+    }
 
-  read_uint32: ->
-    return @read_byte() * Math.pow(256, 3) +
-           (@read_byte() << 16) +
-           (@read_byte() << 8) +
-           @read_byte()
+    let bit_buf = '';
+    for (let i = 0, end = len, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+      bit_buf += this.read_bit().toString();
+    }
+    return parseInt(bit_buf, 2);
+  }
 
-  # Read a signed number represented by two's complement.
-  # bits argument is the length of the signed number including
-  # the sign bit.
-  read_int: (bits) ->
-    if bits < 0
-      throw new Error "read_int: bits argument must be positive: #{bits}"
-    if bits is 1
-      return @read_bit()
-    sign_bit = @read_bit()
-    value = @read_bits bits - 1
-    if sign_bit is 1  # negative number
-      return -Math.pow(2, bits - 1) + value
-    else  # positive number
-      return value
+  read_bit() {
+    if (this.byte_index >= this.buf.length) {
+      throw new Error("read_bit error: no more data");
+    }
+    const value = this.bit(this.bit_index++, this.buf[this.byte_index]);
+    if (this.bit_index === 8) {
+      this.byte_index++;
+      this.bit_index = 0;
+    }
+    return value;
+  }
 
-  # unsigned integer Exp-Golomb-coded syntax element
-  # see clause 9.1
-  read_ue: ->
-    return @read_exp_golomb()
+  push_back_byte() {
+    return this.push_back_bytes(1);
+  }
 
-  # signed integer Exp-Golomb-coded syntax element
-  read_se: ->
-    value = @read_exp_golomb()
-    return Math.pow(-1, value + 1) * Math.ceil(value / 2)
+  push_back_bytes(len) {
+    return this.push_back_bits(len * 8);
+  }
 
-  read_exp_golomb: ->
-    leadingZeroBits = -1
-    b = 0
-    while b is 0
-      b = @read_bit()
-      leadingZeroBits++
-    return Math.pow(2, leadingZeroBits) - 1 + @read_bits(leadingZeroBits)
+  push_back_bits(len) {
+    while (len-- > 0) {
+      this.bit_index--;
+      if (this.bit_index === -1) {
+        this.bit_index = 7;
+        this.byte_index--;
+      }
+    }
+  }
 
-  # Return an instance of Buffer
-  read_bytes: (len, suppress_boundary_warning=0) ->
-    if @bit_index isnt 0
-      throw new Error "read_bytes: bit_index must be 0"
+  bit(index, byte) {
+    let result = null;
+    if (index instanceof Array) {
+      result = [];
+      for (let idx of Array.from(result)) {
+        result.push((byte >> (7 - idx)) & 0x01);
+      }
+    } else {
+      result = (byte >> (7 - index)) & 0x01;
+    }
+    return result;
+  }
 
-    if (not suppress_boundary_warning) and (@byte_index + len > @buf.length)
-      errmsg = "read_bytes exceeded boundary: #{@byte_index+len} > #{@buf.length}"
-      if Bits.is_warning_fatal
-        throw new Error errmsg
-      else
-        console.log "warning: bits.read_bytes: #{errmsg}"
+  push_stash() {
+    this.stash_buf.push(this.buf);
+    this.stash_byte_index.push(this.byte_index);
+    return this.stash_bit_index.push(this.bit_index);
+  }
 
-    range = @buf[@byte_index...@byte_index+len]
-    @byte_index += len
-    return range
+  pop_stash() {
+    this.buf = this.stash_buf.pop();
+    this.byte_index = this.stash_byte_index.pop();
+    return this.bit_index = this.stash_bit_index.pop();
+  }
 
-  read_bytes_sum: (len) ->
-    sum = 0
-    for i in [len...0]
-      sum += @read_byte()
-    return sum
+  set_data(bytes) {
+    this.buf = bytes;
+    this.byte_index = 0;
+    return this.bit_index = 0;
+  }
 
-  read_byte: ->
-    if @bit_index is 0
-      if @byte_index >= @buf.length
-        throw new Error "read_byte error: no more data"
-      value = @buf[@byte_index++]
-    else
-      value = @read_bits 8
-    return value
+  has_more_data() {
+    return this.get_remaining_bits() > 0;
+  }
 
-  read_bits: (len) ->
-    if len is 0
-      return 0
+  get_remaining_bits() {
+    const total_bits = this.buf.length * 8;
+    const total_read_bits = (this.byte_index * 8) + this.bit_index;
+    return total_bits - total_read_bits;
+  }
 
-    bit_buf = ''
-    for i in [0...len]
-      bit_buf += @read_bit().toString()
-    return parseInt bit_buf, 2
+  get_remaining_bytes() {
+    if (this.bit_index !== 0) {
+      console.warn("warning: bits.get_remaining_bytes: bit_index is not 0");
+    }
+    let remainingLen = this.buf.length - this.byte_index;
+    if (remainingLen < 0) {
+      remainingLen = 0;
+    }
+    return remainingLen;
+  }
 
-  read_bit: ->
-    if @byte_index >= @buf.length
-      throw new Error "read_bit error: no more data"
-    value = @bit @bit_index++, @buf[@byte_index]
-    if @bit_index is 8
-      @byte_index++
-      @bit_index = 0
-    return value
+  remaining_buffer() {
+    if (this.bit_index !== 0) {
+      console.warn("warning: bits.remaining_buffer: bit_index is not 0");
+    }
+    return this.buf.slice(this.byte_index);
+  }
 
-  push_back_byte: ->
-    @push_back_bytes 1
+  is_byte_aligned() {
+    return this.bit_index === 0;
+  }
 
-  push_back_bytes: (len) ->
-    @push_back_bits len * 8
+  read_until_byte_aligned() {
+    let sum = 0;
+    while (this.bit_index !== 0) {
+      sum += this.read_bit();
+    }
+    return sum;
+  }
 
-  push_back_bits: (len) ->
-    while len-- > 0
-      @bit_index--
-      if @bit_index is -1
-        @bit_index = 7
-        @byte_index--
-    return
+  // @param bitVal (number)  0 or 1
+  //
+  // @return object or null  If rbsp_stop_one_bit is found,
+  // returns an object {
+  //   byte: (number) byte index (starts from 0)
+  //   bit : (number) bit index (starts from 0)
+  // }. If it is not found, returns null.
+  lastIndexOfBit(bitVal) {
+    for (let start = this.buf.length-1, i = start, end = this.byte_index, asc = start <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
+      const byte = this.buf[i];
+      if (((bitVal === 1) && (byte !== 0x00)) || ((bitVal === 0) && (byte !== 0xff))) {
+        // this byte contains the target bit
+        for (let col = 0; col <= 7; col++) {
+          if (((byte >> col) & 0x01) === bitVal) {
+            return {byte: i, bit: 7 - col};
+          }
+          if ((i === this.byte_index) && ((7 - col) === this.bit_index)) {
+            return null;
+          }
+        }
+      }
+    }
+    return null;  // not found
+  }
 
-  bit: (index, byte) ->
-    result = null
-    if index instanceof Array
-      result = []
-      for idx in result
-        result.push (byte >> (7 - idx)) & 0x01
-    else
-      result = (byte >> (7 - index)) & 0x01
-    return result
+  get_current_byte() {
+    return this.get_byte_at(0);
+  }
 
-  push_stash: ->
-    @stash_buf.push @buf
-    @stash_byte_index.push @byte_index
-    @stash_bit_index.push @bit_index
+  get_byte_at(byteOffset) {
+    if (this.bit_index === 0) {
+      return this.buf[this.byte_index + byteOffset];
+    } else {
+      return Bits.parse_bits_uint(this.buf, byteOffset * 8, 8);
+    }
+  }
 
-  pop_stash: ->
-    @buf = @stash_buf.pop()
-    @byte_index = @stash_byte_index.pop()
-    @bit_index = @stash_bit_index.pop()
+  last_get_byte_at(offsetFromEnd) {
+    const offsetFromStart = this.buf.length - 1 - offsetFromEnd;
+    if (offsetFromStart < 0) {
+      throw new Error("error: last_get_byte_at: index out of range");
+    }
+    return this.buf[offsetFromStart];
+  }
 
-  set_data: (bytes) ->
-    @buf = bytes
-    @byte_index = 0
-    @bit_index = 0
+  remove_trailing_bytes(numBytes) {
+    if (this.buf.length < numBytes) {
+      console.warn(`warning: bits.remove_trailing_bytes: Buffer length (${this.buf.length}) is less than numBytes (${numBytes})`);
+      this.buf = new Buffer([]);
+    } else {
+      this.buf = this.buf.slice(0, this.buf.length-numBytes);
+    }
+  }
 
-  has_more_data: ->
-    return @get_remaining_bits() > 0
+  mark() {
+    if ((this.marks == null)) {
+      return this.marks = [ this.byte_index ];
+    } else {
+      return this.marks.push(this.byte_index);
+    }
+  }
 
-  get_remaining_bits: ->
-    total_bits = @buf.length * 8
-    total_read_bits = @byte_index * 8 + @bit_index
-    return total_bits - total_read_bits
+  marked_bytes() {
+    if (((this.marks == null)) || (this.marks.length === 0)) {
+      throw new Error("The buffer has not been marked");
+    }
+    const startIndex = this.marks.pop();
+    return this.buf.slice(startIndex, +(this.byte_index-1) + 1 || undefined);
+  }
 
-  get_remaining_bytes: ->
-    if @bit_index isnt 0
-      console.warn "warning: bits.get_remaining_bytes: bit_index is not 0"
-    remainingLen = @buf.length - @byte_index
-    if remainingLen < 0
-      remainingLen = 0
-    return remainingLen
+  // Returns a null-terminated string
+  get_string(encoding) {
+    if (encoding == null) { encoding = 'utf8'; }
+    const nullPos = Bits.searchByteInBuffer(this.buf, 0x00, this.byte_index);
+    if (nullPos === -1) {
+      throw new Error("bits.get_string: the string is not null-terminated");
+    }
+    const str = this.buf.slice(this.byte_index, nullPos).toString(encoding);
+    this.byte_index = nullPos + 1;
+    return str;
+  }
 
-  remaining_buffer: ->
-    if @bit_index isnt 0
-      console.warn "warning: bits.remaining_buffer: bit_index is not 0"
-    return @buf[@byte_index..]
+  // Returns a string constructed by a number
+  static uintToString(num, numBytes, encoding) {
+    if (encoding == null) { encoding = 'utf8'; }
+    const arr = [];
+    for (let i = numBytes, asc = numBytes <= 1; asc ? i <= 1 : i >= 1; asc ? i++ : i--) {
+      arr.push((num * Math.pow(2, -(i-1)*8)) & 0xff);
+    }
+    return new Buffer(arr).toString(encoding);
+  }
 
-  is_byte_aligned: ->
-    return @bit_index is 0
+  // Returns the first index at which a given value (byte) can be
+  // found in the Buffer (buf), or -1 if it is not found.
+  static searchByteInBuffer(buf, byte, from_pos) {
+    if (from_pos == null) { from_pos = 0; }
+    if ((!Bits.DISABLE_BUFFER_INDEXOF) && (typeof(buf.indexOf) === 'function')) {
+      return buf.indexOf(byte, from_pos);
+    } else {
+      if (from_pos < 0) {
+        from_pos = buf.length + from_pos;
+      }
+      for (let i = from_pos, end = buf.length, asc = from_pos <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+        if (buf[i] === byte) {
+          return i;
+        }
+      }
+      return -1;
+    }
+  }
 
-  read_until_byte_aligned: ->
-    sum = 0
-    while @bit_index isnt 0
-      sum += @read_bit()
-    return sum
+  static searchBytesInArray(haystack, needle, from_pos) {
+    if (from_pos == null) { from_pos = 0; }
+    if (buffertools != null) {  // buffertools is available
+      if (!(haystack instanceof Buffer)) {
+        haystack = new Buffer(haystack);
+      }
+      if (!(needle instanceof Buffer)) {
+        needle = new Buffer(needle);
+      }
+      return buffertools.indexOf(haystack, needle, from_pos);
+    } else {  // buffertools is not available
+      const haystack_len = haystack.length;
+      if (from_pos >= haystack_len) {
+        return -1;
+      }
 
-  # @param bitVal (number)  0 or 1
-  #
-  # @return object or null  If rbsp_stop_one_bit is found,
-  # returns an object {
-  #   byte: (number) byte index (starts from 0)
-  #   bit : (number) bit index (starts from 0)
-  # }. If it is not found, returns null.
-  lastIndexOfBit: (bitVal) ->
-    for i in [@buf.length-1..@byte_index]
-      byte = @buf[i]
-      if (bitVal is 1 and byte isnt 0x00) or (bitVal is 0 and byte isnt 0xff)
-        # this byte contains the target bit
-        for col in [0..7]
-          if ((byte >> col) & 0x01) is bitVal
-            return byte: i, bit: 7 - col
-          if (i is @byte_index) and (7 - col is @bit_index)
-            return null
-    return null  # not found
+      let needle_idx = 0;
+      const needle_len = needle.length;
+      let haystack_idx = from_pos;
+      while (true) {
+        if (haystack[haystack_idx] === needle[needle_idx]) {
+          needle_idx++;
+          if (needle_idx === needle_len) {
+            return (haystack_idx - needle_len) + 1;
+          }
+        } else if (needle_idx > 0) {
+          haystack_idx -= needle_idx;
+          needle_idx = 0;
+        }
+        haystack_idx++;
+        if (haystack_idx === haystack_len) {
+          return -1;
+        }
+      }
+    }
+  }
 
-  get_current_byte: ->
-    return @get_byte_at 0
+  static searchBitsInArray(haystack, needle, fromPos) {
+    if (fromPos == null) { fromPos = 0; }
+    if (fromPos >= haystack.length) {
+      return -1;
+    }
 
-  get_byte_at: (byteOffset) ->
-    if @bit_index is 0
-      return @buf[@byte_index + byteOffset]
-    else
-      Bits.parse_bits_uint @buf, byteOffset * 8, 8
+    let needleIdx = 0;
+    let haystackIdx = fromPos;
+    const haystackLen = haystack.length;
+    while (true) {
+      if ((haystack[haystackIdx] & needle[needleIdx]) === needle[needleIdx]) {
+        needleIdx++;
+        if (needleIdx === needle.length) {
+          return (haystackIdx - needle.length) + 1;
+        }
+      } else {
+        if (needleIdx > 0) {
+          haystackIdx -= needleIdx;
+          needleIdx = 0;
+        }
+      }
+      haystackIdx++;
+      if (haystackIdx === haystackLen) {
+        return -1;
+      }
+    }
+  }
 
-  last_get_byte_at: (offsetFromEnd) ->
-    offsetFromStart = @buf.length - 1 - offsetFromEnd
-    if offsetFromStart < 0
-      throw new Error "error: last_get_byte_at: index out of range"
-    return @buf[offsetFromStart]
+  // Read <len> bits from the bit position <pos> from the start of
+  // the buffer <buf>, and return it as unsigned integer
+  static parse_bits_uint(buffer, pos, len) {
+    let byteIndex = parseInt(pos / 8);
+    let bitIndex = pos % 8;
+    let consumedLen = 0;
+    let num = 0;
 
-  remove_trailing_bytes: (numBytes) ->
-    if @buf.length < numBytes
-      console.warn "warning: bits.remove_trailing_bytes: Buffer length (#{@buf.length}) is less than numBytes (#{numBytes})"
-      @buf = new Buffer []
-    else
-      @buf = @buf[0...@buf.length-numBytes]
-    return
-
-  mark: ->
-    if not @marks?
-      @marks = [ @byte_index ]
-    else
-      @marks.push @byte_index
-
-  marked_bytes: ->
-    if (not @marks?) or (@marks.length is 0)
-      throw new Error "The buffer has not been marked"
-    startIndex = @marks.pop()
-    return @buf[startIndex..@byte_index-1]
-
-  # Returns a null-terminated string
-  get_string: (encoding='utf8') ->
-    nullPos = Bits.searchByteInBuffer @buf, 0x00, @byte_index
-    if nullPos is -1
-      throw new Error "bits.get_string: the string is not null-terminated"
-    str = @buf[@byte_index...nullPos].toString encoding
-    @byte_index = nullPos + 1
-    return str
-
-  # Returns a string constructed by a number
-  @uintToString: (num, numBytes, encoding='utf8') ->
-    arr = []
-    for i in [numBytes..1]
-      arr.push (num * Math.pow(2, -(i-1)*8)) & 0xff
-    return new Buffer(arr).toString encoding
-
-  # Returns the first index at which a given value (byte) can be
-  # found in the Buffer (buf), or -1 if it is not found.
-  @searchByteInBuffer: (buf, byte, from_pos=0) ->
-    if (not Bits.DISABLE_BUFFER_INDEXOF) and (typeof(buf.indexOf) is 'function')
-      return buf.indexOf byte, from_pos
-    else
-      if from_pos < 0
-        from_pos = buf.length + from_pos
-      for i in [from_pos...buf.length]
-        if buf[i] is byte
-          return i
-      return -1
-
-  @searchBytesInArray: (haystack, needle, from_pos=0) ->
-    if buffertools?  # buffertools is available
-      if haystack not instanceof Buffer
-        haystack = new Buffer haystack
-      if needle not instanceof Buffer
-        needle = new Buffer needle
-      return buffertools.indexOf haystack, needle, from_pos
-    else  # buffertools is not available
-      haystack_len = haystack.length
-      if from_pos >= haystack_len
-        return -1
-
-      needle_idx = 0
-      needle_len = needle.length
-      haystack_idx = from_pos
-      loop
-        if haystack[haystack_idx] is needle[needle_idx]
-          needle_idx++
-          if needle_idx is needle_len
-            return haystack_idx - needle_len + 1
-        else if needle_idx > 0
-          haystack_idx -= needle_idx
-          needle_idx = 0
-        haystack_idx++
-        if haystack_idx is haystack_len
-          return -1
-
-  @searchBitsInArray: (haystack, needle, fromPos=0) ->
-    if fromPos >= haystack.length
-      return -1
-
-    needleIdx = 0
-    haystackIdx = fromPos
-    haystackLen = haystack.length
-    loop
-      if (haystack[haystackIdx] & needle[needleIdx]) is needle[needleIdx]
-        needleIdx++
-        if needleIdx is needle.length
-          return haystackIdx - needle.length + 1
-      else
-        if needleIdx > 0
-          haystackIdx -= needleIdx
-          needleIdx = 0
-      haystackIdx++
-      if haystackIdx is haystackLen
-        return -1
-
-  # Read <len> bits from the bit position <pos> from the start of
-  # the buffer <buf>, and return it as unsigned integer
-  @parse_bits_uint: (buffer, pos, len) ->
-    byteIndex = parseInt pos / 8
-    bitIndex = pos % 8
-    consumedLen = 0
-    num = 0
-
-    while consumedLen < len
-      consumedLen += 8 - bitIndex
-      otherBitsLen = 0
-      if consumedLen > len
-        otherBitsLen = consumedLen - len
-        consumedLen = len
+    while (consumedLen < len) {
+      consumedLen += 8 - bitIndex;
+      let otherBitsLen = 0;
+      if (consumedLen > len) {
+        otherBitsLen = consumedLen - len;
+        consumedLen = len;
+      }
       num += ((buffer[byteIndex] & ((1 << (8 - bitIndex)) - 1)) <<
-        (len - consumedLen)) >> otherBitsLen
-      byteIndex++
-      bitIndex = 0
-    return num
+        (len - consumedLen)) >> otherBitsLen;
+      byteIndex++;
+      bitIndex = 0;
+    }
+    return num;
+  }
 
-  @toBinary: (byte) ->
-    binString = ''
-    for i in [7..0]
-      binString += (byte >> i) & 0x01
-    return binString
+  static toBinary(byte) {
+    let binString = '';
+    for (let i = 7; i >= 0; i--) {
+      binString += (byte >> i) & 0x01;
+    }
+    return binString;
+  }
 
-  @printBinary: (buffer) ->
-    col = 0
-    for byte in buffer
-      process.stdout.write Bits.toBinary byte
-      col++
-      if col is 4
-        console.log()
-        col = 0
-      else
-        process.stdout.write ' '
-    if col isnt 0
-      console.log()
+  static printBinary(buffer) {
+    let col = 0;
+    for (let byte of Array.from(buffer)) {
+      process.stdout.write(Bits.toBinary(byte));
+      col++;
+      if (col === 4) {
+        console.log();
+        col = 0;
+      } else {
+        process.stdout.write(' ');
+      }
+    }
+    if (col !== 0) {
+      return console.log();
+    }
+  }
 
-  @getHexdump: (buffer) ->
-    col = 0
-    strline = ''
-    dump = ''
+  static getHexdump(buffer) {
+    let col = 0;
+    let strline = '';
+    let dump = '';
 
-    endline = ->
-      pad = '  '
-      while col < 16
-        pad += '  '
-        if col % 2 is 0
-          pad += ' '
-        col++
-      dump += pad + strline + '\n'
-      strline = ''
+    const endline = function() {
+      let pad = '  ';
+      while (col < 16) {
+        pad += '  ';
+        if ((col % 2) === 0) {
+          pad += ' ';
+        }
+        col++;
+      }
+      dump += pad + strline + '\n';
+      return strline = '';
+    };
 
-    for byte in buffer
-      if 0x20 <= byte <= 0x7e  # printable char
-        strline += String.fromCharCode byte
-      else
-        strline += ' '
-      dump += Bits.zeropad(2, byte.toString(16))
-      col++
-      if col is 16
-        endline()
-        col = 0
-      else if col % 2 is 0
-        dump += ' '
-    if col isnt 0
-      endline()
+    for (let byte of Array.from(buffer)) {
+      if (0x20 <= byte && byte <= 0x7e) {  // printable char
+        strline += String.fromCharCode(byte);
+      } else {
+        strline += ' ';
+      }
+      dump += Bits.zeropad(2, byte.toString(16));
+      col++;
+      if (col === 16) {
+        endline();
+        col = 0;
+      } else if ((col % 2) === 0) {
+        dump += ' ';
+      }
+    }
+    if (col !== 0) {
+      endline();
+    }
 
-    return dump
+    return dump;
+  }
 
-  @hexdump: (buffer) ->
-    process.stdout.write Bits.getHexdump buffer
+  static hexdump(buffer) {
+    return process.stdout.write(Bits.getHexdump(buffer));
+  }
 
-  @zeropad: (width, num) ->
-    num += ''
-    while num.length < width
-      num = '0' + num
-    num
+  static zeropad(width, num) {
+    num += '';
+    while (num.length < width) {
+      num = `0${num}`;
+    }
+    return num;
+  }
+}
+Bits.initClass();
 
-module.exports = Bits
+module.exports = Bits;
