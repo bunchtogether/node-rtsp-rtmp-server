@@ -8,7 +8,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "lint": "node_modules/.bin/eslint -c .eslintrc --ignore-path .eslintignore --fix --cache ./src"
+    "lint": "node_modules/.bin/eslint -c .eslintrc --ignore-path .eslintignore --fix --cache ./src",
+    "zip": "rm rtsp-server.tar.gz; rm -rf node_modules && yarn install --ignore-platform; tar czvf rtsp-server.tar.gz --exclude './node_modules' --exclude './coverage' --exclude './*.tar.gz' --exclude './nyc_output' --exclude './coffee' ./"
   },
   "dependencies": {
     "@bunchtogether/exit-handler": "^1.0.0",
