@@ -2,6 +2,7 @@
   "name": "node-rtsp-rtmp-server",
   "version": "0.4.0",
   "description": "RTSP/RTMP/HTTP hybrid server",
+  "repository": "git@github.com:bunchtogether/node-rtsp-rtmp-server.git",
   "author": "Nao Iizuka <iizuka@kyu-mu.net>",
   "license": "MIT",
   "main": "stream_server.js",
@@ -14,5 +15,9 @@
   },
   "engines": {
     "node": ">= 6.0.0"
+  },
+  "devDependencies": {
+    "babel-eslint": "^10.0.1",
+    "eslint-config-bunchtogether": "^1.1.6"
   }
 }
