@@ -29,7 +29,7 @@
 * Usage
 
     Bits = require './bits'
-    
+
     * Reader
     buf = new Buffer [
       0b11010001
@@ -52,7 +52,7 @@
     * => 2147483647
     console.log myBits.read_int 32
     * => -2147483648
-    
+
     * Writer
     myBits = new Bits()
     myBits.create_buf()
@@ -63,7 +63,7 @@
     resultArray = myBits.get_created_buf()  # Returns an array
     resultBuf = new Buffer resultArray
     Bits.printBinary resultBuf
-    * => 10100011 11111111 
+    * => 10100011 11111111
 */
 
 let buffertools;

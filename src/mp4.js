@@ -463,7 +463,7 @@ class MP4File extends EventEmitterModule {
           return this.checkAudioBuffer();
         }
       }
-        , timeDiff * 1000);
+      , timeDiff * 1000);
     }
     this.queuedAudioSampleIndex++;
     this.queuedAudioTime = audioSample.time;
@@ -523,7 +523,7 @@ class MP4File extends EventEmitterModule {
           return this.checkVideoBuffer();
         }
       }
-        , timeDiff * 1000);
+      , timeDiff * 1000);
     }
     this.queuedVideoSampleIndex++;
     this.queuedVideoTime = videoSample.time;

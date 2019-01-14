@@ -127,7 +127,7 @@ const createAudioMessage = function (params) {
     messageStreamID: 1,
     body: params.body,
   }
-    , params.chunkSize);
+  , params.chunkSize);
 };
 
 const clearQueuedRTMPMessages = function (stream) {
@@ -189,7 +189,7 @@ const createVideoMessage = function (params) {
     messageStreamID: 1,
     body: params.body,
   }
-    , params.chunkSize);
+  , params.chunkSize);
 };
 
 const parseUserControlMessage = function (buf) {
@@ -498,7 +498,7 @@ var flushRTMPMessages = function (stream, params) {
   }
 
   if (((params != null ? params.forceFlush : undefined) !== true) &&
-  (queuedRTMPMessages[stream.id].length < config.rtmpMessageQueueSize)) {
+    (queuedRTMPMessages[stream.id].length < config.rtmpMessageQueueSize)) {
     // not enough buffer
     return;
   }
@@ -707,7 +707,7 @@ var createRTMPAggregateMessage = function (rtmpMessages, chunkSize) {
     messageStreamID: 1,
     body: aggregateBody,
   }
-    , chunkSize);
+  , chunkSize);
 };
 
 const createRTMPType1Message = function (params) {
@@ -1031,7 +1031,7 @@ class RTMPSession {
       logger.info(`[rtmp:client=${this.clientid}] session timeout`);
       return this.teardown();
     }
-      , config.rtmpSessionTimeoutMs);
+    , config.rtmpSessionTimeoutMs);
   }
 
   schedulePing() {
@@ -1045,7 +1045,7 @@ class RTMPSession {
       }
       return this.ping();
     }
-      , config.rtmpPingTimeoutMs);
+    , config.rtmpPingTimeoutMs);
   }
 
   ping() {
@@ -1063,7 +1063,8 @@ class RTMPSession {
         (currentTimestamp >> 16) & 0xff,
         (currentTimestamp >> 8) & 0xff,
         currentTimestamp & 0xff,
-      ]) });
+      ]),
+    });
 
     return this.sendData(pingRequest);
   }
@@ -1230,7 +1231,8 @@ class RTMPSession {
         0, 0,
         // Stream ID of the stream that became functional
         0, 0, 0, 0,
-      ]) });
+      ]),
+    });
 
     const _error = createAMF0CommandMessage({
       chunkStreamID: 3,
@@ -1245,7 +1247,8 @@ class RTMPSession {
           code: 'NetConnection.Connect.Rejected',
           description: `[ Server.Reject ] : (_defaultRoot_, ) : Invalid application name(/${this.app}).`,
         }),
-      ] });
+      ],
+    });
 
     const close = createAMF0CommandMessage({
       chunkStreamID: 3,
@@ -1255,7 +1258,8 @@ class RTMPSession {
       transactionID: 0,
       objects: [
         createAMF0Data(null),
-      ] });
+      ],
+    });
 
     return callback(null, this.concatenate([streamBegin0, _error, close]));
   }
@@ -1284,7 +1288,8 @@ class RTMPSession {
         // Acknowledgement Window Size (4 bytes)
         //        0, 0x14, 0, 0
         0, 0x26, 0x25, 0xa0,
-      ]) });
+      ]),
+    });
 
     const setPeerBandwidth = createRTMPMessage({
       chunkStreamID: 2,
@@ -1296,7 +1301,8 @@ class RTMPSession {
         0, 0x26, 0x25, 0xa0,
         // Limit Type
         0x02,
-      ]) });
+      ]),
+    });
 
     const streamBegin0 = createRTMPMessage({
       chunkStreamID: 2,
@@ -1308,7 +1314,8 @@ class RTMPSession {
         0, 0,
         // Stream ID of the stream that became functional
         0, 0, 0, 0,
-      ]) });
+      ]),
+    });
 
     // 7.2.1.1.  connect
     const connectResult = createAMF0CommandMessage({
@@ -1328,7 +1335,8 @@ class RTMPSession {
           description: 'Connection succeeded.',
           objectEncoding: this.objectEncoding != null ? this.objectEncoding : 0,
         }),
-      ] });
+      ],
+    });
 
     const onBWDone = createAMF0CommandMessage({
       chunkStreamID: 3,
@@ -1336,7 +1344,8 @@ class RTMPSession {
       messageStreamID: 0,
       command: 'onBWDone',
       transactionID: 0,
-      objects: [createAMF0Data(null)] });
+      objects: [createAMF0Data(null)],
+    });
 
     return callback(null, this.concatenate([
       windowAck, setPeerBandwidth, streamBegin0, connectResult,
@@ -1547,7 +1556,7 @@ class RTMPSession {
           break;
         }
         message.timestampDelta = (chunkMessageHeader[0] << 16) +
-        (chunkMessageHeader[1] << 8) + chunkMessageHeader[2];
+          (chunkMessageHeader[1] << 8) + chunkMessageHeader[2];
 
         if (message.timestampDelta === 0xffffff) {
           message.extendedTimestampType = EXTENDED_TIMESTAMP_TYPE_DELTA;
@@ -1680,7 +1689,8 @@ class RTMPSession {
       objects: [
         createAMF0Data(null),
         createAMF0Data(null),
-      ] });
+      ],
+    });
     return callback(null, _result);
   }
 
@@ -1704,7 +1714,8 @@ class RTMPSession {
       objects: [
         createAMF0Data(null),
         createAMF0Data(null),
-      ] });
+      ],
+    });
 
     const unpublishSuccess = createAMF0CommandMessage({
       chunkStreamID: 4,
@@ -1723,7 +1734,7 @@ class RTMPSession {
         }),
       ],
     }
-      , this.chunkSize);
+    , this.chunkSize);
 
     return callback(null, this.concatenate([
       _result,
@@ -1757,7 +1768,7 @@ class RTMPSession {
           }),
         ],
       }
-        , this.chunkSize);
+      , this.chunkSize);
       return callback(null, publishStart);
     }
 
@@ -1820,7 +1831,7 @@ class RTMPSession {
         }),
       ],
     }
-      , this.chunkSize);
+    , this.chunkSize);
     return callback(null, publishStart);
   }
 
@@ -1840,7 +1851,8 @@ class RTMPSession {
           details: this.app,
           clientid: this.clientid,
         }),
-      ] });
+      ],
+    });
     return callback(null, _error);
   }
 
@@ -1857,7 +1869,8 @@ class RTMPSession {
       objects: [
         createAMF0Data(null),
         createAMF0Data(null),
-      ] });
+      ],
+    });
     return callback(null, _result);
   }
 
@@ -1871,7 +1884,8 @@ class RTMPSession {
       objects: [
         createAMF0Data(null),
         createAMF0Data(1), // stream id
-      ] });
+      ],
+    });
     return callback(null, _result);
   }
 
@@ -1901,7 +1915,8 @@ class RTMPSession {
             details: streamId,
             clientid: this.clientid,
           }),
-        ] });
+        ],
+      });
 
       const close = createAMF0CommandMessage({
         chunkStreamID: 3,
@@ -1911,7 +1926,8 @@ class RTMPSession {
         transactionID: 0,
         objects: [
           createAMF0Data(null),
-        ] });
+        ],
+      });
 
       callback(null, this.concatenate([_error, close]));
       return;
@@ -1928,7 +1944,8 @@ class RTMPSession {
         (this.chunkSize >>> 16) & 0xff,
         (this.chunkSize >>> 8) & 0xff,
         this.chunkSize & 0xff,
-      ]) });
+      ]),
+    });
 
     logger.debug(`[rtmp:client=${this.clientid}] stream type: ${this.stream.type}`);
     if (this.stream.isRecorded()) {
@@ -1944,7 +1961,7 @@ class RTMPSession {
           0, 0, 0, 1,
         ]),
       }
-        , this.chunkSize);
+      , this.chunkSize);
     }
 
     const streamBegin1 = createRTMPMessage({
@@ -1959,7 +1976,7 @@ class RTMPSession {
         0, 0, 0, 1,
       ]),
     }
-      , this.chunkSize);
+    , this.chunkSize);
 
     const playReset = createAMF0CommandMessage({
       chunkStreamID: 4,
@@ -1978,7 +1995,7 @@ class RTMPSession {
         }),
       ],
     }
-      , this.chunkSize);
+    , this.chunkSize);
 
     const playStart = createAMF0CommandMessage({
       chunkStreamID: 4,
@@ -1997,7 +2014,7 @@ class RTMPSession {
         }),
       ],
     }
-      , this.chunkSize);
+    , this.chunkSize);
 
     const rtmpSampleAccess = createAMF0DataMessage({
       chunkStreamID: 4,
@@ -2009,7 +2026,7 @@ class RTMPSession {
         createAMF0Data(false),
       ],
     }
-      , this.chunkSize);
+    , this.chunkSize);
 
     const dataStart = createAMF0DataMessage({
       chunkStreamID: 4,
@@ -2022,7 +2039,7 @@ class RTMPSession {
         }),
       ],
     }
-      , this.chunkSize);
+    , this.chunkSize);
 
     const metadata = {
       canSeekToEnd: false,
@@ -2081,7 +2098,7 @@ class RTMPSession {
         createAMF0Data(metadata),
       ],
     }
-      , this.chunkSize);
+    , this.chunkSize);
 
     const codecConfigs = this.getCodecConfigs(0);
 
@@ -2162,7 +2179,8 @@ class RTMPSession {
       // audio
       // TODO: support other than AAC too?
       buf = flv.createAACAudioDataTag({
-        aacPacketType: flv.AAC_PACKET_TYPE_SEQUENCE_HEADER });
+        aacPacketType: flv.AAC_PACKET_TYPE_SEQUENCE_HEADER,
+      });
       const ascInfo = stream.audioASCInfo;
       if (ascInfo != null) {
         // Flash Player won't play audio if explicit hierarchical
@@ -2269,7 +2287,8 @@ class RTMPSession {
               0, 1,
               // Stream ID of the stream that reaches EOF
               0, 0, 0, 1,
-            ]) });
+            ]),
+          });
 
           // 5.4.1.  Set Chunk Size (1)
           const setChunkSize = createRTMPMessage({
@@ -2282,7 +2301,8 @@ class RTMPSession {
               (this.chunkSize >>> 16) & 0xff,
               (this.chunkSize >>> 8) & 0xff,
               this.chunkSize & 0xff,
-            ]) });
+            ]),
+          });
 
           const streamIsRecorded = createRTMPMessage({
             chunkStreamID: 2,
@@ -2296,7 +2316,7 @@ class RTMPSession {
               0, 0, 0, 1,
             ]),
           }
-            , this.chunkSize);
+          , this.chunkSize);
 
           const streamBegin1 = createRTMPMessage({
             chunkStreamID: 2,
@@ -2310,7 +2330,7 @@ class RTMPSession {
               0, 0, 0, 1,
             ]),
           }
-            , this.chunkSize);
+          , this.chunkSize);
 
           const seekNotify = createAMF0CommandMessage({
             chunkStreamID: 4,
@@ -2329,7 +2349,7 @@ class RTMPSession {
               }),
             ],
           }
-            , this.chunkSize);
+          , this.chunkSize);
 
           const playStart = createAMF0CommandMessage({
             chunkStreamID: 4,
@@ -2348,7 +2368,7 @@ class RTMPSession {
               }),
             ],
           }
-            , this.chunkSize);
+          , this.chunkSize);
 
           const rtmpSampleAccess = createAMF0DataMessage({
             chunkStreamID: 4,
@@ -2360,7 +2380,7 @@ class RTMPSession {
               createAMF0Data(false),
             ],
           }
-            , this.chunkSize);
+          , this.chunkSize);
 
           // TODO: onStatus('NetStream.Data.Start')
           const dataStart = createAMF0DataMessage({
@@ -2374,7 +2394,7 @@ class RTMPSession {
               }),
             ],
           }
-            , this.chunkSize);
+          , this.chunkSize);
 
           const metadata = {
             canSeekToEnd: false,
@@ -2424,7 +2444,7 @@ class RTMPSession {
               createAMF0Data(metadata),
             ],
           }
-            , this.chunkSize);
+          , this.chunkSize);
 
           const codecConfigs = this.getCodecConfigs(msec);
 
@@ -2465,7 +2485,8 @@ class RTMPSession {
             0, 1,
             // Stream ID of the stream that reaches EOF
             0, 0, 0, 1,
-          ]) });
+          ]),
+        });
 
         const pauseNotify = createAMF0CommandMessage({
           chunkStreamID: 4,
@@ -2484,7 +2505,7 @@ class RTMPSession {
             }),
           ],
         }
-          , this.chunkSize);
+        , this.chunkSize);
 
         return callback(null, this.concatenate([streamEOF1, pauseNotify]));
       } // live stream
@@ -2519,7 +2540,8 @@ class RTMPSession {
             (this.chunkSize >>> 16) & 0xff,
             (this.chunkSize >>> 8) & 0xff,
             this.chunkSize & 0xff,
-          ]) });
+          ]),
+        });
 
         if (this.stream.isRecorded()) {
           streamIsRecorded = createRTMPMessage({
@@ -2534,7 +2556,7 @@ class RTMPSession {
               0, 0, 0, 1,
             ]),
           }
-            , this.chunkSize);
+          , this.chunkSize);
         }
 
         const streamBegin1 = createRTMPMessage({
@@ -2549,7 +2571,7 @@ class RTMPSession {
             0, 0, 0, 1,
           ]),
         }
-          , this.chunkSize);
+        , this.chunkSize);
 
         const unpauseNotify = createAMF0CommandMessage({
           chunkStreamID: 4,
@@ -2568,7 +2590,7 @@ class RTMPSession {
             }),
           ],
         }
-          , this.chunkSize);
+        , this.chunkSize);
 
         const playStart = createAMF0CommandMessage({
           chunkStreamID: 4,
@@ -2587,7 +2609,7 @@ class RTMPSession {
             }),
           ],
         }
-          , this.chunkSize);
+        , this.chunkSize);
 
         const rtmpSampleAccess = createAMF0DataMessage({
           chunkStreamID: 4,
@@ -2599,9 +2621,9 @@ class RTMPSession {
             createAMF0Data(false),
           ],
         }
-          , this.chunkSize);
+        , this.chunkSize);
 
-          // TODO: onStatus('NetStream.Data.Start')
+        // TODO: onStatus('NetStream.Data.Start')
         const dataStart = createAMF0DataMessage({
           chunkStreamID: 4,
           timestamp: msec,
@@ -2613,7 +2635,7 @@ class RTMPSession {
             }),
           ],
         }
-          , this.chunkSize);
+        , this.chunkSize);
 
         const metadata = {
           canSeekToEnd: false,
@@ -2663,7 +2685,7 @@ class RTMPSession {
             createAMF0Data(metadata),
           ],
         }
-          , this.chunkSize);
+        , this.chunkSize);
 
         const codecConfigs = this.getCodecConfigs(msec);
 
@@ -2716,7 +2738,8 @@ class RTMPSession {
       objects: [
         createAMF0Data(null),
         createAMF0Data(null),
-      ] });
+      ],
+    });
     return callback(null, _result);
   }
 
@@ -2757,7 +2780,7 @@ class RTMPSession {
       case 'pauseRaw':
         logger.debug('[rtmp] ignoring pauseRaw');
         return callback(null);
-        //        @respondPauseRaw commandMessage, callback
+      //        @respondPauseRaw commandMessage, callback
       // Methods used for publishing from the client
       case 'seek':
         return this.respondSeek(commandMessage, callback);
@@ -2792,7 +2815,8 @@ class RTMPSession {
         (this.receivedBytes >>> 16) & 0xff,
         (this.receivedBytes >>> 8) & 0xff,
         this.receivedBytes & 0xff,
-      ]) });
+      ]),
+    });
   }
 
   handleData(buf, callback) {
@@ -2910,9 +2934,9 @@ class RTMPSession {
           switch (rtmpMessage.messageTypeID) {
             case 1: // Set Chunk Size
               var newChunkSize = (rtmpMessage.body[0] * Math.pow(256, 3)) +
-                  (rtmpMessage.body[1] << 16) +
-                  (rtmpMessage.body[2] << 8) +
-                  rtmpMessage.body[3];
+                (rtmpMessage.body[1] << 16) +
+                (rtmpMessage.body[2] << 8) +
+                rtmpMessage.body[3];
               if (DEBUG_INCOMING_RTMP_PACKETS) {
                 logger.info(`[rtmp:receive] Set Chunk Size: ${newChunkSize}`);
               }
@@ -2930,21 +2954,21 @@ class RTMPSession {
               var userControlMessage = parseUserControlMessage(rtmpMessage.body);
               if (userControlMessage.eventType === 3) { // SetBufferLength
                 const streamID = (userControlMessage.eventData[0] << 24) +
-                    (userControlMessage.eventData[1] << 16) +
-                    (userControlMessage.eventData[2] << 8) +
-                    userControlMessage.eventData[3];
+                  (userControlMessage.eventData[1] << 16) +
+                  (userControlMessage.eventData[2] << 8) +
+                  userControlMessage.eventData[3];
                 const bufferLength = (userControlMessage.eventData[4] << 24) +
-                    (userControlMessage.eventData[5] << 16) +
-                    (userControlMessage.eventData[6] << 8) +
-                    userControlMessage.eventData[7];
+                  (userControlMessage.eventData[5] << 16) +
+                  (userControlMessage.eventData[6] << 8) +
+                  userControlMessage.eventData[7];
                 if (DEBUG_INCOMING_RTMP_PACKETS) {
                   logger.info(`[rtmp:receive] SetBufferLength: streamID=${streamID} bufferLength=${bufferLength}`);
                 }
               } else if (userControlMessage.eventType === 7) {
                 timestamp = (userControlMessage.eventData[0] << 24) +
-                    (userControlMessage.eventData[1] << 16) +
-                    (userControlMessage.eventData[2] << 8) +
-                    userControlMessage.eventData[3];
+                  (userControlMessage.eventData[1] << 16) +
+                  (userControlMessage.eventData[2] << 8) +
+                  userControlMessage.eventData[3];
                 if (DEBUG_INCOMING_RTMP_PACKETS) {
                   logger.info(`[rtmp:receive] PingResponse: timestamp=${timestamp}`);
                 }
@@ -2956,9 +2980,9 @@ class RTMPSession {
               break;
             case 5: // Window Acknowledgement Size
               this.windowAckSize = (rtmpMessage.body[0] << 24) +
-                  (rtmpMessage.body[1] << 16) +
-                  (rtmpMessage.body[2] << 8) +
-                  rtmpMessage.body[3];
+                (rtmpMessage.body[1] << 16) +
+                (rtmpMessage.body[2] << 8) +
+                rtmpMessage.body[3];
               if (DEBUG_INCOMING_RTMP_PACKETS) {
                 logger.info(`[rtmp:receive] WindowAck: ${this.windowAckSize}`);
               }
@@ -3109,7 +3133,7 @@ class RTMPSession {
               logger.error('----- BUG -----');
               logger.error(`[rtmp:receive] received unknown (not implemented) message type ID: ${rtmpMessage.messageTypeID}`);
               logger.error(rtmpMessage);
-              var packageJson = require('./package.json');
+              var packageJson = require('../package.json');
               logger.error(`server version: ${packageJson.version}`);
               logger.error('Please report this bug along with the video file or relevant part of');
               logger.error('pcap file, and the full (uncut) output of node-rtsp-rtsp-server. Thanks.');
@@ -3263,7 +3287,7 @@ class RTMPServer {
     for (nalUnit of Array.from(nalUnits)) {
       const nalUnitType = h264.getNALUnitType(nalUnit);
       if (config.dropH264AccessUnitDelimiter &&
-      (nalUnitType === h264.NAL_UNIT_TYPE_ACCESS_UNIT_DELIMITER)) {
+        (nalUnitType === h264.NAL_UNIT_TYPE_ACCESS_UNIT_DELIMITER)) {
         // ignore access unit delimiters
         continue;
       }
@@ -3334,7 +3358,8 @@ class RTMPServer {
 
     // TODO: support other than AAC too?
     const headerBytes = new Buffer(flv.createAACAudioDataTag({
-      aacPacketType: flv.AAC_PACKET_TYPE_RAW }),
+      aacPacketType: flv.AAC_PACKET_TYPE_RAW,
+    }),
     );
 
     const buf = Buffer.concat([headerBytes, rawDataBlock], rawDataBlock.length + 2);
@@ -3364,7 +3389,8 @@ class RTMPServer {
           duration: 0,
           bytes: 0,
         }),
-      ] });
+      ],
+    });
 
     const playStop = createAMF0CommandMessageParams({
       chunkStreamID: 4, // 5?
@@ -3382,7 +3408,8 @@ class RTMPServer {
           reason: '',
           details: stream.id,
         }),
-      ] });
+      ],
+    });
 
     const streamEOF1 = {
       chunkStreamID: 2,
@@ -3477,7 +3504,7 @@ Connection: keep-alive
 
             // Discard old requests
             if ((session.requestBuffer.reqs.length > 0) &&
-            ((index - session.requestBuffer.reqs[0].index) > RTMPT_SEND_REQUEST_BUFFER_SIZE)) {
+              ((index - session.requestBuffer.reqs[0].index) > RTMPT_SEND_REQUEST_BUFFER_SIZE)) {
               info = session.requestBuffer.reqs[0];
               if (info.index === (session.requestBuffer.nextIndex + 1)) {
                 logger.warn(`[rtmpt] discarded lost request: ${session.requestBuffer.nextIndex}`);
@@ -3491,7 +3518,7 @@ Connection: keep-alive
             return (() => {
               const result = [];
               while ((session.requestBuffer.reqs.length > 0) &&
-            (session.requestBuffer.reqs[0].index === session.requestBuffer.nextIndex)) {
+                (session.requestBuffer.reqs[0].index === session.requestBuffer.nextIndex)) {
                 info = session.requestBuffer.reqs.shift();
                 // TODO: Call respondSend with setImmediate()?
                 session.respondSend(info.req, info.callback);
@@ -3533,7 +3560,7 @@ var generateNewSessionID = (callback) =>
     }
     return callback(null, sid);
   })
-;
+  ;
 
 // Generate a new random session ID
 // NOTE: Session ID must be 31 characters or less
@@ -3545,7 +3572,7 @@ var generateSessionID = (callback) =>
     const sid = buf.toString('hex').slice(0, 31);
     return callback(null, sid);
   })
-;
+  ;
 
 class RTMPTSession {
   constructor(socket, callback) {
@@ -3625,7 +3652,7 @@ class RTMPTSession {
       logger.info(`[rtmpt] session timeout: ${this.id}`);
       return this.close();
     }
-      , config.rtmptSessionTimeoutMs);
+    , config.rtmptSessionTimeoutMs);
   }
 
   close() {

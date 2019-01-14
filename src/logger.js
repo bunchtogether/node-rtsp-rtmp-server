@@ -17,7 +17,7 @@
 * Usage
 
     logger = require './logger'
-    
+
     * Set log level to filter out unwanted log messages
     logger.setLevel logger.LEVEL_INFO
     logger.debug 'debug message'
@@ -25,12 +25,12 @@
     logger.warn 'warn message'
     logger.error 'error message'
     logger.fatal 'fatal message'
-    
+
     * Enable a tag to activate log messages for the tag
     logger.enableTag 'testtag'
     logger.tag 'testtag', 'testtag message'
     logger.tag 'anothertag', 'anothertag message'
-    
+
     * Print raw string. Equivalent of console.log().
     logger.raw "hello\nraw\nstring"
 */

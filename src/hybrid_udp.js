@@ -214,7 +214,7 @@ exports.UDPClient = (UDPClient = class UDPClient {
         return this.resetPacketId(callback);
       }
     }
-      , RESEND_TIMEOUT);
+    , RESEND_TIMEOUT);
   }
 
   rawSend(buf, offset, length, callback) {
@@ -249,7 +249,7 @@ exports.UDPClient = (UDPClient = class UDPClient {
         return onTimeoutCallback();
       }
     }
-      , RESEND_TIMEOUT);
+    , RESEND_TIMEOUT);
   }
 
   _writeReliable(buf, packetId, callback) {

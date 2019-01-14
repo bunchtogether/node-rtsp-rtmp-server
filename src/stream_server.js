@@ -33,7 +33,7 @@ const Bits = require('./bits');
 const avstreams = require('./avstreams');
 const CustomReceiver = require('./custom_receiver');
 const logger = require('./logger');
-const packageJson = require('./package.json');
+const packageJson = require('../package.json');
 
 const Sequent = require('sequent');
 
@@ -323,11 +323,11 @@ class StreamServer {
 
   onReceiveVideoDataBuffer(stream, buf) {
     const pts = (buf[1] * 0x010000000000) +
-          (buf[2] * 0x0100000000) +
-          (buf[3] * 0x01000000) +
-          (buf[4] * 0x010000) +
-          (buf[5] * 0x0100) +
-          buf[6];
+      (buf[2] * 0x0100000000) +
+      (buf[3] * 0x01000000) +
+      (buf[4] * 0x010000) +
+      (buf[5] * 0x0100) +
+      buf[6];
     // TODO: Support dts
     const dts = pts;
     const nalUnit = buf.slice(7);
@@ -336,11 +336,11 @@ class StreamServer {
 
   onReceiveAudioDataBuffer(stream, buf) {
     const pts = (buf[1] * 0x010000000000) +
-          (buf[2] * 0x0100000000) +
-          (buf[3] * 0x01000000) +
-          (buf[4] * 0x010000) +
-          (buf[5] * 0x0100) +
-          buf[6];
+      (buf[2] * 0x0100000000) +
+      (buf[3] * 0x01000000) +
+      (buf[4] * 0x010000) +
+      (buf[5] * 0x0100) +
+      buf[6];
     // TODO: Support dts
     const dts = pts;
     const adtsFrame = buf.slice(7);
@@ -373,7 +373,7 @@ class StreamServer {
       } else if (nalUnitType === h264.NAL_UNIT_TYPE_PPS) { // 8
         stream.updatePPS(nalUnit);
       } else if ((nalUnitType === h264.NAL_UNIT_TYPE_IDR_PICTURE) ||
-      (nalUnitType === h264.NAL_UNIT_TYPE_NON_IDR_PICTURE)) { // 5 (key frame) or 1 (inter frame)
+        (nalUnitType === h264.NAL_UNIT_TYPE_NON_IDR_PICTURE)) { // 5 (key frame) or 1 (inter frame)
         hasVideoFrame = true;
       }
       if (DEBUG_INCOMING_PACKET_HASH) {
