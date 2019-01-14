@@ -5,12 +5,13 @@
   "repository": "git@github.com:bunchtogether/node-rtsp-rtmp-server.git",
   "author": "Nao Iizuka <iizuka@kyu-mu.net>",
   "license": "MIT",
-  "main": "src/sstream_server.js",
+  "main": "src/index.js",
   "scripts": {
-    "start": "node src/server.js",
+    "start": "node src/index.js",
     "lint": "node_modules/.bin/eslint -c .eslintrc --ignore-path .eslintignore --fix --cache ./src"
   },
   "dependencies": {
+    "@bunchtogether/exit-handler": "^1.0.0",
     "ejs": "2.5.x",
     "sequent": ">= 0.1.2"
   },

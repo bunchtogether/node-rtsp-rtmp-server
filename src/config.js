@@ -2,21 +2,35 @@
 // Sanity-check the conversion and remove this comment.
 const os = require('os');
 
+const {
+  SERVER_NAME,
+  RTSP_SERVER_PORT,
+  RTMP_SERVER_PORT,
+  ENABLE_RTSP,
+  ENABLE_RTMP,
+  ENABLE_RTMPT,
+  ENABLE_HTTP,
+  ENABLE_CUSTOM_RECEIVER } = process.env;
+
+if (!SERVER_NAME || !RTSP_SERVER_PORT || !RTMP_SERVER_PORT || !ENABLE_RTSP || !ENABLE_RTMP || !ENABLE_RTMPT || !ENABLE_HTTP || !ENABLE_CUSTOM_RECEIVER) {
+  throw new Error('Missing environmental variables SERVER_NAME, RTSP_SERVER_PORT, RTMP_SERVER_PORT, ENABLE_RTSP, ENABLE_RTMP, ENABLE_RTMPT, ENABLE_HTTP, ENABLE_CUSTOM_RECEIVER');
+}
+
 module.exports = {
   // ###########################
   /* Basic configurations */
   // ###########################
 
   // Server listen port
-  serverPort: 80,
+  serverPort: Number.isNaN(parseInt(RTSP_SERVER_PORT, 10)) ? 8000 : parseInt(RTSP_SERVER_PORT, 10),
 
   // RTMP server listen port
-  rtmpServerPort: 1935,
+  rtmpServerPort: Number.isNaN(parseInt(RTMP_SERVER_PORT, 10)) ? 8000 : parseInt(RTMP_SERVER_PORT, 10),
 
   // Server name which will be embedded in
   // RTSP and HTTP response headers.
   // Default server name is used when this value is null.
-  serverName: 'node-rtsp-rtmp-server',
+  serverName: SERVER_NAME || 'node-rtsp-rtmp-server',
 
   // Average frame rate of video (informative)
   videoFrameRate: 30,
@@ -30,19 +44,19 @@ module.exports = {
   /* Enable/disable each functions */
 
   // Enable RTSP server
-  enableRTSP: true,
+  enableRTSP: ENABLE_RTSP ? ENABLE_RTSP === 'true' : false,
 
   // Enable RTMP/RTMPE server (not including RTMPT)
-  enableRTMP: true,
+  enableRTMP: ENABLE_RTMP ? ENABLE_RTMP === 'true' : false,
 
   // Enable RTMPT/RTMPTE server
-  enableRTMPT: true,
+  enableRTMPT: ENABLE_RTMPT ? ENABLE_RTMPT === 'true' : false,
 
   // Enable HTTP server
-  enableHTTP: true,
+  enableHTTP: ENABLE_HTTP ? ENABLE_HTTP === 'true' : false,
 
   // Enable custom protocol receiver
-  enableCustomReceiver: true,
+  enableCustomReceiver: ENABLE_CUSTOM_RECEIVER ? ENABLE_CUSTOM_RECEIVER === 'true' : false,
 
   /* Custom protocol receiver configurations */
 

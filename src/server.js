@@ -50,17 +50,18 @@ if (config.recordedDir != null) {
   streamServer.attachRecordedDir(config.recordedDir);
 }
 
-process.on('SIGINT', () => {
-  console.log('Got SIGINT');
-  return streamServer.stop(() => process.kill(process.pid, 'SIGTERM'));
-});
+// process.on('SIGINT', () => {
+//   console.log('Got SIGINT');
+//   return streamServer.stop(() => process.kill(process.pid, 'SIGTERM'));
+// });
 
-process.on('uncaughtException', (err) => {
-  streamServer.stop();
-  throw err;
-});
+// process.on('uncaughtException', (err) => {
+//   streamServer.stop();
+//   throw err;
+// });
 
-streamServer.start();
+// streamServer.start();
+module.exports = streamServer;
 
 function __guard__(value, transform) {
   return (typeof value !== 'undefined' && value !== null) ? transform(value) : undefined;

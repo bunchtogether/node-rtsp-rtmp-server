@@ -90,6 +90,11 @@
     lodash "^4.17.10"
     to-fast-properties "^2.0.0"
 
+"@bunchtogether/exit-handler@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@bunchtogether/exit-handler/-/exit-handler-1.0.0.tgz#350caef9ef93e047080d1139a22e818098eea290"
+  integrity sha512-8lk/zWnOiWtS+4XqK/qNpEv8Ktz5AQSyiSxm46n29uCaDQ2DVKdwPFE/HqW8tVAQBWvcQ0uNMqSyYc4X+VIv6g==
+
 acorn-jsx@^5.0.0:
   version "5.0.1"
   resolved "https://registry.yarnpkg.com/acorn-jsx/-/acorn-jsx-5.0.1.tgz#32a064fd925429216a09b141102bfdd185fae40e"
