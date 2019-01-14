@@ -2,7 +2,7 @@ const { addShutdownHandler, addPostShutdownHandler } = require('@bunchtogether/e
 const server = require('./server');
 
 async function init() { // eslint-disable-line no-shadow
-  console.log('Starting RTSP server...')
+  console.log('Starting RTSP server...');
   await server.start();
 
   addShutdownHandler(async () => {
@@ -17,8 +17,8 @@ async function init() { // eslint-disable-line no-shadow
   });
 
   addPostShutdownHandler(() => {
-    console.log('Shutting down RTSP server...')
-    process.exit(0)
+    console.log('Shutting down RTSP server...');
+    process.exit(0);
   });
 }
 
