@@ -1195,7 +1195,7 @@ rxjs@^6.1.0:
   resolved "https://registry.yarnpkg.com/semver/-/semver-5.6.0.tgz#7e74256fbaa49c75aa7c7a205cc22799cac80004"
   integrity sha512-RS9R6R35NYgQn++fkDWaOmqGoj4Ek9gGs+DPxNUZKuwE183xjJroKvyo1IzVFeXvUrvmALy6FWD5xrdJT25gMg==
 
-"sequent@>= 0.1.2":
+sequent@^0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/sequent/-/sequent-0.1.2.tgz#f2f61b19c93cbb5735e3821c98c15fb7f1ceb6be"
   integrity sha1-8vYbGck8u1c144IcmMFft/HOtr4=
