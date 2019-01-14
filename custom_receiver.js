@@ -1,3 +1,13 @@
+/* eslint-disable
+    camelcase,
+    no-constant-condition,
+    no-return-assign,
+    no-unused-vars,
+    no-var,
+    vars-on-top,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS102: Remove unnecessary code created because of implicit returns
@@ -18,19 +28,19 @@ class CustomReceiver {
   constructor(type, callback) {
     this.type = type;
     if ((callback == null)) {
-      throw new Error("Mandatory callback argument is not passed");
+      throw new Error('Mandatory callback argument is not passed');
     }
     if ((callback.videoControl == null)) {
-      throw new Error("Mandatory callback.videoControl is not passed");
+      throw new Error('Mandatory callback.videoControl is not passed');
     }
     if ((callback.audioControl == null)) {
-      throw new Error("Mandatory callback.audioControl is not passed");
+      throw new Error('Mandatory callback.audioControl is not passed');
     }
     if ((callback.videoData == null)) {
-      throw new Error("Mandatory callback.videoData is not passed");
+      throw new Error('Mandatory callback.videoData is not passed');
     }
     if ((callback.audioData == null)) {
-      throw new Error("Mandatory callback.audioData is not passed");
+      throw new Error('Mandatory callback.audioData is not passed');
     }
 
     // We create four separate sockets for receiving different kinds of data.
@@ -43,35 +53,31 @@ class CustomReceiver {
       this.videoDataReceiver = this.createReceiver('VideoData', callback.videoData);
       this.audioDataReceiver = this.createReceiver('AudioData', callback.audioData);
     } else if (this.type === 'udp') {
-      this.videoControlReceiver = new hybrid_udp.UDPServer;
+      this.videoControlReceiver = new hybrid_udp.UDPServer();
       this.videoControlReceiver.name = 'VideoControl';
       this.videoControlReceiver.on('packet', (buf, addr, port) => {
         let streamId;
-        logger.info("[custom_receiver] started receiving video");
+        logger.info('[custom_receiver] started receiving video');
         if (buf.length >= 5) {
           streamId = buf.toString('utf8', 4);
         } else {
-          streamId = "public";  // TODO: Use default value or throw error?
+          streamId = 'public'; // TODO: Use default value or throw error?
         }
         this.setInternalStreamId(streamId);
         return callback.videoControl(this.getInternalStream(), buf.slice(3));
-    });
-      this.audioControlReceiver = new hybrid_udp.UDPServer;
+      });
+      this.audioControlReceiver = new hybrid_udp.UDPServer();
       this.audioControlReceiver.name = 'AudioControl';
       this.audioControlReceiver.on('packet', (buf, addr, port) => {
-        logger.info("[custom_receiver] started receiving audio");
+        logger.info('[custom_receiver] started receiving audio');
         return callback.audioControl(this.getInternalStream(), buf.slice(3));
-    });
-      this.videoDataReceiver = new hybrid_udp.UDPServer;
+      });
+      this.videoDataReceiver = new hybrid_udp.UDPServer();
       this.videoDataReceiver.name = 'VideoData';
-      this.videoDataReceiver.on('packet', (buf, addr, port) => {
-        return callback.videoData(this.getInternalStream(), buf.slice(3));
-    });
-      this.audioDataReceiver = new hybrid_udp.UDPServer;
+      this.videoDataReceiver.on('packet', (buf, addr, port) => callback.videoData(this.getInternalStream(), buf.slice(3)));
+      this.audioDataReceiver = new hybrid_udp.UDPServer();
       this.audioDataReceiver.name = 'AudioData';
-      this.audioDataReceiver.on('packet', (buf, addr, port) => {
-        return callback.audioData(this.getInternalStream(), buf.slice(3));
-    });
+      this.audioDataReceiver.on('packet', (buf, addr, port) => callback.audioData(this.getInternalStream(), buf.slice(3)));
     } else {
       throw new Error(`unknown receiver type: ${this.type}`);
     }
@@ -80,7 +86,7 @@ class CustomReceiver {
   getInternalStream() {
     if ((this.internalStream == null)) {
       logger.warn('[rtsp] warn: Internal stream name not known; using default "public"');
-      const streamId = 'public';  // TODO: Use default value or throw error?
+      const streamId = 'public'; // TODO: Use default value or throw error?
       this.internalStream = avstreams.getOrCreate(streamId);
     }
     return this.internalStream;
@@ -93,7 +99,7 @@ class CustomReceiver {
     logger.info(`[rtsp] internal stream name has been set to: ${streamId}`);
     let stream = avstreams.get(streamId);
     if (stream != null) {
-      logger.info("[rtsp] resetting existing stream");
+      logger.info('[rtsp] resetting existing stream');
       stream.reset();
     } else {
       stream = avstreams.create(streamId);
@@ -109,25 +115,24 @@ class CustomReceiver {
       return this.startTCP();
     } else if (this.type === 'udp') {
       return this.startUDP();
-    } else {
-      throw new Error(`unknown receiverType in config: ${this.type}`);
     }
+    throw new Error(`unknown receiverType in config: ${this.type}`);
   }
 
   startUnix() {
-    this.videoControlReceiver.listen(config.videoControlReceiverPath, function() {
+    this.videoControlReceiver.listen(config.videoControlReceiverPath, () => {
       fs.chmodSync(config.videoControlReceiverPath, '777');
       return logger.debug(`[${TAG}] videoControl socket: ${config.videoControlReceiverPath}`);
     });
-    this.audioControlReceiver.listen(config.audioControlReceiverPath, function() {
+    this.audioControlReceiver.listen(config.audioControlReceiverPath, () => {
       fs.chmodSync(config.audioControlReceiverPath, '777');
       return logger.debug(`[${TAG}] audioControl socket: ${config.audioControlReceiverPath}`);
     });
-    this.videoDataReceiver.listen(config.videoDataReceiverPath, function() {
+    this.videoDataReceiver.listen(config.videoDataReceiverPath, () => {
       fs.chmodSync(config.videoDataReceiverPath, '777');
       return logger.debug(`[${TAG}] videoData socket: ${config.videoDataReceiverPath}`);
     });
-    return this.audioDataReceiver.listen(config.audioDataReceiverPath, function() {
+    return this.audioDataReceiver.listen(config.audioDataReceiverPath, () => {
       fs.chmodSync(config.audioDataReceiverPath, '777');
       return logger.debug(`[${TAG}] audioData socket: ${config.audioDataReceiverPath}`);
     });
@@ -191,11 +196,11 @@ class CustomReceiver {
   }
 
   createReceiver(name, callback) {
-    return net.createServer(c => {
+    return net.createServer((c) => {
       logger.info(`[custom_receiver] new connection to ${name}`);
       let buf = null;
       c.on('close', () => logger.info(`[custom_receiver] connection to ${name} closed`));
-      return c.on('data', data => {
+      return c.on('data', (data) => {
         if (config.debug.dropAllData) {
           return;
         }
@@ -204,17 +209,17 @@ class CustomReceiver {
         } else {
           buf = data;
         }
-        if (buf.length >= 3) {  // 3 bytes == payload size
+        if (buf.length >= 3) { // 3 bytes == payload size
           while (true) {
             const payloadSize = (buf[0] * 0x10000) + (buf[1] * 0x100) + buf[2];
-            const totalSize = payloadSize + 3;  // 3 bytes for payload size
+            const totalSize = payloadSize + 3; // 3 bytes for payload size
             if (buf.length >= totalSize) {
-              if (name === 'VideoControl') {  // parse stream name
+              if (name === 'VideoControl') { // parse stream name
                 var streamId;
                 if (buf.length >= 5) {
                   streamId = buf.toString('utf8', 4, totalSize);
                 } else {
-                  streamId = "public";  // TODO: Use default value or throw error?
+                  streamId = 'public'; // TODO: Use default value or throw error?
                 }
                 this.setInternalStreamId(streamId);
               }

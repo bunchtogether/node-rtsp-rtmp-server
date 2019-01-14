@@ -1,3 +1,18 @@
+/* eslint-disable
+    camelcase,
+    consistent-return,
+    no-cond-assign,
+    no-constant-condition,
+    no-param-reassign,
+    no-return-assign,
+    no-unused-vars,
+    no-var,
+    one-var,
+    radix,
+    vars-on-top,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -49,7 +64,7 @@ class RTPParser {
 
   emit(name, ...data) {
     if (this.eventListeners[name] != null) {
-      for (let listener of Array.from(this.eventListeners[name])) {
+      for (const listener of Array.from(this.eventListeners[name])) {
         listener(...Array.from(data || []));
       }
     }
@@ -58,9 +73,8 @@ class RTPParser {
   on(name, listener) {
     if (this.eventListeners[name] != null) {
       return this.eventListeners[name].push(listener);
-    } else {
-      return this.eventListeners[name] = [ listener ];
     }
+    return this.eventListeners[name] = [listener];
   }
 
   feedUnorderedAACBuffer(buf, clientId, params) {
@@ -87,7 +101,7 @@ class RTPParser {
       this.packetBuffers[tag] = {
         nextSequenceNumber: packet.rtpHeader.sequenceNumber,
         minSequenceNumberInBuffer: null,
-        buffer: []
+        buffer: [],
       };
     }
     const packetBuffer = this.packetBuffers[tag];
@@ -102,16 +116,15 @@ class RTPParser {
       const buffers = packetBuffer.buffer;
       buffers.push(packet);
       if (buffers.length >= 2) {
-        buffers.sort(function(a, b) {
+        buffers.sort((a, b) => {
           const numberA = a.rtpHeader.sequenceNumber;
           const numberB = b.rtpHeader.sequenceNumber;
-          if ((numberA - numberB) >= 60000) {  // large enough gap
-            return -1;  // a comes first
-          } else if ((numberB - numberA) >= 60000) {  // large enough gap
-            return 1;   // b comes first
-          } else {
-            return numberA - numberB;
+          if ((numberA - numberB) >= 60000) { // large enough gap
+            return -1; // a comes first
+          } else if ((numberB - numberA) >= 60000) { // large enough gap
+            return 1; // b comes first
           }
+          return numberA - numberB;
         });
         while (((buffers.length) > 0) &&
         (buffers[0].rtpHeader.sequenceNumber === packetBuffer.nextSequenceNumber)) {
@@ -124,7 +137,7 @@ class RTPParser {
         return (() => {
           const result = [];
           while (buffers.length >= 2) {
-            const latestSequenceNumber = buffers[buffers.length-1].rtpHeader.sequenceNumber;
+            const latestSequenceNumber = buffers[buffers.length - 1].rtpHeader.sequenceNumber;
             let diff = latestSequenceNumber - packetBuffer.nextSequenceNumber;
             if (diff < 0) {
               diff += MAX_SEQUENCE_NUMBER + 1;
@@ -184,15 +197,16 @@ class RTPParser {
   }
 
   onOrderedPacket(tag, packet) {
-    let clientId, match;
+    let clientId,
+      match;
     if ((match = /^h264:(.*)$/.exec(tag)) != null) {
       clientId = match[1];
-      if (packet.h264.fu_a != null) {  // FU-A
+      if (packet.h264.fu_a != null) { // FU-A
         // startBit and endBit won't both be set to 1 in the same FU header
         if (packet.h264.fu_a.fuHeader.startBit) {
           this.fragmentedH264PacketBuffer[tag] = [
-            new Buffer([ (packet.h264.nal_ref_idc << 5) | packet.h264.fu_a.fuHeader.nal_unit_payload_type ]),
-            packet.h264.fu_a.nal_unit_fragment
+            new Buffer([(packet.h264.nal_ref_idc << 5) | packet.h264.fu_a.fuHeader.nal_unit_payload_type]),
+            packet.h264.fu_a.nal_unit_fragment,
           ];
         } else if (this.fragmentedH264PacketBuffer[tag] != null) {
           this.fragmentedH264PacketBuffer[tag].push(packet.h264.fu_a.nal_unit_fragment);
@@ -204,7 +218,7 @@ class RTPParser {
           this.onH264NALUnit(clientId, Buffer.concat(this.fragmentedH264PacketBuffer[tag]), packet, packet.rtpHeader.timestamp);
           return this.fragmentedH264PacketBuffer[tag] = null;
         }
-      } else if (packet.h264.stap_a != null) {  // STAP-A
+      } else if (packet.h264.stap_a != null) { // STAP-A
         return Array.from(packet.h264.stap_a.nalUnits).map((nalUnit) =>
           this.onH264NALUnit(clientId, nalUnit, packet, packet.rtpHeader.timestamp));
       } else { // single NAL unit
@@ -225,18 +239,18 @@ var api = {
   // Number of bytes in RTP header
   RTP_HEADER_LEN,
 
-  RTCP_PACKET_TYPE_SENDER_REPORT      : 200,  // SR
-  RTCP_PACKET_TYPE_RECEIVER_REPORT    : 201,  // RR
-  RTCP_PACKET_TYPE_SOURCE_DESCRIPTION : 202,  // SDES
-  RTCP_PACKET_TYPE_GOODBYE            : 203,  // BYE
-  RTCP_PACKET_TYPE_APPLICATION_DEFINED: 204,  // APP
+  RTCP_PACKET_TYPE_SENDER_REPORT: 200, // SR
+  RTCP_PACKET_TYPE_RECEIVER_REPORT: 201, // RR
+  RTCP_PACKET_TYPE_SOURCE_DESCRIPTION: 202, // SDES
+  RTCP_PACKET_TYPE_GOODBYE: 203, // BYE
+  RTCP_PACKET_TYPE_APPLICATION_DEFINED: 204, // APP
 
   H264_NAL_UNIT_TYPE_STAP_A: 24,
   H264_NAL_UNIT_TYPE_STAP_B: 25,
   H264_NAL_UNIT_TYPE_MTAP16: 26,
   H264_NAL_UNIT_TYPE_MTAP24: 27,
-  H264_NAL_UNIT_TYPE_FU_A  : 28,
-  H264_NAL_UNIT_TYPE_FU_B  : 29,
+  H264_NAL_UNIT_TYPE_FU_A: 28,
+  H264_NAL_UNIT_TYPE_FU_B: 29,
 
   // Remove padding from the end of the buffer
   removeTrailingPadding(bits) {
@@ -254,21 +268,21 @@ var api = {
       api.removeTrailingPadding(bits);
     }
     info.reportCount = bits.read_bits(5);
-    info.payloadType = bits.read_byte();  // == 200
+    info.payloadType = bits.read_byte(); // == 200
     if (info.payloadType !== api.RTCP_PACKET_TYPE_SENDER_REPORT) {
       throw new Error(`payload type must be ${api.RTCP_PACKET_TYPE_SENDER_REPORT}`);
     }
     info.wordsMinusOne = bits.read_bits(16);
     info.totalBytes = (info.wordsMinusOne + 1) * 4;
     info.ssrc = bits.read_bits(32);
-    info.ntpTimestamp = [ bits.read_bits(32), bits.read_bits(32) ];
+    info.ntpTimestamp = [bits.read_bits(32), bits.read_bits(32)];
     info.ntpTimestampInMs = api.ntpTimestampToTime(info.ntpTimestamp);
     info.rtpTimestamp = bits.read_bits(32);
     info.senderPacketCount = bits.read_bits(32);
     info.senderOctetCount = bits.read_bits(32);
 
     info.reportBlocks = [];
-    for (let i = 0, end = info.reportCount, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+    for (let i = 0, end = info.reportCount, asc = end >= 0; asc ? i < end : i > end; asc ? i++ : i--) {
       const reportBlock = {};
       reportBlock.ssrc = bits.read_bits(32);
       reportBlock.fractionLost = bits.read_byte();
@@ -299,7 +313,7 @@ var api = {
       api.removeTrailingPadding(bits);
     }
     info.reportCount = bits.read_bits(5);
-    info.payloadType = bits.read_byte();  // == 201
+    info.payloadType = bits.read_byte(); // == 201
     if (info.payloadType !== api.RTCP_PACKET_TYPE_RECEIVER_REPORT) {
       throw new Error(`payload type must be ${api.RTCP_PACKET_TYPE_RECEIVER_REPORT}`);
     }
@@ -307,7 +321,7 @@ var api = {
     info.totalBytes = (info.wordsMinusOne + 1) * 4;
     info.ssrc = bits.read_bits(32);
     info.reportBlocks = [];
-    for (let i = 0, end = info.reportCount, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+    for (let i = 0, end = info.reportCount, asc = end >= 0; asc ? i < end : i > end; asc ? i++ : i--) {
       const reportBlock = {};
       reportBlock.ssrc = bits.read_bits(32);
       reportBlock.fractionLost = bits.read_byte();
@@ -338,14 +352,14 @@ var api = {
       api.removeTrailingPadding(bits);
     }
     info.sourceCount = bits.read_bits(5);
-    info.payloadType = bits.read_byte();  // == 202
+    info.payloadType = bits.read_byte(); // == 202
     if (info.payloadType !== api.RTCP_PACKET_TYPE_SOURCE_DESCRIPTION) {
       throw new Error(`payload type must be ${api.RTCP_PACKET_TYPE_SOURCE_DESCRIPTION}`);
     }
     info.wordsMinusOne = bits.read_bits(16);
     info.totalBytes = (info.wordsMinusOne + 1) * 4;
     info.chunks = [];
-    for (let i = 0, end = info.sourceCount, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+    for (let i = 0, end = info.sourceCount, asc = end >= 0; asc ? i < end : i > end; asc ? i++ : i--) {
       const chunk = {};
       chunk.ssrc_csrc = bits.read_bits(32);
       chunk.sdesItems = [];
@@ -353,7 +367,7 @@ var api = {
       while (true) {
         const sdesItem = {};
         sdesItem.type = bits.read_byte();
-        if (sdesItem.type === 0) {  // terminate the list
+        if (sdesItem.type === 0) { // terminate the list
           // skip until the next 32-bit boundary
           let bytesPastBoundary = (bits.current_position().byte - startBytePos) % 4;
           if (bytesPastBoundary > 0) {
@@ -374,33 +388,33 @@ var api = {
         }
         sdesItem.text = bits.read_bytes(sdesItem.octetCount).toString('utf8');
         switch (sdesItem.type) {
-          case 1:  // Canonical End-Point Identifier
+          case 1: // Canonical End-Point Identifier
             chunk.sdes.cname = sdesItem.text;
             break;
-          case 2:  // User Name
+          case 2: // User Name
             chunk.sdes.name = sdesItem.text;
             break;
-          case 3:  // Electronic Mail Address
+          case 3: // Electronic Mail Address
             chunk.sdes.email = sdesItem.text;
             break;
-          case 4:  // Phone Number
+          case 4: // Phone Number
             chunk.sdes.phone = sdesItem.text;
             break;
-          case 5:  // Geographic User Location
+          case 5: // Geographic User Location
             chunk.sdes.loc = sdesItem.text;
             break;
-          case 6:  // Application or Tool Name
+          case 6: // Application or Tool Name
             chunk.sdes.tool = sdesItem.text;
             break;
-          case 7:  // Notice/Status
+          case 7: // Notice/Status
             chunk.sdes.note = sdesItem.text;
             break;
-          case 8:  // Private Extensions
+          case 8: // Private Extensions
             chunk.sdes.priv = sdesItem.text;
             break;
           default:
-            throw new Error("unknown SDES item type in source description " +
-              `RTCP packet: ${chunk.type} (maybe not implemented yet)`
+            throw new Error('unknown SDES item type in source description ' +
+              `RTCP packet: ${chunk.type} (maybe not implemented yet)`,
             );
         }
         chunk.sdesItems.push(sdesItem);
@@ -427,7 +441,7 @@ var api = {
       api.removeTrailingPadding(bits);
     }
     info.sourceCount = bits.read_bits(5);
-    info.payloadType = bits.read_byte();  // == 203
+    info.payloadType = bits.read_byte(); // == 203
     if (info.payloadType !== api.RTCP_PACKET_TYPE_GOODBYE) {
       throw new Error(`payload type must be ${api.RTCP_PACKET_TYPE_GOODBYE}`);
     }
@@ -459,7 +473,7 @@ var api = {
       api.removeTrailingPadding(bits);
     }
     info.subtype = bits.read_bits(5);
-    info.payloadType = bits.read_byte();  // == 204
+    info.payloadType = bits.read_byte(); // == 204
     if (info.payloadType !== api.RTCP_PACKET_TYPE_APPLICATION_DEFINED) {
       throw new Error(`payload type must be ${api.RTCP_PACKET_TYPE_APPLICATION_DEFINED}`);
     }
@@ -495,7 +509,7 @@ var api = {
     info.timestamp = bits.read_bits(32);
     info.ssrc = bits.read_bits(32);
     info.csrc = [];
-    for (let i = 0, end = info.csrcCount, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+    for (let i = 0, end = info.csrcCount, asc = end >= 0; asc ? i < end : i > end; asc ? i++ : i--) {
       info.csrc.push(bits.read_bits(32));
     }
     return info;
@@ -519,21 +533,21 @@ var api = {
 
   readH264Payload(bits) {
     const info = {};
-    info.forbidden_zero_bit = bits.read_bit();  // 1 indicates error
+    info.forbidden_zero_bit = bits.read_bit(); // 1 indicates error
     if (info.forbidden_zero_bit !== 0) {
       throw new Error(`forbidden_zero_bit must be 0 (got ${info.forbidden_zero_bit})`);
     }
-    info.nal_ref_idc = bits.read_bits(2);  // == 00: not important, > 00: important
+    info.nal_ref_idc = bits.read_bits(2); // == 00: not important, > 00: important
     info.nal_unit_type = bits.read_bits(5);
-    if (1 <= info.nal_unit_type && info.nal_unit_type <= 23) {  // Single NAL unit packet
+    if (info.nal_unit_type >= 1 && info.nal_unit_type <= 23) { // Single NAL unit packet
       bits.push_back_byte();
       info.nal_unit = bits.remaining_buffer();
-    } else if (24 <= info.nal_unit_type && info.nal_unit_type <= 29) {
+    } else if (info.nal_unit_type >= 24 && info.nal_unit_type <= 29) {
       switch (info.nal_unit_type) {
-        case api.H264_NAL_UNIT_TYPE_STAP_A:  // STAP-A (24)
+        case api.H264_NAL_UNIT_TYPE_STAP_A: // STAP-A (24)
           info.stap_a = api.readH264STAP_A(bits);
           break;
-        case api.H264_NAL_UNIT_TYPE_FU_A:  // FU-A (28)
+        case api.H264_NAL_UNIT_TYPE_FU_A: // FU-A (28)
           info.fu_a = api.readH264FragmentationUnitA(bits);
           break;
         default:
@@ -548,13 +562,13 @@ var api = {
   // Read Single-Time Aggregation Packet type A (STAP-A)
   readH264STAP_A(bits) {
     const info =
-      {nalUnits: []};
+      { nalUnits: [] };
     while (bits.get_remaining_bytes() >= 2) {
       const nalUnitSize = bits.read_bits(16);
       info.nalUnits.push(bits.read_bytes(nalUnitSize));
     }
     if (info.nalUnits.length < 1) {
-      logger.error("rtp: error: STAP-A does not contain a NAL unit");
+      logger.error('rtp: error: STAP-A does not contain a NAL unit');
     }
     return info;
   },
@@ -582,7 +596,7 @@ var api = {
   parsePacket(buf) {
     const bits = new Bits(buf);
     const packet = {};
-    const payloadValue = bits.get_byte_at(1);  // including marker bit
+    const payloadValue = bits.get_byte_at(1); // including marker bit
     switch (payloadValue) {
       case api.RTCP_PACKET_TYPE_SENDER_REPORT:
         packet.rtcpSenderReport = api.readRTCPSenderReport(bits);
@@ -599,7 +613,7 @@ var api = {
       case api.RTCP_PACKET_TYPE_APPLICATION_DEFINED:
         packet.rtcpApplicationDefined = api.readRTCPApplicationDefined(bits);
         break;
-      default:  // RTP data transfer protocol - fixed header
+      default: // RTP data transfer protocol - fixed header
         packet.rtpHeader = api.readRTPFixedHeader(bits);
     }
     return packet;
@@ -611,7 +625,7 @@ var api = {
     const packets = [];
     while (bits.has_more_data()) {
       const packet = {};
-      const payloadValue = bits.get_byte_at(1);  // including marker bit
+      const payloadValue = bits.get_byte_at(1); // including marker bit
       switch (payloadValue) {
         case api.RTCP_PACKET_TYPE_SENDER_REPORT:
           packet.rtcpSenderReport = api.readRTCPSenderReport(bits);
@@ -628,7 +642,7 @@ var api = {
         case api.RTCP_PACKET_TYPE_APPLICATION_DEFINED:
           packet.rtcpApplicationDefined = api.readRTCPApplicationDefined(bits);
           break;
-        default:  // RTP data transfer protocol - fixed header
+        default: // RTP data transfer protocol - fixed header
           packet.rtpHeader = api.readRTPFixedHeader(bits);
       }
       packets.push(packet);
@@ -639,8 +653,8 @@ var api = {
 
   // Replace SSRC in-place in the given RTP header
   replaceSSRCInRTP(buf, ssrc) {
-    buf[8]  = (ssrc >>> 24) & 0xff;
-    buf[9]  = (ssrc >>> 16) & 0xff;
+    buf[8] = (ssrc >>> 24) & 0xff;
+    buf[9] = (ssrc >>> 16) & 0xff;
     buf[10] = (ssrc >>> 8) & 0xff;
     buf[11] = ssrc & 0xff;
   },
@@ -664,25 +678,25 @@ var api = {
 
   readAACPayload(bits, params) {
     const info = {};
-    info.auHeadersLengthBits = bits.read_bits(16);  // in bits
+    info.auHeadersLengthBits = bits.read_bits(16); // in bits
     info.numAUHeaders = info.auHeadersLengthBits / 16;
     const auHeaders = [];
-    for (let i = 0, end = info.numAUHeaders, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+    for (let i = 0, end = info.numAUHeaders, asc = end >= 0; asc ? i < end : i > end; asc ? i++ : i--) {
       params.index = i;
       auHeaders.push(api.readAACAUHeader(bits, params));
     }
     info.auHeaders = auHeaders;
     info.accessUnits = [];
-    for (let auHeader of Array.from(auHeaders)) {
+    for (const auHeader of Array.from(auHeaders)) {
       info.accessUnits.push(bits.read_bytes(auHeader.auSize));
-      const accessUnit = info.accessUnits[info.accessUnits.length-1];
+      const accessUnit = info.accessUnits[info.accessUnits.length - 1];
     }
     return info;
   },
 
   readAACAUHeader(bits, params) {
     if ((params.sizelength == null)) {
-      throw new Error("sizelength is not defined in params");
+      throw new Error('sizelength is not defined in params');
     }
     const info = {};
     // size in octets of the associated Access Unit in the
@@ -690,16 +704,16 @@ var api = {
     info.auSize = bits.read_bits(params.sizelength);
     // serial number of the associated Access Unit (fragment).
     if ((params.index == null)) {
-      throw new Error("index is not defined in params");
+      throw new Error('index is not defined in params');
     }
     if (params.index > 0) {
       if ((params.indexdeltalength == null)) {
-        throw new Error("indexdeltalength is not defined in params");
+        throw new Error('indexdeltalength is not defined in params');
       }
       info.auIndexDelta = bits.read_bits(params.indexdeltalength);
     } else {
       if ((params.indexlength == null)) {
-        throw new Error("indexlength is not defined in params");
+        throw new Error('indexlength is not defined in params');
       }
       info.auIndex = bits.read_bits(params.indexlength);
     }
@@ -713,17 +727,17 @@ var api = {
     if (opts.accessUnits.length > 4095) {
       throw new Error(`too many audio access units: ${opts.accessUnits.length} (must be <= 4095)`);
     }
-    const numBits = opts.accessUnits.length * 16;  // 2 bytes per access unit
+    const numBits = opts.accessUnits.length * 16; // 2 bytes per access unit
     let header = [
-      //# payload
-      //# See section 3.2.1 and 3.3.6 of RFC 3640 for details
-      //# AU Header Section
+      // # payload
+      // # See section 3.2.1 and 3.3.6 of RFC 3640 for details
+      // # AU Header Section
       // AU-headers-length(16) for AAC-hbr
       // Number of bits in the AU-headers
       (numBits >> 8) & 0xff,
       numBits & 0xff,
     ];
-    for (let accessUnit of Array.from(opts.accessUnits)) {
+    for (const accessUnit of Array.from(opts.accessUnits)) {
       header = header.concat(api.createAudioAUHeader(accessUnit.length));
     }
     return header;
@@ -735,7 +749,7 @@ var api = {
     let currentGroup = [];
     for (let i = 0; i < adtsFrames.length; i++) {
       const adtsFrame = adtsFrames[i];
-      packetSize += adtsFrame.length + 2;  // 2 bytes for AU-Header
+      packetSize += adtsFrame.length + 2; // 2 bytes for AU-Header
       if (packetSize > MAX_PAYLOAD_SIZE) {
         groups.push(currentGroup);
         currentGroup = [];
@@ -775,7 +789,7 @@ var api = {
       opts.nal_ref_idc | 28,
       // FU header
       // start bit(1) == 0, end bit(1) == 1, reserved bit(1), type(5)
-      (opts.isStart << 7) | (opts.isEnd << 6) | opts.nal_unit_type
+      (opts.isStart << 7) | (opts.isEnd << 6) | opts.nal_unit_type,
     ];
   },
 
@@ -823,7 +837,7 @@ var api = {
   // Create RTCP BYE (Goodbye) packet
   createGoodbye(opts) {
     if (((opts != null ? opts.ssrcs : undefined) == null)) {
-      throw new Error("createGoodbye: ssrcs is required");
+      throw new Error('createGoodbye: ssrcs is required');
     }
     const { ssrcs } = opts;
     if (ssrcs.length > 0b11111) {
@@ -831,7 +845,7 @@ var api = {
     }
 
     // Reason for leaving
-    const reason = [...Array.from((new Buffer('End of stream', 'utf8')))];  // Convert Buffer to array
+    const reason = [...Array.from((new Buffer('End of stream', 'utf8')))]; // Convert Buffer to array
     const reasonLen = reason.length;
     // Number of bytes until the next 32-bit boundary
     let padLen = 4 - ((1 + reasonLen) % 4);
@@ -859,7 +873,7 @@ var api = {
       length >> 8, length & 0xff,
     ];
 
-    for (let ssrc of Array.from(ssrcs)) {
+    for (const ssrc of Array.from(ssrcs)) {
       // Append SSRC
       data.push((ssrc >>> 24) & 0xff, (ssrc >>> 16) & 0xff, (ssrc >>> 8) & 0xff, ssrc & 0xff);
     }
@@ -882,27 +896,27 @@ var api = {
   //   octetCount: octetCount
   createSenderReport(opts) {
     if (((opts != null ? opts.ssrc : undefined) == null)) {
-      throw new Error("createSenderReport: ssrc is required");
+      throw new Error('createSenderReport: ssrc is required');
     }
     const { ssrc } = opts;
     if (((opts != null ? opts.packetCount : undefined) == null)) {
-      throw new Error("createSenderReport: packetCount is required");
+      throw new Error('createSenderReport: packetCount is required');
     }
     const { packetCount } = opts;
     if (((opts != null ? opts.octetCount : undefined) == null)) {
-      throw new Error("createSenderReport: octetCount is required");
+      throw new Error('createSenderReport: octetCount is required');
     }
     const { octetCount } = opts;
     if (((opts != null ? opts.time : undefined) == null)) {
-      throw new Error("createSenderReport: time is required");
+      throw new Error('createSenderReport: time is required');
     }
     const ntp_ts = api.getNTPTimestamp(opts.time);
     if (((opts != null ? opts.rtpTime : undefined) == null)) {
-      throw new Error("createSenderReport: rtpTime is required");
+      throw new Error('createSenderReport: rtpTime is required');
     }
     const rtp_ts = opts.rtpTime;
 
-    const length = 6;  // 28 (packet bytes) / 4 (32-bit word) - 1
+    const length = 6; // 28 (packet bytes) / 4 (32-bit word) - 1
     return [
       // See section 6.4.1 for details
 
@@ -957,12 +971,12 @@ var api = {
   // Parse config parameter for AAC
   // see: RFC 3640, 4.1. MIME Type Registration
   parseAACConfig(str) {
-    if (str === '""') {  // empty string
+    if (str === '""') { // empty string
       return null;
     }
     const buf = new Buffer(str, 'hex');
     return aac.parseAudioSpecificConfig(buf);
-  }
+  },
 };
 
 module.exports = api;

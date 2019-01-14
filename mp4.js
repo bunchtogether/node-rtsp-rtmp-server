@@ -1,3 +1,21 @@
+/* eslint-disable
+    camelcase,
+    consistent-return,
+    guard-for-in,
+    new-cap,
+    no-constant-condition,
+    no-param-reassign,
+    no-restricted-properties,
+    no-restricted-syntax,
+    no-return-assign,
+    no-underscore-dangle,
+    no-unused-vars,
+    no-var,
+    one-var,
+    vars-on-top,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -14,13 +32,13 @@ const fs = require('fs');
 const logger = require('./logger');
 const h264 = require('./h264');
 
-const formatDate = date => date.toISOString();
+const formatDate = (date) => date.toISOString();
 
 // copyright sign + 'too' (we should not use literal '\xa9'
 // since it expands to [0xc2, 0xa9])
 const TAG_CTOO = new Buffer([0xa9, 0x74, 0x6f, 0x6f]).toString('utf8');
 
-const MIN_TIME_DIFF = 0.01;  // seconds
+const MIN_TIME_DIFF = 0.01; // seconds
 const READ_BUFFER_TIME = 3.0;
 const QUEUE_BUFFER_TIME = 1.5;
 
@@ -29,7 +47,7 @@ const DEBUG = false;
 // If true, outgoing audio/video packets will be printed
 const DEBUG_OUTGOING_MP4_DATA = false;
 
-const getCurrentTime = function() {
+const getCurrentTime = function () {
   const time = process.hrtime();
   return time[0] + (time[1] / 1e9);
 };
@@ -65,7 +83,7 @@ class MP4File extends EventEmitterModule {
     if (DEBUG) {
       startTime = process.hrtime();
     }
-    this.fileBuf = fs.readFileSync(filename);  // up to 1GB
+    this.fileBuf = fs.readFileSync(filename); // up to 1GB
     this.bits = new Bits(this.fileBuf);
     if (DEBUG) {
       const diffTime = process.hrtime(startTime);
@@ -104,7 +122,7 @@ class MP4File extends EventEmitterModule {
     }
     this.boxes = [];
     while (this.bits.has_more_data()) {
-      const box = Box.parse(this.bits, null);  // null == root box
+      const box = Box.parse(this.bits, null); // null == root box
       if (box instanceof MovieBox) {
         this.moovBox = box;
       } else if (box instanceof MediaDataBox) {
@@ -117,8 +135,8 @@ class MP4File extends EventEmitterModule {
       logger.debug(`[mp4] took ${((diffTime[0] * 1e9) + diffTime[1]) / 1000000} ms to parse ${this.filename}`);
     }
 
-    for (let child of Array.from(this.moovBox.children)) {
-      if (child instanceof TrackBox) {  // trak
+    for (const child of Array.from(this.moovBox.children)) {
+      if (child instanceof TrackBox) { // trak
         const tkhdBox = child.find('tkhd');
         if (tkhdBox.isAudioTrack) {
           this.audioTrakBox = child;
@@ -130,15 +148,14 @@ class MP4File extends EventEmitterModule {
 
     this.numVideoSamples = this.getNumVideoSamples();
     this.numAudioSamples = this.getNumAudioSamples();
-
   }
 
   getTree() {
     if ((this.boxes == null)) {
-      throw new Error("parse() must be called before dump");
+      throw new Error('parse() must be called before dump');
     }
     const tree = { root: [] };
-    for (let box of Array.from(this.boxes)) {
+    for (const box of Array.from(this.boxes)) {
       tree.root.push(box.getTree());
     }
     return tree;
@@ -146,9 +163,9 @@ class MP4File extends EventEmitterModule {
 
   dump() {
     if ((this.boxes == null)) {
-      throw new Error("parse() must be called before dump");
+      throw new Error('parse() must be called before dump');
     }
-    for (let box of Array.from(this.boxes)) {
+    for (const box of Array.from(this.boxes)) {
       process.stdout.write(box.dump(0, 2));
     }
   }
@@ -188,14 +205,13 @@ class MP4File extends EventEmitterModule {
     if (!this.isStopped) {
       this.isStopped = true;
       return logger.debug(`[mp4:${this.filename}] paused at ${this.currentPlayTime} (server mp4 head time)`);
-    } else {
-      return logger.debug(`[mp4:${this.filename}] already paused`);
     }
+    return logger.debug(`[mp4:${this.filename}] already paused`);
   }
 
   sendVideoPacketsSinceLastKeyFrame(endSeconds, callback) {
     let videoSampleNumber;
-    if ((this.videoTrakBox == null)) {  // video trak does not exist
+    if ((this.videoTrakBox == null)) { // video trak does not exist
       if (typeof callback === 'function') {
         callback(null);
       }
@@ -219,7 +235,7 @@ class MP4File extends EventEmitterModule {
       let isKeyFrameFound = false;
       if (rawSample != null) {
         const nalUnits = this.parseH264Sample(rawSample.data);
-        for (let nalUnit of Array.from(nalUnits)) {
+        for (const nalUnit of Array.from(nalUnits)) {
           if ((nalUnit[0] & 0x1f) === h264.NAL_UNIT_TYPE_IDR_PICTURE) {
             isKeyFrameFound = true;
             break;
@@ -230,7 +246,7 @@ class MP4File extends EventEmitterModule {
             pts: rawSample.pts,
             dts: rawSample.dts,
             time: rawSample.time,
-            data: nalUnits
+            data: nalUnits,
           });
         }
       }
@@ -245,7 +261,7 @@ class MP4File extends EventEmitterModule {
         break;
       }
     }
-    for (let sample of Array.from(samples)) {
+    for (const sample of Array.from(samples)) {
       this.emit('video_data', sample.data, sample.pts, sample.dts);
     }
 
@@ -267,23 +283,27 @@ class MP4File extends EventEmitterModule {
   }
 
   fillBuffer(callback) {
-    const seq = new Sequent;
+    const seq = new Sequent();
 
-    this.bufferAudio(() => {
+    this.bufferAudio(() =>
       // audio samples has been buffered
-      return seq.done();
-    });
+      seq.done(),
+    );
 
-    this.bufferVideo(() => {
+    this.bufferVideo(() =>
       // video samples has been buffered
-      return seq.done();
-    });
+      seq.done(),
+    );
 
     return seq.wait(2, callback);
   }
 
   seek(seekSeconds) {
-    let audioSampleNumber, stblBox, sttsBox, videoSampleNumber, videoSampleSeconds;
+    let audioSampleNumber,
+      stblBox,
+      sttsBox,
+      videoSampleNumber,
+      videoSampleSeconds;
     if (seekSeconds == null) { seekSeconds = 0; }
     logger.debug(`[mp4:${this.filename}] seek: seconds=${seekSeconds}`);
     this.clearBuffers();
@@ -365,10 +385,9 @@ class MP4File extends EventEmitterModule {
       if (this.checkEOF()) {
         // EOF reached
         return false;
-      } else {
-        this.queueBufferedSamples();
-        return true;
       }
+      this.queueBufferedSamples();
+      return true;
     });
   }
 
@@ -408,7 +427,7 @@ class MP4File extends EventEmitterModule {
 
   queueBufferedAudioSamples() {
     const audioSample = this.bufferedAudioSamples[this.queuedAudioSampleIndex];
-    if ((audioSample == null)) {  // @bufferedAudioSamples is empty
+    if ((audioSample == null)) { // @bufferedAudioSamples is empty
       return;
     }
     const timeDiff = audioSample.time - this.currentPlayTime;
@@ -425,29 +444,26 @@ class MP4File extends EventEmitterModule {
         this.isAudioEOF = true;
         this.checkEOF();
       }
-    } else {
-      if (!this.isStopped) {
-        const { sessionId } = this;
-        setTimeout(() => {
-          if ((!this.isStopped) && (this.sessionId === sessionId)) {
-            this.bufferedAudioSamples.shift();
-            this.queuedAudioSampleIndex--;
-            if (DEBUG_OUTGOING_MP4_DATA) {
-              logger.info(`emit timed audio_data pts=${audioSample.pts}`);
-            }
-            this.emit('audio_data', audioSample.data, audioSample.pts);
-            this.updateCurrentPlayTime();
-            if ((this.queuedAudioSampleIndex === 0) && (this.consumedAudioSamples === this.numAudioSamples)) {
-              // No audio sample left
-              this.isAudioEOF = true;
-              return this.checkEOF();
-            } else {
-              return this.checkAudioBuffer();
-            }
+    } else if (!this.isStopped) {
+      const { sessionId } = this;
+      setTimeout(() => {
+        if ((!this.isStopped) && (this.sessionId === sessionId)) {
+          this.bufferedAudioSamples.shift();
+          this.queuedAudioSampleIndex--;
+          if (DEBUG_OUTGOING_MP4_DATA) {
+            logger.info(`emit timed audio_data pts=${audioSample.pts}`);
           }
+          this.emit('audio_data', audioSample.data, audioSample.pts);
+          this.updateCurrentPlayTime();
+          if ((this.queuedAudioSampleIndex === 0) && (this.consumedAudioSamples === this.numAudioSamples)) {
+            // No audio sample left
+            this.isAudioEOF = true;
+            return this.checkEOF();
+          }
+          return this.checkAudioBuffer();
         }
-        , timeDiff * 1000);
       }
+        , timeDiff * 1000);
     }
     this.queuedAudioSampleIndex++;
     this.queuedAudioTime = audioSample.time;
@@ -457,12 +473,13 @@ class MP4File extends EventEmitterModule {
   }
 
   queueBufferedVideoSamples() {
-    let nalUnit, totalBytes;
+    let nalUnit,
+      totalBytes;
     if (this.isStopped) {
       return;
     }
     const videoSample = this.bufferedVideoSamples[this.queuedVideoSampleIndex];
-    if ((videoSample == null)) {  // @bufferedVideoSamples is empty
+    if ((videoSample == null)) { // @bufferedVideoSamples is empty
       return;
     }
     const timeDiff = videoSample.time - this.currentPlayTime;
@@ -502,12 +519,11 @@ class MP4File extends EventEmitterModule {
             // No video sample left
             this.isVideoEOF = true;
             return this.checkEOF();
-          } else {
-            return this.checkVideoBuffer();
           }
+          return this.checkVideoBuffer();
         }
       }
-      , timeDiff * 1000);
+        , timeDiff * 1000);
     }
     this.queuedVideoSampleIndex++;
     this.queuedVideoTime = videoSample.time;
@@ -528,14 +544,12 @@ class MP4File extends EventEmitterModule {
       if (firstVideoTime <= firstAudioTime) {
         this.queueBufferedVideoSamples();
         return this.queueBufferedAudioSamples();
-      } else {
-        this.queueBufferedAudioSamples();
-        return this.queueBufferedVideoSamples();
       }
-    } else {
       this.queueBufferedAudioSamples();
       return this.queueBufferedVideoSamples();
     }
+    this.queueBufferedAudioSamples();
+    return this.queueBufferedVideoSamples();
   }
 
   checkEOF() {
@@ -573,23 +587,23 @@ class MP4File extends EventEmitterModule {
     if (this.videoTrakBox != null) {
       const sttsBox = this.videoTrakBox.find('stts');
       return sttsBox.getTotalSamples();
-    } else {
-      return 0;
     }
+    return 0;
   }
 
   getNumAudioSamples() {
     if (this.audioTrakBox != null) {
       const sttsBox = this.audioTrakBox.find('stts');
       return sttsBox.getTotalSamples();
-    } else {
-      return 0;
     }
+    return 0;
   }
 
   // Returns the timestamp of the last sample in the file
   getLastTimestamp() {
-    let audioLastTimestamp, sttsBox, videoLastTimestamp;
+    let audioLastTimestamp,
+      sttsBox,
+      videoLastTimestamp;
     if (this.videoTrakBox != null) {
       const numVideoSamples = this.getNumVideoSamples();
       sttsBox = this.videoTrakBox.find('stts');
@@ -608,9 +622,8 @@ class MP4File extends EventEmitterModule {
 
     if (audioLastTimestamp > videoLastTimestamp) {
       return audioLastTimestamp;
-    } else {
-      return videoLastTimestamp;
     }
+    return videoLastTimestamp;
   }
 
   getDurationSeconds() {
@@ -664,7 +677,8 @@ class MP4File extends EventEmitterModule {
     for (let i = 0; i < sampleSizes.length; i++) {
       const sampleSize = sampleSizes[i];
       if ((firstSampleNumberInChunk + i) === sampleNumber) {
-        var dts, pts;
+        var dts,
+          pts;
         let compositionTimeOffset = 0;
         if (cttsBox != null) {
           compositionTimeOffset = cttsBox.getCompositionTimeOffset(sampleNumber);
@@ -682,7 +696,7 @@ class MP4File extends EventEmitterModule {
           pts,
           dts,
           time: sampleTime.seconds,
-          data: this.fileBuf.slice(chunkOffset+sampleOffset, chunkOffset+sampleOffset+sampleSize)
+          data: this.fileBuf.slice(chunkOffset + sampleOffset, chunkOffset + sampleOffset + sampleSize),
         };
       }
       sampleOffset += sampleSize;
@@ -714,7 +728,8 @@ class MP4File extends EventEmitterModule {
     for (let i = 0; i < sampleSizes.length; i++) {
       const sampleSize = sampleSizes[i];
       if ((firstSampleNumberInChunk + i) >= fromSampleNumber) {
-        var dts, pts;
+        var dts,
+          pts;
         let compositionTimeOffset = 0;
         if (cttsBox != null) {
           compositionTimeOffset = cttsBox.getCompositionTimeOffset(firstSampleNumberInChunk + i);
@@ -732,7 +747,7 @@ class MP4File extends EventEmitterModule {
           pts,
           dts,
           time: sampleTime.seconds,
-          data: this.fileBuf.slice(chunkOffset+sampleOffset, chunkOffset+sampleOffset+sampleSize)
+          data: this.fileBuf.slice(chunkOffset + sampleOffset, chunkOffset + sampleOffset + sampleSize),
         });
       }
       sampleOffset += sampleSize;
@@ -757,7 +772,7 @@ class MP4File extends EventEmitterModule {
       this.consumedVideoChunks++;
     }
 
-    for (let sample of Array.from(samples)) {
+    for (const sample of Array.from(samples)) {
       const nalUnits = this.parseH264Sample(sample.data);
       sample.data = nalUnits;
     }
@@ -771,7 +786,7 @@ class MP4File extends EventEmitterModule {
   }
 
   parseAACSample(buf) {}
-    // nop
+  // nop
 
   readNextAudioChunk() {
     let samples;
@@ -789,11 +804,11 @@ class MP4File extends EventEmitterModule {
       this.consumedAudioChunks++;
     }
 
-//    for sample in samples
-//      @parseAACSample sample.data
+    //    for sample in samples
+    //      @parseAACSample sample.data
 
     this.consumedAudioSamples += samples.length;
-    this.bufferedAudioTime = samples[samples.length-1].time;
+    this.bufferedAudioTime = samples[samples.length - 1].time;
     this.bufferedAudioSamples = this.bufferedAudioSamples.concat(samples);
 
     return true;
@@ -809,10 +824,10 @@ class Box {
 
   getTree() {
     const obj =
-      {type: this.typeStr};
+      { type: this.typeStr };
     if (this.children != null) {
       obj.children = [];
-      for (let child of Array.from(this.children)) {
+      for (const child of Array.from(this.children)) {
         obj.children.push(child.getTree());
       }
     }
@@ -823,7 +838,7 @@ class Box {
     if (depth == null) { depth = 0; }
     if (detailLevel == null) { detailLevel = 0; }
     let str = '';
-    for (let i = 0, end = depth, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+    for (let i = 0, end = depth, asc = end >= 0; asc ? i < end : i > end; asc ? i++ : i--) {
       str += '  ';
     }
     str += `${this.typeStr}`;
@@ -833,10 +848,10 @@ class Box {
         str += ` (${detailString})`;
       }
     }
-    str += "\n";
+    str += '\n';
     if (this.children != null) {
-      for (let child of Array.from(this.children)) {
-        str += child.dump(depth+1, detailLevel);
+      for (const child of Array.from(this.children)) {
+        str += child.dump(depth + 1, detailLevel);
       }
     }
     return str;
@@ -847,7 +862,7 @@ class Box {
   }
 
   constructor(info) {
-    for (let name in info) {
+    for (const name in info) {
       const value = info[name];
       this[name] = value;
     }
@@ -865,43 +880,39 @@ class Box {
     if (this.parent != null) {
       if (this.parent.typeStr === typeStr) {
         return this.parent;
-      } else {
-        return this.parent.findParent(typeStr);
       }
-    } else {
-      return null;
+      return this.parent.findParent(typeStr);
     }
+    return null;
   }
 
   child(typeStr) {
     if (this.typeStr === typeStr) {
       return this;
-    } else {
-      if (this.children != null) {
-        for (let child of Array.from(this.children)) {
-          if (child.typeStr === typeStr) {
-            return child;
-          }
+    }
+    if (this.children != null) {
+      for (const child of Array.from(this.children)) {
+        if (child.typeStr === typeStr) {
+          return child;
         }
       }
-      return null;
     }
+    return null;
   }
 
   find(typeStr) {
     if (this.typeStr === typeStr) {
       return this;
-    } else {
-      if (this.children != null) {
-        for (let child of Array.from(this.children)) {
-          const box = child.find(typeStr);
-          if (box != null) {
-            return box;
-          }
+    }
+    if (this.children != null) {
+      for (const child of Array.from(this.children)) {
+        const box = child.find(typeStr);
+        if (box != null) {
+          return box;
         }
       }
-      return null;
     }
+    return null;
   }
 
   read(buf) {}
@@ -912,7 +923,7 @@ class Box {
     destObj.typeStr = destObj.type.toString('utf8');
     let headerLen = 8;
     if (destObj.size === 1) {
-      destObj.size = bits.read_bits(64);  // TODO: might lose some precision
+      destObj.size = bits.read_bits(64); // TODO: might lose some precision
       headerLen += 8;
     }
     if (destObj.typeStr === 'uuid') {
@@ -926,7 +937,6 @@ class Box {
       destObj.data = bits.remaining_buffer();
       destObj.size = headerLen + destObj.data.length;
     }
-
   }
 
   static readLanguageCode(bits) {
@@ -938,7 +948,7 @@ class Box {
     return String.fromCharCode(0x60 + diff);
   }
 
-  static parse(bits, parent=null, cls) {
+  static parse(bits, parent = null, cls) {
     const info = {};
     info.parent = parent;
     this.readHeader(bits, info);
@@ -1045,10 +1055,9 @@ class Box {
       default:
         if (cls != null) {
           return new cls(info);
-        } else {
-          logger.warn(`[mp4] warning: skipping unknown (not implemented) box type: ${info.typeStr} (0x${info.type.toString('hex')})`);
-          return new Box(info);
         }
+        logger.warn(`[mp4] warning: skipping unknown (not implemented) box type: ${info.typeStr} (0x${info.type.toString('hex')})`);
+        return new Box(info);
     }
   }
 }
@@ -1104,7 +1113,7 @@ class FileTypeBox extends Box {
       const brandStr = brand.toString('utf8');
       this.compatibleBrands.push({
         brand,
-        brandStr
+        brandStr,
       });
     }
   }
@@ -1114,7 +1123,7 @@ class FileTypeBox extends Box {
   }
 
   getTree() {
-    const obj = new Box;
+    const obj = new Box();
     obj.brand = this.majorBrandStr;
     obj.version = this.minorVersion;
     return obj;
@@ -1128,28 +1137,28 @@ class MovieHeaderBox extends Box {
     this.readFullBoxHeader(bits);
 
     if (this.version === 1) {
-      this.creationTime = bits.read_bits(64);  // TODO: loses precision
+      this.creationTime = bits.read_bits(64); // TODO: loses precision
       this.creationDate = Box.mp4TimeToDate(this.creationTime);
-      this.modificationTime = bits.read_bits(64);  // TODO: loses precision
+      this.modificationTime = bits.read_bits(64); // TODO: loses precision
       this.modificationDate = Box.mp4TimeToDate(this.modificationTime);
       this.timescale = bits.read_uint32();
-      this.duration = bits.read_bits(64);  // TODO: loses precision
+      this.duration = bits.read_bits(64); // TODO: loses precision
       this.durationSeconds = this.duration / this.timescale;
-    } else {  // @version is 0
-      this.creationTime = bits.read_bits(32);  // TODO: loses precision
+    } else { // @version is 0
+      this.creationTime = bits.read_bits(32); // TODO: loses precision
       this.creationDate = Box.mp4TimeToDate(this.creationTime);
-      this.modificationTime = bits.read_bits(32);  // TODO: loses precision
+      this.modificationTime = bits.read_bits(32); // TODO: loses precision
       this.modificationDate = Box.mp4TimeToDate(this.modificationTime);
       this.timescale = bits.read_uint32();
-      this.duration = bits.read_bits(32);  // TODO: loses precision
+      this.duration = bits.read_bits(32); // TODO: loses precision
       this.durationSeconds = this.duration / this.timescale;
     }
     this.rate = bits.read_int(32);
-    if (this.rate !== 0x00010000) {  // 1.0
+    if (this.rate !== 0x00010000) { // 1.0
       logger.warn(`[mp4] warning: Irregular rate found in mvhd box: ${this.rate}`);
     }
     this.volume = bits.read_int(16);
-    if (this.volume !== 0x0100) {  // full volume
+    if (this.volume !== 0x0100) { // full volume
       logger.warn(`[mp4] warning: Irregular volume found in mvhd box: ${this.volume}`);
     }
     const reserved = bits.read_bits(16);
@@ -1164,12 +1173,12 @@ class MovieHeaderBox extends Box {
     if (reservedInt2 !== 0) {
       throw new Error(`reserved int(32) (2) is not zero: ${reservedInt2}`);
     }
-    bits.skip_bytes(4 * 9);  // Unity matrix
-    bits.skip_bytes(4 * 6);  // pre_defined
+    bits.skip_bytes(4 * 9); // Unity matrix
+    bits.skip_bytes(4 * 6); // pre_defined
     this.nextTrackID = bits.read_uint32();
 
     if (bits.has_more_data()) {
-      throw new Error("mvhd box has more data");
+      throw new Error('mvhd box has more data');
     }
   }
 
@@ -1178,7 +1187,7 @@ class MovieHeaderBox extends Box {
   }
 
   getTree() {
-    const obj = new Box;
+    const obj = new Box();
     obj.creationDate = this.creationDate;
     obj.modificationDate = this.modificationDate;
     obj.timescale = this.timescale;
@@ -1206,27 +1215,27 @@ class TrackHeaderBox extends Box {
     this.readFullBoxHeader(bits);
 
     if (this.version === 1) {
-      this.creationTime = bits.read_bits(64);  // TODO: loses precision
+      this.creationTime = bits.read_bits(64); // TODO: loses precision
       this.creationDate = Box.mp4TimeToDate(this.creationTime);
-      this.modificationTime = bits.read_bits(64);  // TODO: loses precision
+      this.modificationTime = bits.read_bits(64); // TODO: loses precision
       this.modificationDate = Box.mp4TimeToDate(this.modificationTime);
       this.trackID = bits.read_uint32();
       reserved = bits.read_uint32();
       if (reserved !== 0) {
         throw new Error(`tkhd: reserved bits are not zero: ${reserved}`);
       }
-      this.duration = bits.read_bits(64);  // TODO: loses precision
-    } else {  // @version is 0
-      this.creationTime = bits.read_bits(32);  // TODO: loses precision
+      this.duration = bits.read_bits(64); // TODO: loses precision
+    } else { // @version is 0
+      this.creationTime = bits.read_bits(32); // TODO: loses precision
       this.creationDate = Box.mp4TimeToDate(this.creationTime);
-      this.modificationTime = bits.read_bits(32);  // TODO: loses precision
+      this.modificationTime = bits.read_bits(32); // TODO: loses precision
       this.modificationDate = Box.mp4TimeToDate(this.modificationTime);
       this.trackID = bits.read_uint32();
       reserved = bits.read_uint32();
       if (reserved !== 0) {
         throw new Error(`tkhd: reserved bits are not zero: ${reserved}`);
       }
-      this.duration = bits.read_bits(32);  // TODO: loses precision
+      this.duration = bits.read_bits(32); // TODO: loses precision
     }
     reserved = bits.read_bits(64);
     if (reserved !== 0) {
@@ -1237,8 +1246,8 @@ class TrackHeaderBox extends Box {
       logger.warn(`[mp4] warning: layer is not 0 in tkhd box: ${this.layer}`);
     }
     this.alternateGroup = bits.read_int(16);
-//    if @alternateGroup isnt 0
-//      logger.warn "[mp4] warning: alternate_group is not 0 in tkhd box: #{@alternateGroup}"
+    //    if @alternateGroup isnt 0
+    //      logger.warn "[mp4] warning: alternate_group is not 0 in tkhd box: #{@alternateGroup}"
     this.volume = bits.read_int(16);
     if (this.volume === 0x0100) {
       this.isAudioTrack = true;
@@ -1250,18 +1259,18 @@ class TrackHeaderBox extends Box {
       throw new Error(`tkhd: reserved bits are not zero: ${reserved}`);
     }
     bits.skip_bytes(4 * 9);
-    this.width = bits.read_uint32() / 65536;  // fixed-point 16.16 value
-    this.height = bits.read_uint32() / 65536;  // fixed-point 16.16 value
+    this.width = bits.read_uint32() / 65536; // fixed-point 16.16 value
+    this.height = bits.read_uint32() / 65536; // fixed-point 16.16 value
 
     if (bits.has_more_data()) {
-      throw new Error("tkhd box has more data");
+      throw new Error('tkhd box has more data');
     }
   }
 
   getDetails(detailLevel) {
     let str = `created=${formatDate(this.creationDate)} modified=${formatDate(this.modificationDate)}`;
     if (this.isAudioTrack) {
-      str += " audio";
+      str += ' audio';
     } else {
       str += ` video; width=${this.width} height=${this.height}`;
     }
@@ -1269,7 +1278,7 @@ class TrackHeaderBox extends Box {
   }
 
   getTree() {
-    const obj = new Box;
+    const obj = new Box();
     obj.creationDate = this.creationDate;
     obj.modificationDate = this.modificationDate;
     obj.isAudioTrack = this.isAudioTrack;
@@ -1299,12 +1308,13 @@ class EditListBox extends Box {
 
     const entryCount = bits.read_uint32();
     this.entries = [];
-    for (let i = 1, end = entryCount, asc = 1 <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
-      var mediaTime, segmentDuration;
+    for (let i = 1, end = entryCount, asc = end >= 1; asc ? i <= end : i >= end; asc ? i++ : i--) {
+      var mediaTime,
+        segmentDuration;
       if (this.version === 1) {
-        segmentDuration = bits.read_bits(64);  // TODO: loses precision
+        segmentDuration = bits.read_bits(64); // TODO: loses precision
         mediaTime = bits.read_int(64);
-      } else {  // @version is 0
+      } else { // @version is 0
         segmentDuration = bits.read_bits(32);
         mediaTime = bits.read_int(32);
       }
@@ -1314,23 +1324,23 @@ class EditListBox extends Box {
         logger.warn(`[mp4] warning: media_rate_fraction is not 0 in elst box: ${mediaRateFraction}`);
       }
       this.entries.push({
-        segmentDuration,  // in Movie Header Box (mvhd) timescale
+        segmentDuration, // in Movie Header Box (mvhd) timescale
         segmentDurationSeconds: segmentDuration / mvhdBox.timescale,
-        mediaTime,  // in media (mdhd) timescale
-        mediaRate: mediaRateInteger + (mediaRateFraction / 65536)
+        mediaTime, // in media (mdhd) timescale
+        mediaRate: mediaRateInteger + (mediaRateFraction / 65536),
       });
     } // TODO: Is this correct?
 
     if (bits.has_more_data()) {
-      throw new Error("elst box has more data");
+      throw new Error('elst box has more data');
     }
   }
 
   // Returns the starting offset for this track in mdhd timescale units
   getEmptyDuration() {
     let time = 0;
-    for (let entry of Array.from(this.entries)) {
-      if (entry.mediaTime === -1) {  // empty edit
+    for (const entry of Array.from(this.entries)) {
+      if (entry.mediaTime === -1) { // empty edit
         // moov
         //   mvhd <- find target
         //   iods
@@ -1348,7 +1358,7 @@ class EditListBox extends Box {
         //       mdhd <- find target
         const mdhdBox = this.findParent('trak').child('mdia').child('mdhd');
         if ((mdhdBox == null)) {
-          throw new Error("cannot access mdhd box (not parsed yet?)");
+          throw new Error('cannot access mdhd box (not parsed yet?)');
         }
 
         // Convert segmentDuration from mvhd timescale to mdhd timescale
@@ -1365,7 +1375,7 @@ class EditListBox extends Box {
   }
 
   getTree() {
-    const obj = new Box;
+    const obj = new Box();
     obj.entries = this.entries;
     return obj;
   }
@@ -1380,13 +1390,13 @@ class MediaHeaderBox extends Box {
     this.readFullBoxHeader(bits);
 
     if (this.version === 1) {
-      this.creationTime = bits.read_bits(64);  // TODO: loses precision
+      this.creationTime = bits.read_bits(64); // TODO: loses precision
       this.creationDate = Box.mp4TimeToDate(this.creationTime);
-      this.modificationTime = bits.read_bits(64);  // TODO: loses precision
+      this.modificationTime = bits.read_bits(64); // TODO: loses precision
       this.modificationDate = Box.mp4TimeToDate(this.modificationTime);
       this.timescale = bits.read_uint32();
-      this.duration = bits.read_bits(64);  // TODO: loses precision
-    } else {  // @version is 0
+      this.duration = bits.read_bits(64); // TODO: loses precision
+    } else { // @version is 0
       this.creationTime = bits.read_bits(32);
       this.creationDate = Box.mp4TimeToDate(this.creationTime);
       this.modificationTime = bits.read_bits(32);
@@ -1411,7 +1421,7 @@ class MediaHeaderBox extends Box {
   }
 
   getTree() {
-    const obj = new Box;
+    const obj = new Box();
     obj.creationDate = this.creationDate;
     obj.modificationDate = this.modificationDate;
     obj.timescale = this.timescale;
@@ -1438,8 +1448,8 @@ class HandlerBox extends Box {
     // vide: Video track
     // soun: Audio track
     // hint: Hint track
-    bits.skip_bytes(4 * 3);  // reserved 0 bits (may not be all zero if handlerType is
-                           // none of the above)
+    bits.skip_bytes(4 * 3); // reserved 0 bits (may not be all zero if handlerType is
+    // none of the above)
     this.name = bits.get_string();
   }
 
@@ -1448,7 +1458,7 @@ class HandlerBox extends Box {
   }
 
   getTree() {
-    const obj = new Box;
+    const obj = new Box();
     obj.handlerType = this.handlerType;
     obj.name = this.name;
     return obj;
@@ -1484,7 +1494,7 @@ class DataReferenceBox extends Box {
 
     const entry_count = bits.read_uint32();
     this.children = [];
-    for (let i = 1, end = entry_count, asc = 1 <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
+    for (let i = 1, end = entry_count, asc = end >= 1; asc ? i <= end : i >= end; asc ? i++ : i--) {
       this.children.push(Box.parse(bits, this));
     }
   }
@@ -1506,13 +1516,12 @@ class DataEntryUrlBox extends Box {
   getDetails(detailLevel) {
     if (this.location != null) {
       return `location=${this.location}`;
-    } else {
-      return "empty location value";
     }
+    return 'empty location value';
   }
 
   getTree() {
-    const obj = new Box;
+    const obj = new Box();
     obj.location = this.location;
     return obj;
   }
@@ -1567,15 +1576,15 @@ class SampleDescriptionBox extends Box {
 
     const entry_count = bits.read_uint32();
     this.children = [];
-    for (let i = 1, end = entry_count, asc = 1 <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
+    for (let i = 1, end = entry_count, asc = end >= 1; asc ? i <= end : i >= end; asc ? i++ : i--) {
       switch (handlerType) {
-        case 'soun':  // for audio tracks
+        case 'soun': // for audio tracks
           this.children.push(Box.parse(bits, this, AudioSampleEntry));
           break;
-        case 'vide':  // for video tracks
+        case 'vide': // for video tracks
           this.children.push(Box.parse(bits, this, VisualSampleEntry));
           break;
-        case 'hint':  // hint track
+        case 'hint': // hint track
           this.children.push(Box.parse(bits, this, HintSampleEntry));
           break;
         default:
@@ -1596,7 +1605,6 @@ class HintSampleEntry extends Box {
     this.dataReferenceIndex = bits.read_bits(16);
 
     // unsigned int(8) data []
-
   }
 }
 
@@ -1656,7 +1664,7 @@ class AudioSampleEntry extends Box {
     const mdhdBox = this.findParent('mdia').find('mdhd');
 
     this.sampleRate = bits.read_uint32();
-    if (this.sampleRate !== (mdhdBox.timescale * Math.pow(2, 16))) {  // "<< 16" may lead to int32 overflow
+    if (this.sampleRate !== (mdhdBox.timescale * Math.pow(2, 16))) { // "<< 16" may lead to int32 overflow
       throw new Error(`AudioSampleEntry: illegal sampleRate: ${this.sampleRate} (should be ${mdhdBox.timescale << 16})`);
     }
 
@@ -1690,11 +1698,11 @@ class VisualSampleEntry extends Box {
     this.width = bits.read_bits(16);
     this.height = bits.read_bits(16);
     this.horizontalResolution = bits.read_uint32();
-    if (this.horizontalResolution !== 0x00480000) {  // 72 dpi
+    if (this.horizontalResolution !== 0x00480000) { // 72 dpi
       throw new Error(`VisualSampleEntry: horizontalResolution is not 0x00480000: ${this.horizontalResolution}`);
     }
     this.verticalResolution = bits.read_uint32();
-    if (this.verticalResolution !== 0x00480000) {  // 72 dpi
+    if (this.verticalResolution !== 0x00480000) { // 72 dpi
       throw new Error(`VisualSampleEntry: verticalResolution is not 0x00480000: ${this.verticalResolution}`);
     }
     reserved = bits.read_uint32();
@@ -1740,7 +1748,7 @@ class TimeToSampleBox extends Box {
 
     this.entryCount = bits.read_uint32();
     this.entries = [];
-    for (let i = 0, end = this.entryCount, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+    for (let i = 0, end = this.entryCount, asc = end >= 0; asc ? i < end : i > end; asc ? i++ : i--) {
       // number of consecutive samples that have the given duration
       const sampleCount = bits.read_uint32();
       // delta of these samples in the time-scale of the media
@@ -1750,14 +1758,14 @@ class TimeToSampleBox extends Box {
       }
       this.entries.push({
         sampleCount,
-        sampleDelta
+        sampleDelta,
       });
     }
   }
 
   getTotalSamples() {
     let samples = 0;
-    for (let entry of Array.from(this.entries)) {
+    for (const entry of Array.from(this.entries)) {
       samples += entry.sampleCount;
     }
     return samples;
@@ -1782,7 +1790,7 @@ class TimeToSampleBox extends Box {
     const mdhdBox = this.findParent('mdia').find('mdhd');
 
     let time = 0;
-    for (let entry of Array.from(this.entries)) {
+    for (const entry of Array.from(this.entries)) {
       time += entry.sampleDelta * entry.sampleCount;
     }
     return time / mdhdBox.timescale;
@@ -1798,14 +1806,14 @@ class TimeToSampleBox extends Box {
     const { timescale } = this.findParent('mdia').find('mdhd');
     let remainingTime = sec * timescale;
     let sampleNumber = 1;
-    const elstBox = __guard__(this.findParent('trak').child('edts'), x => x.child('elst'));
+    const elstBox = __guard__(this.findParent('trak').child('edts'), (x) => x.child('elst'));
     if (elstBox != null) {
       totalTime = elstBox.getEmptyDuration();
       remainingTime -= totalTime;
     } else {
       totalTime = 0;
     }
-    for (let entry of Array.from(this.entries)) {
+    for (const entry of Array.from(this.entries)) {
       let numSamples = Math.ceil(remainingTime / entry.sampleDelta);
       if (numSamples < 0) {
         numSamples = 0;
@@ -1821,7 +1829,7 @@ class TimeToSampleBox extends Box {
         return {
           sampleNumber: sampleNumber + numSamples,
           time: totalTime,
-          seconds: totalSeconds
+          seconds: totalSeconds,
         };
       }
       sampleNumber += entry.sampleCount;
@@ -1842,14 +1850,14 @@ class TimeToSampleBox extends Box {
     const { timescale } = this.findParent('mdia').find('mdhd');
     let remainingTime = sec * timescale;
     let sampleNumber = 1;
-    const elstBox = __guard__(this.findParent('trak').child('edts'), x => x.child('elst'));
+    const elstBox = __guard__(this.findParent('trak').child('edts'), (x) => x.child('elst'));
     if (elstBox != null) {
       totalTime = elstBox.getEmptyDuration();
       remainingTime -= totalTime;
     } else {
       totalTime = 0;
     }
-    for (let entry of Array.from(this.entries)) {
+    for (const entry of Array.from(this.entries)) {
       let sampleIndexInChunk = Math.floor(remainingTime / entry.sampleDelta);
       if (sampleIndexInChunk < 0) {
         sampleIndexInChunk = 0;
@@ -1859,7 +1867,7 @@ class TimeToSampleBox extends Box {
         return {
           sampleNumber: sampleNumber + sampleIndexInChunk,
           time: totalTime,
-          seconds: totalTime / timescale
+          seconds: totalTime / timescale,
         };
       }
       sampleNumber += entry.sampleCount;
@@ -1877,7 +1885,7 @@ class TimeToSampleBox extends Box {
   getDecodingTime(sampleNumber) {
     let time;
     const trakBox = this.findParent('trak');
-    const elstBox = __guard__(trakBox.child('edts'), x => x.child('elst'));
+    const elstBox = __guard__(trakBox.child('edts'), (x) => x.child('elst'));
     const mdhdBox = trakBox.child('mdia').child('mdhd');
 
     sampleNumber--;
@@ -1886,7 +1894,7 @@ class TimeToSampleBox extends Box {
     } else {
       time = 0;
     }
-    for (let entry of Array.from(this.entries)) {
+    for (const entry of Array.from(this.entries)) {
       if (sampleNumber > entry.sampleCount) {
         time += entry.sampleDelta * entry.sampleCount;
         sampleNumber -= entry.sampleCount;
@@ -1897,7 +1905,7 @@ class TimeToSampleBox extends Box {
     }
     return {
       time,
-      seconds: time / mdhdBox.timescale
+      seconds: time / mdhdBox.timescale,
     };
   }
 
@@ -1910,7 +1918,7 @@ class TimeToSampleBox extends Box {
   }
 
   getTree() {
-    const obj = new Box;
+    const obj = new Box();
     obj.entries = this.entries;
     return obj;
   }
@@ -1926,7 +1934,7 @@ class SyncSampleBox extends Box {
     this.entryCount = bits.read_uint32();
     this.sampleNumbers = [];
     let lastSampleNumber = -1;
-    for (let i = 0, end = this.entryCount, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+    for (let i = 0, end = this.entryCount, asc = end >= 0; asc ? i < end : i > end; asc ? i++ : i--) {
       const sampleNumber = bits.read_uint32();
       if (sampleNumber < lastSampleNumber) {
         throw new Error(`stss: sample number must be in increasing order: ${sampleNumber} < ${lastSampleNumber}`);
@@ -1939,13 +1947,12 @@ class SyncSampleBox extends Box {
   getDetails(detailLevel) {
     if (detailLevel >= 2) {
       return `sampleNumbers=${this.sampleNumbers.join(',')}`;
-    } else {
-      return `entryCount=${this.entryCount}`;
     }
+    return `entryCount=${this.entryCount}`;
   }
 
   getTree() {
-    const obj = new Box;
+    const obj = new Box();
     obj.sampleNumbers = this.sampleNumbers;
     return obj;
   }
@@ -1954,16 +1961,19 @@ class SyncSampleBox extends Box {
 // stsc: number of samples for each chunk
 class SampleToChunkBox extends Box {
   read(buf) {
-    let firstChunk, i;
-    let asc, end;
-    let asc1, end1;
+    let firstChunk,
+      i;
+    let asc,
+      end;
+    let asc1,
+      end1;
     const bits = new Bits(buf);
     this.readFullBoxHeader(bits);
 
     this.entryCount = bits.read_uint32();
     this.entries = [];
     let sampleNumber = 1;
-    for (i = 0, end = this.entryCount, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+    for (i = 0, end = this.entryCount, asc = end >= 0; asc ? i < end : i > end; asc ? i++ : i--) {
       firstChunk = bits.read_uint32();
       const samplesPerChunk = bits.read_uint32();
       const sampleDescriptionIndex = bits.read_uint32();
@@ -1975,28 +1985,27 @@ class SampleToChunkBox extends Box {
         firstChunk,
         firstSample: sampleNumber,
         samplesPerChunk,
-        sampleDescriptionIndex
+        sampleDescriptionIndex,
       });
     }
 
     // Determine the number of chunks of each entry
     const endIndex = this.entries.length - 1;
-    for (i = 0, end1 = endIndex, asc1 = 0 <= end1; asc1 ? i < end1 : i > end1; asc1 ? i++ : i--) {
+    for (i = 0, end1 = endIndex, asc1 = end1 >= 0; asc1 ? i < end1 : i > end1; asc1 ? i++ : i--) {
       if (i === endIndex) {
         break;
       }
-      this.entries[i].numChunks = this.entries[i+1].firstChunk - this.entries[i].firstChunk;
+      this.entries[i].numChunks = this.entries[i + 1].firstChunk - this.entries[i].firstChunk;
     }
 
     // XXX: We could determine the number of chunks in the last batch because
     //      the total number of samples is known by stts box. However we don't
     //      need it.
-
   }
 
   getNumSamplesExceptLastChunk() {
     let samples = 0;
-    for (let entry of Array.from(this.entries)) {
+    for (const entry of Array.from(this.entries)) {
       if (entry.numChunks != null) {
         samples += entry.samplesPerChunk * entry.numChunks;
       }
@@ -2005,7 +2014,7 @@ class SampleToChunkBox extends Box {
   }
 
   getNumSamplesInChunk(chunk) {
-    for (let entry of Array.from(this.entries)) {
+    for (const entry of Array.from(this.entries)) {
       if ((entry.numChunks == null)) {
         // TOOD: too heavy
         const sttsBox = this.findParent('stbl').find('stts');
@@ -2019,12 +2028,12 @@ class SampleToChunkBox extends Box {
   }
 
   findChunk(sampleNumber) {
-    for (let entry of Array.from(this.entries)) {
+    for (const entry of Array.from(this.entries)) {
       if ((entry.numChunks == null)) {
-        return entry.firstChunk + Math.floor((sampleNumber-1) / entry.samplesPerChunk);
+        return entry.firstChunk + Math.floor((sampleNumber - 1) / entry.samplesPerChunk);
       }
       if (sampleNumber <= (entry.samplesPerChunk * entry.numChunks)) {
-        return entry.firstChunk + Math.floor((sampleNumber-1) / entry.samplesPerChunk);
+        return entry.firstChunk + Math.floor((sampleNumber - 1) / entry.samplesPerChunk);
       }
       sampleNumber -= entry.samplesPerChunk * entry.numChunks;
     }
@@ -2032,7 +2041,7 @@ class SampleToChunkBox extends Box {
   }
 
   getFirstSampleNumberInChunk(chunkNumber) {
-    for (let start = this.entries.length-1, i = start, asc = start <= 0; asc ? i <= 0 : i >= 0; asc ? i++ : i--) {
+    for (let start = this.entries.length - 1, i = start, asc = start <= 0; asc ? i <= 0 : i >= 0; asc ? i++ : i--) {
       if (chunkNumber >= this.entries[i].firstChunk) {
         return this.entries[i].firstSample +
           ((chunkNumber - this.entries[i].firstChunk) * this.entries[i].samplesPerChunk);
@@ -2043,14 +2052,13 @@ class SampleToChunkBox extends Box {
 
   getDetails(detailLevel) {
     if (detailLevel >= 2) {
-      return this.entries.map(entry => `firstChunk=${entry.firstChunk} samplesPerChunk=${entry.samplesPerChunk} sampleDescriptionIndex=${entry.sampleDescriptionIndex}`).join(', ');
-    } else {
-      return `entryCount=${this.entryCount}`;
+      return this.entries.map((entry) => `firstChunk=${entry.firstChunk} samplesPerChunk=${entry.samplesPerChunk} sampleDescriptionIndex=${entry.sampleDescriptionIndex}`).join(', ');
     }
+    return `entryCount=${this.entryCount}`;
   }
 
   getTree() {
-    const obj = new Box;
+    const obj = new Box();
     obj.entries = this.entries;
     return obj;
   }
@@ -2070,7 +2078,7 @@ class SampleSizeBox extends Box {
     this.sampleCount = bits.read_uint32();
     if (this.sampleSize === 0) {
       this.entrySizes = [];
-      for (let i = 1, end = this.sampleCount, asc = 1 <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
+      for (let i = 1, end = this.sampleCount, asc = end >= 1; asc ? i <= end : i >= end; asc ? i++ : i--) {
         this.entrySizes.push(bits.read_uint32());
       }
     }
@@ -2101,19 +2109,18 @@ class SampleSizeBox extends Box {
   // the specified number of samples (len)
   getTotalSampleSize(sampleNumber, len) {
     if (len == null) { len = 1; }
-    if (this.sampleSize !== 0) {  // all samples are the same size
+    if (this.sampleSize !== 0) { // all samples are the same size
       return this.sampleSize * len;
-    } else {  // the samples have different sizes
-      let totalLength = 0;
-      for (let i = len, asc = len <= 0; asc ? i < 0 : i > 0; asc ? i++ : i--) {
-        if (sampleNumber > this.entrySizes.length) {
-          throw new Error(`Sample number is out of range: ${sampleNumber} > ${this.entrySizes.length}`);
-        }
-        totalLength += this.entrySizes[sampleNumber - 1];  // TODO: Is -1 correct?
-        sampleNumber++;
+    } // the samples have different sizes
+    let totalLength = 0;
+    for (let i = len, asc = len <= 0; asc ? i < 0 : i > 0; asc ? i++ : i--) {
+      if (sampleNumber > this.entrySizes.length) {
+        throw new Error(`Sample number is out of range: ${sampleNumber} > ${this.entrySizes.length}`);
       }
-      return totalLength;
+      totalLength += this.entrySizes[sampleNumber - 1]; // TODO: Is -1 correct?
+      sampleNumber++;
     }
+    return totalLength;
   }
 
   getDetails(detailLevel) {
@@ -2129,7 +2136,7 @@ class SampleSizeBox extends Box {
   }
 
   getTree() {
-    const obj = new Box;
+    const obj = new Box();
     obj.sampleSize = this.sampleSize;
     obj.sampleCount = this.sampleCount;
     if (this.entrySizes != null) {
@@ -2147,7 +2154,7 @@ class ChunkOffsetBox extends Box {
 
     this.entryCount = bits.read_uint32();
     this.chunkOffsets = [];
-    for (let i = 1, end = this.entryCount, asc = 1 <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
+    for (let i = 1, end = this.entryCount, asc = end >= 1; asc ? i <= end : i >= end; asc ? i++ : i--) {
       this.chunkOffsets.push(bits.read_uint32());
     }
   }
@@ -2163,13 +2170,12 @@ class ChunkOffsetBox extends Box {
   getDetails(detailLevel) {
     if (detailLevel >= 2) {
       return `chunkOffsets=${this.chunkOffsets.join(',')}`;
-    } else {
-      return `entryCount=${this.entryCount}`;
     }
+    return `entryCount=${this.entryCount}`;
   }
 
   getTree() {
-    const obj = new Box;
+    const obj = new Box();
     obj.chunkOffsets = this.chunkOffsets;
     return obj;
   }
@@ -2190,7 +2196,6 @@ class SoundMediaHeaderBox extends Box {
     if (reserved !== 0) {
       throw new Error(`smhd: reserved bits are not 0: ${reserved}`);
     }
-
   }
 }
 
@@ -2230,18 +2235,18 @@ class ItemLocationBox extends Box {
     this.reserved = bits.read_bits(4);
     this.itemCount = bits.read_bits(16);
     this.items = [];
-    for (let i = 0, end = this.itemCount, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+    for (let i = 0, end = this.itemCount, asc = end >= 0; asc ? i < end : i > end; asc ? i++ : i--) {
       const itemID = bits.read_bits(16);
       const dataReferenceIndex = bits.read_bits(16);
       const baseOffset = bits.read_bits(this.baseOffsetSize * 8);
       const extentCount = bits.read_bits(16);
       const extents = [];
-      for (let j = 0, end1 = extentCount, asc1 = 0 <= end1; asc1 ? j < end1 : j > end1; asc1 ? j++ : j--) {
+      for (let j = 0, end1 = extentCount, asc1 = end1 >= 0; asc1 ? j < end1 : j > end1; asc1 ? j++ : j--) {
         const extentOffset = bits.read_bits(this.offsetSize * 8);
         const extentLength = bits.read_bits(this.lengthSize * 8);
         extents.push({
           extentOffset,
-          extentLength
+          extentLength,
         });
       }
       this.items.push({
@@ -2249,7 +2254,7 @@ class ItemLocationBox extends Box {
         dataReferenceIndex,
         baseOffset,
         extentCount,
-        extents
+        extents,
       });
     }
   }
@@ -2264,7 +2269,7 @@ class ItemProtectionBox extends Box {
     this.protectionCount = bits.read_bits(16);
 
     this.children = [];
-    for (let i = 1, end = this.protectionCount, asc = 1 <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
+    for (let i = 1, end = this.protectionCount, asc = end >= 1; asc ? i <= end : i >= end; asc ? i++ : i--) {
       const box = Box.parse(bits, this);
       this.children.push(box);
     }
@@ -2296,7 +2301,7 @@ class ItemInfoBox extends Box {
     this.entryCount = bits.read_bits(16);
 
     this.children = [];
-    for (let i = 1, end = this.entryCount, asc = 1 <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
+    for (let i = 1, end = this.entryCount, asc = end >= 1; asc ? i <= end : i >= end; asc ? i++ : i--) {
       const box = Box.parse(bits, this);
       this.children.push(box);
     }
@@ -2332,7 +2337,7 @@ class GenericDataBox extends Box {
   }
 
   getTree() {
-    const obj = new Box;
+    const obj = new Box();
     obj.data = this.valueStr;
     return obj;
   }
@@ -2361,7 +2366,7 @@ class GoogleGSHHBox extends GenericDataBox {}
 class MediaDataBox extends Box {
   read(buf) {}
 }
-    // We will not parse the raw media stream
+// We will not parse the raw media stream
 
 // avc1
 // Defined in ISO 14496-15
@@ -2395,7 +2400,7 @@ class MPEG4BitRateBox extends Box {
   }
 
   getTree() {
-    const obj = new Box;
+    const obj = new Box();
     obj.bufferSizeDB = this.bufferSizeDB;
     obj.maxBitrate = this.maxBitrate;
     obj.avgBitrate = this.avgBitrate;
@@ -2408,15 +2413,17 @@ class MPEG4BitRateBox extends Box {
 class MPEG4ExtensionDescriptorsBox {
   read(buf) {}
 }
-    // TODO: implement this?
+// TODO: implement this?
 
 // avcC
 // Defined in ISO 14496-15
 class AVCConfigurationBox extends Box {
   read(buf) {
     let i;
-    let asc, end;
-    let asc1, end1;
+    let asc,
+      end;
+    let asc1,
+      end1;
     const bits = new Bits(buf);
 
     // AVCDecoderConfigurationRecord
@@ -2428,17 +2435,17 @@ class AVCConfigurationBox extends Box {
     this.profileCompatibility = bits.read_byte();
     this.AVCLevelIndication = bits.read_byte();
     let reserved = bits.read_bits(6);
-//    if reserved isnt 0b111111  # XXX: not always 0b111111?
-//      throw new Error "AVCConfigurationBox: reserved-1 is not #{0b111111} (got #{reserved})"
+    //    if reserved isnt 0b111111  # XXX: not always 0b111111?
+    //      throw new Error "AVCConfigurationBox: reserved-1 is not #{0b111111} (got #{reserved})"
     this.lengthSizeMinusOne = bits.read_bits(2);
     reserved = bits.read_bits(3);
-//    if reserved isnt 0b111  # XXX: not always 0b111?
-//      throw new Error "AVCConfigurationBox: reserved-2 is not #{0b111} (got #{reserved})"
+    //    if reserved isnt 0b111  # XXX: not always 0b111?
+    //      throw new Error "AVCConfigurationBox: reserved-2 is not #{0b111} (got #{reserved})"
 
     // SPS
     this.numOfSequenceParameterSets = bits.read_bits(5);
     this.sequenceParameterSets = [];
-    for (i = 0, end = this.numOfSequenceParameterSets, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+    for (i = 0, end = this.numOfSequenceParameterSets, asc = end >= 0; asc ? i < end : i > end; asc ? i++ : i--) {
       const sequenceParameterSetLength = bits.read_bits(16);
       this.sequenceParameterSets.push(bits.read_bytes(sequenceParameterSetLength));
     }
@@ -2446,21 +2453,20 @@ class AVCConfigurationBox extends Box {
     // PPS
     this.numOfPictureParameterSets = bits.read_byte();
     this.pictureParameterSets = [];
-    for (i = 0, end1 = this.numOfPictureParameterSets, asc1 = 0 <= end1; asc1 ? i < end1 : i > end1; asc1 ? i++ : i--) {
+    for (i = 0, end1 = this.numOfPictureParameterSets, asc1 = end1 >= 0; asc1 ? i < end1 : i > end1; asc1 ? i++ : i--) {
       const pictureParameterSetLength = bits.read_bits(16);
       this.pictureParameterSets.push(bits.read_bytes(pictureParameterSetLength));
     }
-
   }
 
   getDetails(detailLevel) {
-    return `sps=${this.sequenceParameterSets.map(sps => `0x${sps.toString('hex')}`).join(',')} pps=${this.pictureParameterSets.map(pps => `0x${pps.toString('hex')}`).join(',')}`;
+    return `sps=${this.sequenceParameterSets.map((sps) => `0x${sps.toString('hex')}`).join(',')} pps=${this.pictureParameterSets.map((pps) => `0x${pps.toString('hex')}`).join(',')}`;
   }
 
   getTree() {
-    const obj = new Box;
-    obj.sps = this.sequenceParameterSets.map(sps => [...Array.from(sps)]);
-    obj.pps = this.pictureParameterSets.map(pps => [...Array.from(pps)]);
+    const obj = new Box();
+    obj.sps = this.sequenceParameterSets.map((sps) => [...Array.from(sps)]);
+    obj.pps = this.pictureParameterSets.map((pps) => [...Array.from(pps)]);
     return obj;
   }
 }
@@ -2470,7 +2476,7 @@ class ESDBox extends Box {
   readDecoderConfigDescriptor(bits) {
     const info = {};
     info.tag = bits.read_byte();
-    if (info.tag !== 0x04) {  // 0x04 == DecoderConfigDescrTag
+    if (info.tag !== 0x04) { // 0x04 == DecoderConfigDescrTag
       throw new Error(`ESDBox: DecoderConfigDescrTag is not 4 (got ${info.tag})`);
     }
     info.length = this.readDescriptorLength(bits);
@@ -2491,7 +2497,7 @@ class ESDBox extends Box {
   readDecoderSpecificInfo(bits) {
     const info = {};
     info.tag = bits.read_byte();
-    if (info.tag !== 0x05) {  // 0x05 == DecSpecificInfoTag
+    if (info.tag !== 0x05) { // 0x05 == DecSpecificInfoTag
       throw new Error(`ESDBox: DecSpecificInfoTag is not 5 (got ${info.tag})`);
     }
     info.length = this.readDescriptorLength(bits);
@@ -2502,7 +2508,7 @@ class ESDBox extends Box {
   readSLConfigDescriptor(bits) {
     const info = {};
     info.tag = bits.read_byte();
-    if (info.tag !== 0x06) {  // 0x06 == SLConfigDescrTag
+    if (info.tag !== 0x06) { // 0x06 == SLConfigDescrTag
       throw new Error(`ESDBox: SLConfigDescrTag is not 6 (got ${info.tag})`);
     }
     info.length = this.readDescriptorLength(bits);
@@ -2576,7 +2582,7 @@ class ESDBox extends Box {
 
     // ES_Descriptor (defined in ISO 14496-1)
     this.tag = bits.read_byte();
-    if (this.tag !== 0x03) {  // 0x03 == ES_DescrTag
+    if (this.tag !== 0x03) { // 0x03 == ES_DescrTag
       throw new Error(`ESDBox: tag is not ${0x03} (got ${this.tag})`);
     }
     this.length = this.readDescriptorLength(bits);
@@ -2610,7 +2616,6 @@ class ESDBox extends Box {
     // QoS_Descriptor
     // RegistrationDescriptor
     // ExtensionDescriptor
-
   }
 
   getDetails(detailLevel) {
@@ -2618,7 +2623,7 @@ class ESDBox extends Box {
   }
 
   getTree() {
-    const obj = new Box;
+    const obj = new Box();
     obj.audioSpecificConfig = [...Array.from(this.decoderConfigDescriptor.decoderSpecificInfo.specificInfo)];
     obj.maxBitrate = this.decoderConfigDescriptor.maxBitrate;
     obj.avgBitrate = this.decoderConfigDescriptor.avgBitrate;
@@ -2633,7 +2638,7 @@ class MP4AudioSampleEntry extends AudioSampleEntry {
     super.read(buf);
     const bits = new Bits(this.remaining_buf);
     this.children = [
-      Box.parse(bits, this, ESDBox)
+      Box.parse(bits, this, ESDBox),
     ];
   }
 }
@@ -2650,19 +2655,19 @@ class CompositionOffsetBox extends Box {
 
     this.entryCount = bits.read_uint32();
     this.entries = [];
-    for (let i = 0, end = this.entryCount, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+    for (let i = 0, end = this.entryCount, asc = end >= 0; asc ? i < end : i > end; asc ? i++ : i--) {
       const sampleCount = bits.read_uint32();
       const sampleOffset = bits.read_uint32();
       this.entries.push({
         sampleCount,
-        sampleOffset
+        sampleOffset,
       });
     }
   }
 
   // sampleNumber is indexed from 1
   getCompositionTimeOffset(sampleNumber) {
-    for (let entry of Array.from(this.entries)) {
+    for (const entry of Array.from(this.entries)) {
       if (sampleNumber <= entry.sampleCount) {
         return entry.sampleOffset;
       }
@@ -2677,7 +2682,7 @@ class CTOOBox extends GenericDataBox {}
 
 
 const api =
-  {MP4File};
+  { MP4File };
 
 module.exports = api;
 

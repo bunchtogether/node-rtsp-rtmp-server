@@ -1,3 +1,10 @@
+/* eslint-disable
+    no-console,
+    no-underscore-dangle,
+    no-unused-vars,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS102: Remove unnecessary code created because of implicit returns
@@ -15,10 +22,10 @@ const logger = require('./logger');
 Bits.set_warning_fatal(true);
 logger.setLevel(logger.LEVEL_INFO);
 
-const streamServer = new StreamServer;
+const streamServer = new StreamServer();
 
 // Uncomment this block if you use Basic auth for RTSP
-//streamServer.setAuthenticator (username, password, callback) ->
+// streamServer.setAuthenticator (username, password, callback) ->
 //  # If isAuthenticated is true, access is allowed
 //  isAuthenticated = false
 //
@@ -28,16 +35,15 @@ const streamServer = new StreamServer;
 //
 //  callback null, isAuthenticated
 
-streamServer.setLivePathConsumer(function(uri, callback) {
-  const pathname = __guard__(url.parse(uri).pathname, x => x.slice(1));
+streamServer.setLivePathConsumer((uri, callback) => {
+  const pathname = __guard__(url.parse(uri).pathname, (x) => x.slice(1));
 
   const isAuthorized = true;
 
   if (isAuthorized) {
     return callback(null); // Accept access
-  } else {
-    return callback(new Error('Unauthorized access'));
   }
+  return callback(new Error('Unauthorized access'));
 }); // Deny access
 
 if (config.recordedDir != null) {
@@ -49,7 +55,7 @@ process.on('SIGINT', () => {
   return streamServer.stop(() => process.kill(process.pid, 'SIGTERM'));
 });
 
-process.on('uncaughtException', function(err) {
+process.on('uncaughtException', (err) => {
   streamServer.stop();
   throw err;
 });

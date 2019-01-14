@@ -1,3 +1,19 @@
+/* eslint-disable
+    consistent-return,
+    no-constant-condition,
+    no-param-reassign,
+    no-return-assign,
+    no-shadow,
+    no-undef,
+    no-underscore-dangle,
+    no-unused-vars,
+    no-var,
+    one-var,
+    prefer-rest-params,
+    vars-on-top,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS102: Remove unnecessary code created because of implicit returns
@@ -37,7 +53,8 @@
             console.log "client stopped"
 */
 
-let UDPClient, UDPServer;
+let UDPClient,
+  UDPServer;
 const events = require('events');
 const dgram = require('dgram');
 
@@ -46,12 +63,12 @@ const logger = require('./logger');
 const MAX_PACKET_ID = 255;
 const FRAGMENT_HEADER_LEN = 2;
 
-const RESEND_TIMEOUT = 100;  // ms
+const RESEND_TIMEOUT = 100; // ms
 
-const PACKET_TYPE_UNRELIABLE  = 0x01;
+const PACKET_TYPE_UNRELIABLE = 0x01;
 const PACKET_TYPE_REQUIRE_ACK = 0x02;
-const PACKET_TYPE_ACK         = 0x03;
-const PACKET_TYPE_RESET       = 0x04;
+const PACKET_TYPE_ACK = 0x03;
+const PACKET_TYPE_RESET = 0x04;
 
 const OLD_UDP_PACKET_TIME_THRESHOLD = 1000;
 
@@ -59,7 +76,7 @@ const RECEIVE_PACKET_ID_WINDOW = 10;
 
 const INITIAL_PACKET_ID = 0;
 
-const zeropad = function(width, num) {
+const zeropad = function (width, num) {
   num += '';
   while (num.length < width) {
     num = `0${num}`;
@@ -71,8 +88,8 @@ exports.UDPClient = (UDPClient = class UDPClient {
   constructor() {
     this.pendingPackets = [];
     this.newPacketId = 0;
-    this.maxPacketSize = 8000;  // good for LAN?
-//    @maxPacketSize = 1472  # good for internet
+    this.maxPacketSize = 8000; // good for LAN?
+    //    @maxPacketSize = 1472  # good for internet
     this.isInBlockMode = false;
     this.ackCallbacks = {};
     this.serverPort = null;
@@ -81,23 +98,19 @@ exports.UDPClient = (UDPClient = class UDPClient {
 
     this.socket = dgram.createSocket('udp4');
 
-    this.socket.on('error', function(err) {
+    this.socket.on('error', function (err) {
       logger.error(`UDPServer socket error: ${err}`);
       return this.socket.close();
     });
 
-    this.socket.on('message', (msg, rinfo) => {
-      return this.onMessage(msg, rinfo);
-    });
+    this.socket.on('message', (msg, rinfo) => this.onMessage(msg, rinfo));
   }
 
   start(serverPort, serverHost, callback) {
     this.serverPort = serverPort;
     this.serverHost = serverHost;
     // bind to any available port
-    return this.socket.bind(0, '0.0.0.0', () => {
-      return this.resetPacketId(callback);
-    });
+    return this.socket.bind(0, '0.0.0.0', () => this.resetPacketId(callback));
   }
 
   stop() {
@@ -111,13 +124,11 @@ exports.UDPClient = (UDPClient = class UDPClient {
       const packetId = msg[1];
       if (this.ackCallbacks[packetId] != null) {
         return this.ackCallbacks[packetId]();
-      } else {
-        return logger.warn(`ACK is already processed for packetId ${packetId}`);
       }
-    } else {
-      logger.warn(`unknown packet type: ${packetType} len=${msg.length}`);
-      return logger.warn(msg);
+      return logger.warn(`ACK is already processed for packetId ${packetId}`);
     }
+    logger.warn(`unknown packet type: ${packetType} len=${msg.length}`);
+    return logger.warn(msg);
   }
 
   getNextPacketId() {
@@ -169,9 +180,8 @@ exports.UDPClient = (UDPClient = class UDPClient {
         sentCount++;
         if (sentCount === totalFragments) {
           return (typeof callback === 'function' ? callback() : undefined);
-        } else {
-          return sendNextFragment();
         }
+        return sendNextFragment();
       });
     };
 
@@ -190,7 +200,7 @@ exports.UDPClient = (UDPClient = class UDPClient {
     let isACKReceived = false;
 
     // wait until receives ack
-    this.waitForACK(INITIAL_PACKET_ID, function() {
+    this.waitForACK(INITIAL_PACKET_ID, () => {
       isACKReceived = true;
       return (typeof callback === 'function' ? callback() : undefined);
     });
@@ -200,11 +210,11 @@ exports.UDPClient = (UDPClient = class UDPClient {
 
     return setTimeout(() => {
       if (!isACKReceived && !this.isStopped) {
-        logger.warn("resend reset (no ACK received)");
+        logger.warn('resend reset (no ACK received)');
         return this.resetPacketId(callback);
       }
     }
-    , RESEND_TIMEOUT);
+      , RESEND_TIMEOUT);
   }
 
   rawSend(buf, offset, length, callback) {
@@ -225,7 +235,7 @@ exports.UDPClient = (UDPClient = class UDPClient {
     let isACKReceived = false;
 
     // wait until receives ack
-    this.waitForACK(packetId, function() {
+    this.waitForACK(packetId, () => {
       isACKReceived = true;
       return (typeof onSuccessCallback === 'function' ? onSuccessCallback() : undefined);
     });
@@ -239,7 +249,7 @@ exports.UDPClient = (UDPClient = class UDPClient {
         return onTimeoutCallback();
       }
     }
-    , RESEND_TIMEOUT);
+      , RESEND_TIMEOUT);
   }
 
   _writeReliable(buf, packetId, callback) {
@@ -249,9 +259,7 @@ exports.UDPClient = (UDPClient = class UDPClient {
       return;
     }
 
-    return this._writeReliableBypassBlock(buf, packetId, callback, () => {
-      return this._writeReliable(buf, packetId, callback);
-    });
+    return this._writeReliableBypassBlock(buf, packetId, callback, () => this._writeReliable(buf, packetId, callback));
   }
 
   writeReliable(buf, callback) {
@@ -277,8 +285,8 @@ exports.UDPClient = (UDPClient = class UDPClient {
     const packet = this.pendingPackets.shift();
     const func = packet[0];
     const args = packet.slice(1);
-    const origCallback = args[func.length-1];
-    args[func.length-1] = () => {
+    const origCallback = args[func.length - 1];
+    args[func.length - 1] = () => {
       this.flushPendingPackets(callback);
       return (typeof origCallback === 'function' ? origCallback() : undefined);
     };
@@ -286,9 +294,7 @@ exports.UDPClient = (UDPClient = class UDPClient {
   }
 
   _writeReliableBlocked(buf, packetId, callback) {
-    return this._writeReliableBypassBlock(buf, packetId, callback, () => {
-      return this._writeReliableBlocked(buf, packetId, callback);
-    });
+    return this._writeReliableBypassBlock(buf, packetId, callback, () => this._writeReliableBlocked(buf, packetId, callback));
   }
 
   // Defer other packets until this packet is received
@@ -330,14 +336,12 @@ exports.UDPServer = (UDPServer = class UDPServer extends events.EventEmitter {
     super();
     this.socket = dgram.createSocket('udp4');
 
-    this.socket.on('error', function(err) {
+    this.socket.on('error', function (err) {
       logger.error(`UDPServer socket error: ${err}`);
       return this.socket.close();
     });
 
-    this.socket.on('message', (msg, rinfo) => {
-      return this.onReceiveMessage(msg, rinfo);
-    });
+    this.socket.on('message', (msg, rinfo) => this.onReceiveMessage(msg, rinfo));
 
     this.isStopped = false;
     this.resetServerState();
@@ -378,7 +382,7 @@ exports.UDPServer = (UDPServer = class UDPServer extends events.EventEmitter {
       this.latestPacketId = packetId;
     }
 
-    if (endFragmentNumber > 0) {  // fragmentation
+    if (endFragmentNumber > 0) { // fragmentation
       if (this.videoReceiveBuf[packetId] != null) {
         // check if existing packet is too old
         if ((Date.now() - this.videoReceiveBuf[packetId].time) >= OLD_UDP_PACKET_TIME_THRESHOLD) {
@@ -389,7 +393,7 @@ exports.UDPServer = (UDPServer = class UDPServer extends events.EventEmitter {
       if ((this.videoReceiveBuf[packetId] == null)) {
         this.videoReceiveBuf[packetId] = {
           buf: [],
-          totalReceivedLength: 0
+          totalReceivedLength: 0,
         };
       }
       const targetBuf = this.videoReceiveBuf[packetId];
@@ -397,13 +401,13 @@ exports.UDPServer = (UDPServer = class UDPServer extends events.EventEmitter {
       targetBuf.time = Date.now();
       targetBuf.totalReceivedLength += msg.length - 4;
       let isMissing = false;
-      for (let i = 0, end = endFragmentNumber, asc = 0 <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
+      for (let i = 0, end = endFragmentNumber, asc = end >= 0; asc ? i <= end : i >= end; asc ? i++ : i--) {
         if ((targetBuf.buf[i] == null)) {
           isMissing = true;
           break;
         }
       }
-      if (!isMissing) {  // received all fragments
+      if (!isMissing) { // received all fragments
         try {
           receivedBuf = Buffer.concat(targetBuf.buf);
           return this.onReceivePacket({
@@ -411,19 +415,18 @@ exports.UDPServer = (UDPServer = class UDPServer extends events.EventEmitter {
             packetId,
             port: rinfo.port,
             address: rinfo.address,
-            body: receivedBuf
+            body: receivedBuf,
           });
         } catch (e) {
           logger.error(`concat/receive error for packetId=${packetId}: ${e}`);
           logger.error(e.stack);
           return logger.error(targetBuf.buf);
-        }
-        finally {
+        } finally {
           delete this.videoReceiveBuf[packetId];
           delete this.packetLastReceiveTime[packetId];
         }
       }
-    } else {  // no fragmentation
+    } else { // no fragmentation
       receivedBuf = msg.slice(4);
       delete this.videoReceiveBuf[packetId];
       delete this.packetLastReceiveTime[packetId];
@@ -432,7 +435,7 @@ exports.UDPServer = (UDPServer = class UDPServer extends events.EventEmitter {
         packetId,
         port: rinfo.port,
         address: rinfo.address,
-        body: receivedBuf
+        body: receivedBuf,
       });
     }
   }
@@ -508,7 +511,7 @@ exports.UDPServer = (UDPServer = class UDPServer extends events.EventEmitter {
     if (anticipatingPacketId === (MAX_PACKET_ID + 1)) {
       anticipatingPacketId = 0;
     }
-    if (packet.packetId === anticipatingPacketId) {  // continuous
+    if (packet.packetId === anticipatingPacketId) { // continuous
       let nextPacketId;
       this.processedPacketId = packet.packetId;
       this.onCompletePacket(packet);
@@ -518,17 +521,16 @@ exports.UDPServer = (UDPServer = class UDPServer extends events.EventEmitter {
         nextPacketId = packet.packetId + 1;
       }
       return this.consumeBufferedPacketsFrom(nextPacketId);
-    } else {  // non-continuous
-      if (this.processedPacketId - RECEIVE_PACKET_ID_WINDOW <= packet.packetId && packet.packetId <= this.processedPacketId) {
-        logger.warn(`duplicated packet ${packet.packetId}`);
-        if (packet.packetType === PACKET_TYPE_REQUIRE_ACK) {
-          this.sendAck(packet.packetId, packet.port, packet.address);
-        }
-        return;
+    } // non-continuous
+    if (this.processedPacketId - RECEIVE_PACKET_ID_WINDOW <= packet.packetId && packet.packetId <= this.processedPacketId) {
+      logger.warn(`duplicated packet ${packet.packetId}`);
+      if (packet.packetType === PACKET_TYPE_REQUIRE_ACK) {
+        this.sendAck(packet.packetId, packet.port, packet.address);
       }
-      this.bufferedPackets[packet.packetId] = packet;
-      return this.deleteOldBufferedPackets();
+      return;
     }
+    this.bufferedPackets[packet.packetId] = packet;
+    return this.deleteOldBufferedPackets();
   }
 
   onCompletePacket(packet) {
@@ -536,10 +538,8 @@ exports.UDPServer = (UDPServer = class UDPServer extends events.EventEmitter {
       this.sendAck(packet.packetId, packet.port, packet.address);
     }
 
-    return setTimeout(() => {
-      return this.emit('packet', packet.body, packet.address, packet.port);
-    }
-    , 0);
+    return setTimeout(() => this.emit('packet', packet.body, packet.address, packet.port)
+      , 0);
   }
 
   sendAck(packetId, port, address, callback) {
@@ -547,7 +547,7 @@ exports.UDPServer = (UDPServer = class UDPServer extends events.EventEmitter {
       // packet type
       PACKET_TYPE_ACK,
       // packet id
-      packetId
+      packetId,
     ]);
     return this.socket.send(buf, 0, buf.length, port, address, callback);
   }

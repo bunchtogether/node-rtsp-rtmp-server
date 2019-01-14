@@ -1,3 +1,21 @@
+/* eslint-disable
+    camelcase,
+    consistent-return,
+    no-cond-assign,
+    no-constant-condition,
+    no-loop-func,
+    no-param-reassign,
+    no-return-assign,
+    no-shadow,
+    no-undef,
+    no-underscore-dangle,
+    no-unused-vars,
+    no-var,
+    one-var,
+    vars-on-top,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -19,81 +37,81 @@ let videoBuf = null;
 const pps = {};
 let sps = {};
 
-const ASPECT_RATIO_IDC_EXTENDED_SAR = 255;  // Extended_SAR
+const ASPECT_RATIO_IDC_EXTENDED_SAR = 255; // Extended_SAR
 
 const SUB_WIDTHS = {
   // 'chroma_format_idc,separate_colour_plane_flag': [SubWidthC, SubHeightC]
   '1,0': [2, 2],
   '2,0': [2, 1],
-  '3,0': [1, 1]
+  '3,0': [1, 1],
 };
 
 // rangeTabLPS
 const RANGE_TAB_LPS = [
-  [ 128, 176, 208, 240 ],
-  [ 128, 167, 197, 227 ],
-  [ 128, 158, 187, 216 ],
-  [ 123, 150, 178, 205 ],
-  [ 116, 142, 169, 195 ],
-  [ 111, 135, 160, 185 ],
-  [ 105, 128, 152, 175 ],
-  [ 100, 122, 144, 166 ],
-  [ 95, 116, 137, 158 ],
-  [ 90, 110, 130, 150 ],
-  [ 85, 104, 123, 142 ],
-  [ 81, 99, 117, 135 ],
-  [ 77, 94, 111, 128 ],
-  [ 73, 89, 105, 122 ],
-  [ 69, 85, 100, 116 ],
-  [ 66, 80, 95, 110 ],
-  [ 62, 76, 90, 104 ],
-  [ 59, 72, 86, 99 ],
-  [ 56, 69, 81, 94 ],
-  [ 53, 65, 77, 89 ],
-  [ 51, 62, 73, 85 ],
-  [ 48, 59, 69, 80 ],
-  [ 46, 56, 66, 76 ],
-  [ 43, 53, 63, 72 ],
-  [ 41, 50, 59, 69 ],
-  [ 39, 48, 56, 65 ],
-  [ 37, 45, 54, 62 ],
-  [ 35, 43, 51, 59 ],
-  [ 33, 41, 48, 56 ],
-  [ 32, 39, 46, 53 ],
-  [ 30, 37, 43, 50 ],
-  [ 29, 35, 41, 48 ],
-  [ 27, 33, 39, 45 ],
-  [ 26, 31, 37, 43 ],
-  [ 24, 30, 35, 41 ],
-  [ 23, 28, 33, 39 ],
-  [ 22, 27, 32, 37 ],
-  [ 21, 26, 30, 35 ],
-  [ 20, 24, 29, 33 ],
-  [ 19, 23, 27, 31 ],
-  [ 18, 22, 26, 30 ],
-  [ 17, 21, 25, 28 ],
-  [ 16, 20, 23, 27 ],
-  [ 15, 19, 22, 25 ],
-  [ 14, 18, 21, 24 ],
-  [ 14, 17, 20, 23 ],
-  [ 13, 16, 19, 22 ],
-  [ 12, 15, 18, 21 ],
-  [ 12, 14, 17, 20 ],
-  [ 11, 14, 16, 19 ],
-  [ 11, 13, 15, 18 ],
-  [ 10, 12, 15, 17 ],
-  [ 10, 12, 14, 16 ],
-  [ 9, 11, 13, 15 ],
-  [ 9, 11, 12, 14 ],
-  [ 8, 10, 12, 14 ],
-  [ 8, 9, 11, 13 ],
-  [ 7, 9, 11, 12 ],
-  [ 7, 9, 10, 12 ],
-  [ 7, 8, 10, 11 ],
-  [ 6, 8, 9, 11 ],
-  [ 6, 7, 9, 10 ],
-  [ 6, 7, 8, 9 ],
-  [ 2, 2, 2, 2 ]
+  [128, 176, 208, 240],
+  [128, 167, 197, 227],
+  [128, 158, 187, 216],
+  [123, 150, 178, 205],
+  [116, 142, 169, 195],
+  [111, 135, 160, 185],
+  [105, 128, 152, 175],
+  [100, 122, 144, 166],
+  [95, 116, 137, 158],
+  [90, 110, 130, 150],
+  [85, 104, 123, 142],
+  [81, 99, 117, 135],
+  [77, 94, 111, 128],
+  [73, 89, 105, 122],
+  [69, 85, 100, 116],
+  [66, 80, 95, 110],
+  [62, 76, 90, 104],
+  [59, 72, 86, 99],
+  [56, 69, 81, 94],
+  [53, 65, 77, 89],
+  [51, 62, 73, 85],
+  [48, 59, 69, 80],
+  [46, 56, 66, 76],
+  [43, 53, 63, 72],
+  [41, 50, 59, 69],
+  [39, 48, 56, 65],
+  [37, 45, 54, 62],
+  [35, 43, 51, 59],
+  [33, 41, 48, 56],
+  [32, 39, 46, 53],
+  [30, 37, 43, 50],
+  [29, 35, 41, 48],
+  [27, 33, 39, 45],
+  [26, 31, 37, 43],
+  [24, 30, 35, 41],
+  [23, 28, 33, 39],
+  [22, 27, 32, 37],
+  [21, 26, 30, 35],
+  [20, 24, 29, 33],
+  [19, 23, 27, 31],
+  [18, 22, 26, 30],
+  [17, 21, 25, 28],
+  [16, 20, 23, 27],
+  [15, 19, 22, 25],
+  [14, 18, 21, 24],
+  [14, 17, 20, 23],
+  [13, 16, 19, 22],
+  [12, 15, 18, 21],
+  [12, 14, 17, 20],
+  [11, 14, 16, 19],
+  [11, 13, 15, 18],
+  [10, 12, 15, 17],
+  [10, 12, 14, 16],
+  [9, 11, 13, 15],
+  [9, 11, 12, 14],
+  [8, 10, 12, 14],
+  [8, 9, 11, 13],
+  [7, 9, 11, 12],
+  [7, 9, 10, 12],
+  [7, 8, 10, 11],
+  [6, 8, 9, 11],
+  [6, 7, 9, 10],
+  [6, 7, 8, 9],
+  [2, 2, 2, 2],
 ];
 
 // Name association to slice_type
@@ -107,7 +125,7 @@ const SLICE_TYPES = {
   6: 'B',
   7: 'I',
   8: 'SP',
-  9: 'SI'
+  9: 'SI',
 };
 
 const eventListeners = {};
@@ -119,15 +137,15 @@ let dtsPackets = [];
 
 var api = {
   NAL_UNIT_TYPE_NON_IDR_PICTURE: 1, // inter frame
-  NAL_UNIT_TYPE_IDR_PICTURE: 5,     // key frame
-  NAL_UNIT_TYPE_SEI: 6,             // SEI (supplemental enhancement information)
-  NAL_UNIT_TYPE_SPS: 7,             // SPS (sequence parameter set)
-  NAL_UNIT_TYPE_PPS: 8,             // PPS (picture parameter set)
-  NAL_UNIT_TYPE_ACCESS_UNIT_DELIMITER: 9,  // access unit delimiter
+  NAL_UNIT_TYPE_IDR_PICTURE: 5, // key frame
+  NAL_UNIT_TYPE_SEI: 6, // SEI (supplemental enhancement information)
+  NAL_UNIT_TYPE_SPS: 7, // SPS (sequence parameter set)
+  NAL_UNIT_TYPE_PPS: 8, // PPS (picture parameter set)
+  NAL_UNIT_TYPE_ACCESS_UNIT_DELIMITER: 9, // access unit delimiter
 
   open(file) {
     return videoBuf = fs.readFileSync(file);
-  },  // up to 1GB
+  }, // up to 1GB
 
   close() {
     return videoBuf = null;
@@ -135,7 +153,7 @@ var api = {
 
   emit(name, ...data) {
     if (eventListeners[name] != null) {
-      for (let listener of Array.from(eventListeners[name])) {
+      for (const listener of Array.from(eventListeners[name])) {
         listener(...Array.from(data || []));
       }
     }
@@ -144,9 +162,8 @@ var api = {
   on(name, listener) {
     if (eventListeners[name] != null) {
       return eventListeners[name].push(listener);
-    } else {
-      return eventListeners[name] = [ listener ];
     }
+    return eventListeners[name] = [listener];
   },
 
   end() {
@@ -162,14 +179,14 @@ var api = {
 
       if (startCodePos !== -1) {
         nalUnit = buffer.slice(0, startCodePos);
-        buffer = buffer.slice(startCodePos+3);
+        buffer = buffer.slice(startCodePos + 3);
       } else {
         nalUnit = buffer;
       }
 
       // Remove trailing_zero_8bits
-      while (nalUnit[nalUnit.length-1] === 0x00) {
-        nalUnit = nalUnit.slice(0, nalUnit.length-1);
+      while (nalUnit[nalUnit.length - 1] === 0x00) {
+        nalUnit = nalUnit.slice(0, nalUnit.length - 1);
       }
 
       if (nalUnit.length > 0) {
@@ -203,11 +220,11 @@ var api = {
           break;
         }
         let nalUnit = videoBuf.slice(0, startCodePos);
-        videoBuf = videoBuf.slice(startCodePos+3);
+        videoBuf = videoBuf.slice(startCodePos + 3);
 
         // Remove trailing_zero_8bits
-        while (nalUnit[nalUnit.length-1] === 0x00) {
-          nalUnit = nalUnit.slice(0, nalUnit.length-1);
+        while (nalUnit[nalUnit.length - 1] === 0x00) {
+          nalUnit = nalUnit.slice(0, nalUnit.length - 1);
         }
 
         if (nalUnit.length > 0) {
@@ -252,11 +269,11 @@ var api = {
         break;
       }
       let nalUnit = videoBuf.slice(0, startCodePos);
-      videoBuf = videoBuf.slice(startCodePos+3);
+      videoBuf = videoBuf.slice(startCodePos + 3);
 
       // Remove trailing_zero_8bits
-      while (nalUnit[nalUnit.length-1] === 0x00) {
-        nalUnit = nalUnit.slice(0, nalUnit.length-1);
+      while (nalUnit[nalUnit.length - 1] === 0x00) {
+        nalUnit = nalUnit.slice(0, nalUnit.length - 1);
       }
 
       if (nalUnit.length > 0) {
@@ -292,7 +309,7 @@ var api = {
   isPictureNALUnitType(nalUnitType) {
     return [
       api.NAL_UNIT_TYPE_NON_IDR_PICTURE,
-      api.NAL_UNIT_TYPE_IDR_PICTURE
+      api.NAL_UNIT_TYPE_IDR_PICTURE,
     ].includes(nalUnitType);
   },
 
@@ -307,7 +324,7 @@ var api = {
   readScalingList(bits, scalingList, sizeOfScalingList, useDefaultScalingMatrixFlag) {
     let lastScale = 8;
     let nextScale = 8;
-    for (let j = 0, end = sizeOfScalingList, asc = 0 <= end; asc ? j < end : j > end; asc ? j++ : j--) {
+    for (let j = 0, end = sizeOfScalingList, asc = end >= 0; asc ? j < end : j > end; asc ? j++ : j--) {
       if (nextScale !== 0) {
         const delta_scale = bits.read_se();
         nextScale = (lastScale + delta_scale + 256) % 256;
@@ -336,21 +353,21 @@ var api = {
     bits.read_bytes(payloadSize);
 
     // TODO
-//    logger.debug "SEI: payloadType=#{payloadType} payloadSize=#{payloadSize}"
-//    switch payloadType
-//      when 0 then api.read_buffering_period payloadSize
-//      when 1 then api.read_pic_timing payloadSize
-//      when 2 then api.read_pan_scan_rect payloadSize
-//      when 3 then api.read_filler_payload payloadSize
-//      when 4 then api.read_user_data_registered_itu_t_t35 payloadSize
-//      when 5 then api.read_user_data_unregistered bits, payloadSize
-//      when 6 then api.read_recovery_point payloadSize
-//      when 7 then api.read_dec_ref_pic_marking_repetition payloadSize
-//      when 8 then api.read_spare_pic payloadSize
-//      when 9 then api.read_scene_info payloadSize
-//      when 10 then api.read_sub_seq_info payloadSize
-//      ...
-//      else api.read_reserved_sei_message bits, payloadSize
+    //    logger.debug "SEI: payloadType=#{payloadType} payloadSize=#{payloadSize}"
+    //    switch payloadType
+    //      when 0 then api.read_buffering_period payloadSize
+    //      when 1 then api.read_pic_timing payloadSize
+    //      when 2 then api.read_pan_scan_rect payloadSize
+    //      when 3 then api.read_filler_payload payloadSize
+    //      when 4 then api.read_user_data_registered_itu_t_t35 payloadSize
+    //      when 5 then api.read_user_data_unregistered bits, payloadSize
+    //      when 6 then api.read_recovery_point payloadSize
+    //      when 7 then api.read_dec_ref_pic_marking_repetition payloadSize
+    //      when 8 then api.read_spare_pic payloadSize
+    //      when 9 then api.read_scene_info payloadSize
+    //      when 10 then api.read_sub_seq_info payloadSize
+    //      ...
+    //      else api.read_reserved_sei_message bits, payloadSize
 
     return bits.read_until_byte_aligned();
   },
@@ -398,13 +415,15 @@ var api = {
       let iGroup;
       const slice_group_map_type = bits.read_ue();
       if (slice_group_map_type === 0) {
-        let asc, end;
-        for (iGroup = 0, end = pps.num_slice_groups_minus1, asc = 0 <= end; asc ? iGroup <= end : iGroup >= end; asc ? iGroup++ : iGroup--) {
+        let asc,
+          end;
+        for (iGroup = 0, end = pps.num_slice_groups_minus1, asc = end >= 0; asc ? iGroup <= end : iGroup >= end; asc ? iGroup++ : iGroup--) {
           const run_length_minus1 = bits.read_ue();
         }
       } else if (slice_group_map_type === 2) {
-        let asc1, end1;
-        for (iGroup = 0, end1 = pps.num_slice_groups_minus1, asc1 = 0 <= end1; asc1 ? iGroup < end1 : iGroup > end1; asc1 ? iGroup++ : iGroup--) {
+        let asc1,
+          end1;
+        for (iGroup = 0, end1 = pps.num_slice_groups_minus1, asc1 = end1 >= 0; asc1 ? iGroup < end1 : iGroup > end1; asc1 ? iGroup++ : iGroup--) {
           const top_left = bits.read_ue();
           const bottom_right = bits.read_ue();
         }
@@ -412,9 +431,10 @@ var api = {
         const slice_group_change_direction_flag = bits.read_bit();
         pps.slice_group_change_rate_minus1 = bits.read_ue();
       } else if (slice_group_map_type === 6) {
-        let asc2, end2;
+        let asc2,
+          end2;
         const pic_size_in_map_units_minus1 = bits.read_ue();
-        for (i = 0, end2 = pic_size_in_map_units_minus1, asc2 = 0 <= end2; asc2 ? i <= end2 : i >= end2; asc2 ? i++ : i--) {
+        for (i = 0, end2 = pic_size_in_map_units_minus1, asc2 = end2 >= 0; asc2 ? i <= end2 : i >= end2; asc2 ? i++ : i--) {
           // Ceil( Log2( num_slice_groups_minus1 + 1 ) )
           const numBits = Math.ceil(Math.log(pps.num_slice_groups_minus1 + 1) / Math.LN2);
           const slice_group_id = bits.read_bits(numBits);
@@ -435,8 +455,9 @@ var api = {
       const transform_8x8_mode_flag = bits.read_bit();
       const pic_scaling_matrix_present_flag = bits.read_bit();
       if (pic_scaling_matrix_present_flag === 1) {
-        let asc3, end3;
-        for (i = 0, end3 = 6+((sps.chroma_format_idc !== 3 ? 2 : 6)*transform_8x8_mode_flag), asc3 = 0 <= end3; asc3 ? i < end3 : i > end3; asc3 ? i++ : i--) {
+        let asc3,
+          end3;
+        for (i = 0, end3 = 6 + ((sps.chroma_format_idc !== 3 ? 2 : 6) * transform_8x8_mode_flag), asc3 = end3 >= 0; asc3 ? i < end3 : i > end3; asc3 ? i++ : i--) {
           const pic_scaling_list_present_flag = bits.read_bit();
           if (pic_scaling_list_present_flag) {
             if (i < 6) {
@@ -466,7 +487,8 @@ var api = {
   //   height (number): height in pixels
   // }
   getFrameSize(sps) {
-    let cropUnitX, cropUnitY;
+    let cropUnitX,
+      cropUnitY;
     if (sps.chromaArrayType === 0) {
       cropUnitX = 1;
       cropUnitY = 2 - sps.frame_mbs_only_flag;
@@ -482,13 +504,13 @@ var api = {
       (cropUnitY * sps.frame_crop_top_offset)) + 1;
     return {
       width,
-      height
+      height,
     };
   },
 
   getSubWidths(sps) {
-    return SUB_WIDTHS[sps.chroma_format_idc + ',' +
-      sps.separate_colour_plane_flag];
+    return SUB_WIDTHS[`${sps.chroma_format_idc},${
+      sps.separate_colour_plane_flag}`];
   },
 
   readSPS(nalUnit) {
@@ -513,7 +535,7 @@ var api = {
 
     if ([100, 110, 122, 244, 44, 83, 86, 118, 128].includes(sps.profile_idc)) {
       sps.chroma_format_idc = bits.read_ue();
-      sps.chromaArrayType = sps.chroma_format_idc;  // default value
+      sps.chromaArrayType = sps.chroma_format_idc; // default value
       if (sps.chroma_format_idc === 3) {
         sps.separate_colour_plane_flag = bits.read_bit();
 
@@ -530,8 +552,9 @@ var api = {
       const qpprime_y_zero_transform_bypass_flag = bits.read_bit();
       const seq_scaling_matrix_present_flag = bits.read_bit();
       if (seq_scaling_matrix_present_flag) {
-        let asc, end;
-        for (i = 0, end = sps.chroma_format_idc !== 3 ? 8 : 12, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+        let asc,
+          end;
+        for (i = 0, end = sps.chroma_format_idc !== 3 ? 8 : 12, asc = end >= 0; asc ? i < end : i > end; asc ? i++ : i--) {
           const seq_scaling_list_present_flag = bits.read_bit();
           if (seq_scaling_list_present_flag) {
             if (i < 6) {
@@ -549,7 +572,7 @@ var api = {
         }
       }
     } else {
-      sps.chromaArrayType = (sps.chroma_format_idc = 1);  // 4:2:0 chroma format
+      sps.chromaArrayType = (sps.chroma_format_idc = 1); // 4:2:0 chroma format
       sps.separate_colour_plane_flag = 0;
     }
     const subWidths = api.getSubWidths(sps);
@@ -563,12 +586,13 @@ var api = {
     if (sps.pic_order_cnt_type === 0) {
       sps.log2_max_pic_order_cnt_lsb_minus4 = bits.read_ue();
     } else if (sps.pic_order_cnt_type === 1) {
-      let asc1, end1;
+      let asc1,
+        end1;
       const delta_pic_order_always_zero_flag = bits.read_bit();
       const offset_for_non_ref_pic = bits.read_se();
       const offset_for_top_to_bottom_field = bits.read_se();
       const num_ref_frames_in_pic_order_cnt_cycle = bits.read_ue();
-      for (i = 0, end1 = num_ref_frames_in_pic_order_cnt_cycle, asc1 = 0 <= end1; asc1 ? i < end1 : i > end1; asc1 ? i++ : i--) {
+      for (i = 0, end1 = num_ref_frames_in_pic_order_cnt_cycle, asc1 = end1 >= 0; asc1 ? i < end1 : i > end1; asc1 ? i++ : i--) {
         const offset_for_ref_frame = bits.read_se();
       }
     }
@@ -588,14 +612,14 @@ var api = {
     const direct_8x8_inference_flag = bits.read_bit();
     const frame_cropping_flag = bits.read_bit();
     if (frame_cropping_flag) {
-      sps.frame_crop_left_offset   = bits.read_ue();
-      sps.frame_crop_right_offset  = bits.read_ue();
-      sps.frame_crop_top_offset    = bits.read_ue();
+      sps.frame_crop_left_offset = bits.read_ue();
+      sps.frame_crop_right_offset = bits.read_ue();
+      sps.frame_crop_top_offset = bits.read_ue();
       sps.frame_crop_bottom_offset = bits.read_ue();
     } else {
-      sps.frame_crop_left_offset   = 0;
-      sps.frame_crop_right_offset  = 0;
-      sps.frame_crop_top_offset    = 0;
+      sps.frame_crop_left_offset = 0;
+      sps.frame_crop_right_offset = 0;
+      sps.frame_crop_top_offset = 0;
       sps.frame_crop_bottom_offset = 0;
     }
     const vui_parameters_present_flag = bits.read_bit();
@@ -606,16 +630,16 @@ var api = {
     // rbsp_trailing_bits
     const rbsp_stop_one_bit = bits.read_bit();
     if (rbsp_stop_one_bit !== 1) {
-      logger.warn("warn: malformed SPS data: rbsp_stop_one_bit must be 1");
+      logger.warn('warn: malformed SPS data: rbsp_stop_one_bit must be 1');
     }
 
     const zero_bits_sum = bits.read_until_byte_aligned();
     if (zero_bits_sum !== 0) {
-      logger.warn("warn: malformed SPS data: rbsp_alignment_zero_bit must be all zeroes");
+      logger.warn('warn: malformed SPS data: rbsp_alignment_zero_bit must be all zeroes');
     }
 
     if (bits.get_remaining_bits() !== 0) {
-      logger.warn("warn: malformed SPS length");
+      logger.warn('warn: malformed SPS length');
     }
 
     return sps;
@@ -624,33 +648,35 @@ var api = {
   read_slice_data(bits, opts) {
     let sliceTypeString;
     if (pps.entropy_coding_mode_flag) {
-      bits.read_until_byte_aligned();  // cabac_alignment_one_bit
+      bits.read_until_byte_aligned(); // cabac_alignment_one_bit
     }
     const currMbAddr = opts.sliceHeader.first_mb_in_slice * (1 + opts.sliceHeader.mbaffFrameFlag);
     const moreDataFlag = 1;
     const prevMbSkipped = 0;
     return sliceTypeString = api.getSliceTypeString(opts.sliceHeader.slice_type);
   },
-//    loop
-//      if sliceTypeString not in ['I', 'SI']
-//        if not pps.entropy_coding_mode_flag
-//          mb_skip_run = bits.read_ue()
-//          prevMbSkipped = mb_skip_run > 0
-//          for i in [0...mb_skip_run]
-//            currMbAddr = nextMbAddress(currMbAddr)
-//          if mb_skip_run > 0
-//            moreDataFlag = api.more_rbsp_data bits
-//        else
-//          sliceQPy = 26 + pps.pic_init_qp_minus26 + opts.sliceHeader.slice_qp_delta
-//          mb_skip_flag = api.read_ae bits
-//            sliceQPy: sliceQPy
+  //    loop
+  //      if sliceTypeString not in ['I', 'SI']
+  //        if not pps.entropy_coding_mode_flag
+  //          mb_skip_run = bits.read_ue()
+  //          prevMbSkipped = mb_skip_run > 0
+  //          for i in [0...mb_skip_run]
+  //            currMbAddr = nextMbAddress(currMbAddr)
+  //          if mb_skip_run > 0
+  //            moreDataFlag = api.more_rbsp_data bits
+  //        else
+  //          sliceQPy = 26 + pps.pic_init_qp_minus26 + opts.sliceHeader.slice_qp_delta
+  //          mb_skip_flag = api.read_ae bits
+  //            sliceQPy: sliceQPy
 
   read_ref_pic_list_mvc_modification(opts) {
-    throw new Error("Not implemented");
+    throw new Error('Not implemented');
   },
 
   read_ref_pic_list_modification(bits, opts) {
-    let abs_diff_pic_num_minus1, long_term_pic_num, modification_of_pic_nums_idc;
+    let abs_diff_pic_num_minus1,
+      long_term_pic_num,
+      modification_of_pic_nums_idc;
     const { sliceHeader } = opts;
 
     if (![2, 4].includes(sliceHeader.slice_type % 5)) {
@@ -694,8 +720,10 @@ var api = {
   },
 
   read_pred_weight_table(bits, opts) {
-    let i, j;
-    let asc, end;
+    let i,
+      j;
+    let asc,
+      end;
     const { sliceHeader } = opts;
 
     const luma_log2_weight_denom = bits.read_ue();
@@ -709,7 +737,7 @@ var api = {
     const luma_offset_10 = [];
     const chroma_weight_10 = [];
     const chroma_offset_10 = [];
-    for (i = 0, end = sliceHeader.num_ref_idx_l0_active_minus1, asc = 0 <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
+    for (i = 0, end = sliceHeader.num_ref_idx_l0_active_minus1, asc = end >= 0; asc ? i <= end : i >= end; asc ? i++ : i--) {
       const luma_weight_10_flag = bits.read_bit();
       if (luma_weight_10_flag) {
         luma_weight_10[i] = bits.read_se();
@@ -733,9 +761,10 @@ var api = {
       const chroma_weight_11 = [];
       const chroma_offset_11 = [];
       return (() => {
-        let asc1, end1;
+        let asc1,
+          end1;
         const result = [];
-        for (i = 0, end1 = sliceHeader.num_ref_idx_l1_active_minus1, asc1 = 0 <= end1; asc1 ? i <= end1 : i >= end1; asc1 ? i++ : i--) {
+        for (i = 0, end1 = sliceHeader.num_ref_idx_l1_active_minus1, asc1 = end1 >= 0; asc1 ? i <= end1 : i >= end1; asc1 ? i++ : i--) {
           const luma_weight_11_flag = bits.read_bit();
           if (luma_weight_11_flag) {
             luma_weight_11[i] = bits.read_se();
@@ -773,34 +802,33 @@ var api = {
       let long_term_reference_flag;
       const no_output_of_prior_pics_flag = bits.read_bit();
       return long_term_reference_flag = bits.read_bit();
-    } else {
-      const adaptive_ref_pic_marking_mode_flag = bits.read_bit();
-      if (adaptive_ref_pic_marking_mode_flag) {
-        return (() => {
-          const result = [];
-          while (true) {
-            const memory_management_control_operation = bits.read_ue();
-            if ([1, 3].includes(memory_management_control_operation)) {
-              const difference_of_pic_nums_minus1 = bits.read_ue();
-            }
-            if (memory_management_control_operation === 2) {
-              const long_term_pic_num = bits.read_ue();
-            }
-            if ([3, 6].includes(memory_management_control_operation)) {
-              const long_term_frame_idx = bits.read_ue();
-            }
-            if (memory_management_control_operation === 4) {
-              const max_long_term_frame_idx_plus1 = bits.read_ue();
-            }
-            if (memory_management_control_operation === 0) {
-              break;
-            } else {
-              result.push(undefined);
-            }
+    }
+    const adaptive_ref_pic_marking_mode_flag = bits.read_bit();
+    if (adaptive_ref_pic_marking_mode_flag) {
+      return (() => {
+        const result = [];
+        while (true) {
+          const memory_management_control_operation = bits.read_ue();
+          if ([1, 3].includes(memory_management_control_operation)) {
+            const difference_of_pic_nums_minus1 = bits.read_ue();
           }
-          return result;
-        })();
-      }
+          if (memory_management_control_operation === 2) {
+            const long_term_pic_num = bits.read_ue();
+          }
+          if ([3, 6].includes(memory_management_control_operation)) {
+            const long_term_frame_idx = bits.read_ue();
+          }
+          if (memory_management_control_operation === 4) {
+            const max_long_term_frame_idx_plus1 = bits.read_ue();
+          }
+          if (memory_management_control_operation === 0) {
+            break;
+          } else {
+            result.push(undefined);
+          }
+        }
+        return result;
+      })();
     }
   },
 
@@ -893,7 +921,7 @@ var api = {
         const slice_beta_offset_div2 = bits.read_se();
       }
     }
-    if ((pps.num_slice_groups_minus1 > 0) && (3 <= slice_group_map_type && slice_group_map_type <= 5)) {
+    if ((pps.num_slice_groups_minus1 > 0) && (slice_group_map_type >= 3 && slice_group_map_type <= 5)) {
       // Ceil( Log2( PicSizeInMapUnits + SliceGroupChangeRate + 1 ) )
       const numBits = Math.ceil(Math.log(sps.picSizeInMapUnits +
         pps.slice_group_change_rate_minus1 + 1) / Math.LN2);
@@ -902,7 +930,7 @@ var api = {
   },
 
   _isSamePicture(nalData1, nalData2) {
-    for (let elem of [
+    for (const elem of [
       'pic_parameter_set_id',
       'frame_num',
       'field_pic_flag',
@@ -913,7 +941,7 @@ var api = {
       'delta_pic_order_cnt_0',
       'delta_pic_order_cnt_1',
       'sp_for_switch_flag',
-      'slice_group_change_cycle'
+      'slice_group_change_cycle',
     ]) {
       if (nalData1.sliceHeader[elem] !== nalData2.sliceHeader[elem]) {
         // different picture
@@ -940,7 +968,7 @@ var api = {
     data.nalHeader = api.read_nal_header(bits);
     if ([
       api.NAL_UNIT_TYPE_NON_IDR_PICTURE,
-      api.NAL_UNIT_TYPE_IDR_PICTURE
+      api.NAL_UNIT_TYPE_IDR_PICTURE,
     ].includes(data.nalHeader.nal_unit_type)) {
       api.read_slice_header(bits, data);
     }
@@ -995,7 +1023,7 @@ var api = {
     // occurrence of 0x000001 in a NAL unit. Therefore a
     // byte-aligned 0x000001 is always a start code prefix.
     const startCodePos = Bits.searchBytesInArray(videoBuf, [0x00, 0x00, 0x01], 0);
-    if (startCodePos === -1) {  // last NAL unit
+    if (startCodePos === -1) { // last NAL unit
       nalUnit = videoBuf;
       videoBuf = [];
       return nalUnit;
@@ -1003,11 +1031,11 @@ var api = {
     nalUnit = videoBuf.slice(0, startCodePos);
 
     // Truncate video buffer
-    videoBuf = videoBuf.slice(startCodePos+3);
+    videoBuf = videoBuf.slice(startCodePos + 3);
 
     // Remove trailing_zero_8bits
-    while (nalUnit[nalUnit.length-1] === 0x00) {
-      nalUnit = nalUnit.slice(0, nalUnit.length-1);
+    while (nalUnit[nalUnit.length - 1] === 0x00) {
+      nalUnit = nalUnit.slice(0, nalUnit.length - 1);
     }
 
     if (nalUnit.length > 0) {
@@ -1020,9 +1048,8 @@ var api = {
         api.readSEI(nalUnit);
       }
       return nalUnit;
-    } else {
-      return api.getNextNALUnit();
     }
+    return api.getNextNALUnit();
   },
 
   clip3(x, y, z) {
@@ -1042,9 +1069,8 @@ var api = {
     if (vars.codIOffset >= vars.codIRange) {
       vars.binVal = 1;
       return vars.codIOffset -= vars.codIRange;
-    } else {
-      return vars.binVal = 0;
     }
+    return vars.binVal = 0;
   },
 
   deriveCtxIdx(input) {
@@ -1057,7 +1083,7 @@ var api = {
     const ctxIdxInc = null;
 
     return {
-      ctxIdx: 0
+      ctxIdx: 0,
     };
   },
 
@@ -1067,7 +1093,7 @@ var api = {
       const result = [];
       while (vars.codIRange < 256) {
         vars.codIRange <<= 1;
-        vars.codIOffset <<= 1;  // TODO: correct?
+        vars.codIOffset <<= 1; // TODO: correct?
         result.push(vars.codIOffset |= bits.read_bit());
       }
       return result;
@@ -1079,10 +1105,9 @@ var api = {
     vars.codIRange -= 2;
     if (vars.codIOffset >= vars.codIRange) {
       return vars.binVal = 1;
-    } else {
-      vars.binVal = 0;
-      return api.renormD(bits);
     }
+    vars.binVal = 0;
+    return api.renormD(bits);
   },
 
   // 9.3.3.2.1
@@ -1113,46 +1138,46 @@ var api = {
 
   read_ae(bits, opts) {
     // TODO
-    throw new Error("Not implemented");
+    throw new Error('Not implemented');
   },
 
-//    bypassFlag = opts.bypassFlag
-//    ctxIdx = opts.ctxIdx
-//
-//    # 9.3.1.1 initialization
-//    preCtxState = api.clip3(1, 126,
-//      ((m * api.clip3(0, 51, opts.sliceQPy)) >> 4) + n)
-//    if preCtxState <= 63
-//      pStateIdx = 63 - preCtxState
-//      valMPS = 0
-//    else
-//      pStateIdx = preCtxState - 64
-//      valMPS = 1
-//
-//    # 9.3.1.2
-//    vars =
-//      codIRange: 510
-//      codIOffset: bits.read_bits 9
-//      pStateIdx: pStateIdx
-//      valMPS: valMPS
-//    if vars.codIOffset in [510, 511]
-//      throw new Error "Illegal codIOffset: #{vars.codIOffset}"
-//
-//    if bypassFlag is 1
-//      decodeBypass vars
-//    else if bypassFlag is 0 and ctxIdx is 276
-//      decodeTerminate bits
-//    else
-//      decodeDecision()
+  //    bypassFlag = opts.bypassFlag
+  //    ctxIdx = opts.ctxIdx
+  //
+  //    # 9.3.1.1 initialization
+  //    preCtxState = api.clip3(1, 126,
+  //      ((m * api.clip3(0, 51, opts.sliceQPy)) >> 4) + n)
+  //    if preCtxState <= 63
+  //      pStateIdx = 63 - preCtxState
+  //      valMPS = 0
+  //    else
+  //      pStateIdx = preCtxState - 64
+  //      valMPS = 1
+  //
+  //    # 9.3.1.2
+  //    vars =
+  //      codIRange: 510
+  //      codIOffset: bits.read_bits 9
+  //      pStateIdx: pStateIdx
+  //      valMPS: valMPS
+  //    if vars.codIOffset in [510, 511]
+  //      throw new Error "Illegal codIOffset: #{vars.codIOffset}"
+  //
+  //    if bypassFlag is 1
+  //      decodeBypass vars
+  //    else if bypassFlag is 0 and ctxIdx is 276
+  //      decodeTerminate bits
+  //    else
+  //      decodeDecision()
 
   read_nal_unit_header_svc_extension() {
     // TODO
-    throw new Error("Not implemented");
+    throw new Error('Not implemented');
   },
 
   read_nal_unit_header_mvc_extension() {
     // TODO
-    throw new Error("Not implemented");
+    throw new Error('Not implemented');
   },
 
   read_nal_header(bits) {
@@ -1179,7 +1204,7 @@ var api = {
     const bit_rate_value_minus1 = [];
     const cpb_size_value_minus1 = [];
     const cbr_flag = [];
-    for (let schedSelIdx = 0, end = cpb_cnt_minus1, asc = 0 <= end; asc ? schedSelIdx <= end : schedSelIdx >= end; asc ? schedSelIdx++ : schedSelIdx--) {
+    for (let schedSelIdx = 0, end = cpb_cnt_minus1, asc = end >= 0; asc ? schedSelIdx <= end : schedSelIdx >= end; asc ? schedSelIdx++ : schedSelIdx--) {
       bit_rate_value_minus1[schedSelIdx] = bits.read_ue();
       cpb_size_value_minus1[schedSelIdx] = bits.read_ue();
       cbr_flag[schedSelIdx] = bits.read_bit();
@@ -1261,25 +1286,24 @@ var api = {
   more_rbsp_data(bits) {
     const remaining_bits = bits.get_remaining_bits();
     if (remaining_bits === 0) {
-      return false;  // no more data
+      return false; // no more data
     }
     const stop_bit_pos = api.search_rbsp_stop_one_bit(bits);
     if ((stop_bit_pos == null)) {
-      throw new Error("stop_one_bit is not found");
+      throw new Error('stop_one_bit is not found');
     }
     const currPos = bits.current_position();
     if ((stop_bit_pos.byte > currPos.byte) || (stop_bit_pos.bit > currPos.bit)) {
       return true;
-    } else {
-      return false;
     }
+    return false;
   },
 
   concatWithStartCodePrefix(bufs) {
     const nalUnitsWithStartCodePrefix = [];
     const startCodePrefix = new Buffer([0x00, 0x00, 0x00, 0x01]);
     let totalLen = 0;
-    for (let buf of Array.from(bufs)) {
+    for (const buf of Array.from(bufs)) {
       nalUnitsWithStartCodePrefix.push(startCodePrefix);
       nalUnitsWithStartCodePrefix.push(buf);
       totalLen += 4 + buf.length;
@@ -1290,8 +1314,10 @@ var api = {
   // ISO 14496-15 5.2.4.1.1
   readAVCDecoderConfigurationRecord(bits) {
     let i;
-    let asc, end;
-    let asc1, end1;
+    let asc,
+      end;
+    let asc1,
+      end1;
     const info = {};
     info.configurationVersion = bits.read_byte();
     if (info.configurationVersion !== 1) {
@@ -1303,19 +1329,19 @@ var api = {
     info.profile_compatibility = bits.read_byte();
     info.avcLevelIndication = bits.read_byte();
 
-    bits.skip_bits(6);  // reserved
+    bits.skip_bits(6); // reserved
     info.lengthSizeMinusOne = bits.read_bits(2);
     info.nalUnitLengthSize = info.lengthSizeMinusOne + 1;
-    bits.skip_bits(3);  // reserved
+    bits.skip_bits(3); // reserved
     info.numOfSPS = bits.read_bits(5);
     info.sps = [];
-    for (i = 0, end = info.numOfSPS, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+    for (i = 0, end = info.numOfSPS, asc = end >= 0; asc ? i < end : i > end; asc ? i++ : i--) {
       const spsLen = bits.read_bits(16);
       info.sps.push(bits.read_bytes(spsLen));
     }
     info.numOfPPS = bits.read_byte();
     info.pps = [];
-    for (i = 0, end1 = info.numOfPPS, asc1 = 0 <= end1; asc1 ? i < end1 : i > end1; asc1 ? i++ : i--) {
+    for (i = 0, end1 = info.numOfPPS, asc1 = end1 >= 0; asc1 ? i < end1 : i > end1; asc1 ? i++ : i--) {
       const ppsLen = bits.read_bits(16);
       info.pps.push(bits.read_bytes(ppsLen));
     }
@@ -1326,19 +1352,19 @@ var api = {
   // appeared in RTP payload (RFC 6184)
   parseSpropParameterSets(str) {
     const nalUnits = [];
-    for (let base64String of Array.from(str.split(','))) {
+    for (const base64String of Array.from(str.split(','))) {
       nalUnits.push(new Buffer(base64String, 'base64'));
     }
     return nalUnits;
-  }
+  },
 };
 
 module.exports = api;
 
 function __range__(left, right, inclusive) {
-  let range = [];
-  let ascending = left < right;
-  let end = !inclusive ? right : ascending ? right + 1 : right - 1;
+  const range = [];
+  const ascending = left < right;
+  const end = !inclusive ? right : ascending ? right + 1 : right - 1;
   for (let i = left; ascending ? i < end : i > end; ascending ? i++ : i--) {
     range.push(i);
   }

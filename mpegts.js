@@ -1,3 +1,24 @@
+/* eslint-disable
+    camelcase,
+    consistent-return,
+    default-case,
+    guard-for-in,
+    no-cond-assign,
+    no-constant-condition,
+    no-param-reassign,
+    no-restricted-properties,
+    no-restricted-syntax,
+    no-return-assign,
+    no-undef,
+    no-unreachable,
+    no-unused-vars,
+    no-var,
+    one-var,
+    radix,
+    vars-on-top,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -16,34 +37,34 @@ const logger = require('./logger');
 const TS_PACKET_SIZE = 188;
 const SYNC_BYTE = 0x47;
 
-const PES_STREAM_ID_PROGRAM_STREAM_MAP              = 188;
-const PES_STREAM_ID_PRIVATE_STREAM_1                = 189;
-const PES_STREAM_ID_PADDING_STREAM                  = 190;
-const PES_STREAM_ID_PRIVATE_STREAM_2                = 191;
-const PES_STREAM_ID_ECM                             = 240;
-const PES_STREAM_ID_EMM                             = 241;
-const PES_STREAM_ID_PROGRAM_STREAM_DIRECTORY        = 255;
-const PES_STREAM_ID_DSMCC_STREAM                    = 242;
+const PES_STREAM_ID_PROGRAM_STREAM_MAP = 188;
+const PES_STREAM_ID_PRIVATE_STREAM_1 = 189;
+const PES_STREAM_ID_PADDING_STREAM = 190;
+const PES_STREAM_ID_PRIVATE_STREAM_2 = 191;
+const PES_STREAM_ID_ECM = 240;
+const PES_STREAM_ID_EMM = 241;
+const PES_STREAM_ID_PROGRAM_STREAM_DIRECTORY = 255;
+const PES_STREAM_ID_DSMCC_STREAM = 242;
 const PES_STREAM_ID_ITU_T_REC_H_222_1_TYPE_E_STREAM = 248;
 
 const TRICK_MODE_CONTROL_FAST_FORWARD = 0;
-const TRICK_MODE_CONTROL_SLOW_MOTION  = 1;
+const TRICK_MODE_CONTROL_SLOW_MOTION = 1;
 const TRICK_MODE_CONTROL_FREEZE_FRAME = 2;
 const TRICK_MODE_CONTROL_FAST_REVERSE = 3;
 const TRICK_MODE_CONTROL_SLOW_REVERSE = 4;
 
-const PID_PROGRAM_ASSOCIATION_TABLE          = 0x0000;
-const PID_CONDITIONAL_ACCESS_TABLE           = 0x0001;
+const PID_PROGRAM_ASSOCIATION_TABLE = 0x0000;
+const PID_CONDITIONAL_ACCESS_TABLE = 0x0001;
 const PID_TRANSPORT_STREAM_DESCRIPTION_TABLE = 0x0002;
-const PID_IPMP_CONTROL_INFORMATION_TABLE     = 0x0003;
-const PID_DVB_NIT_ST                         = 0x0010;
-const PID_NULL_PACKET                        = 0x1FFF;
+const PID_IPMP_CONTROL_INFORMATION_TABLE = 0x0003;
+const PID_DVB_NIT_ST = 0x0010;
+const PID_NULL_PACKET = 0x1FFF;
 
-const STREAM_TYPE_MPEG2_VIDEO       = 0x02;  // MPEG-2 video
-const STREAM_TYPE_MPEG2_PES_PRIVATE = 0x06;  // PES packets containing private data
-const STREAM_TYPE_MPEG2_DSM_CC      = 0x0D;
-const STREAM_TYPE_AUDIO_ADTS        = 0x0F;
-const STREAM_TYPE_H264              = 0x1B;  // AVC video
+const STREAM_TYPE_MPEG2_VIDEO = 0x02; // MPEG-2 video
+const STREAM_TYPE_MPEG2_PES_PRIVATE = 0x06; // PES packets containing private data
+const STREAM_TYPE_MPEG2_DSM_CC = 0x0D;
+const STREAM_TYPE_AUDIO_ADTS = 0x0F;
+const STREAM_TYPE_H264 = 0x1B; // AVC video
 
 const MAX_PES_PAYLOAD_SIZE = 200 * 1024;
 
@@ -69,7 +90,7 @@ const eventListeners = {};
 var api = {
   open(file) {
     return tsBuf = fs.readFileSync(file);
-  },  // up to 1GB
+  }, // up to 1GB
 
   close() {
     return tsBuf = null;
@@ -77,7 +98,7 @@ var api = {
 
   emit(name, ...data) {
     if (eventListeners[name] != null) {
-      for (let listener of Array.from(eventListeners[name])) {
+      for (const listener of Array.from(eventListeners[name])) {
         listener(...Array.from(data || []));
       }
     }
@@ -86,9 +107,8 @@ var api = {
   on(name, listener) {
     if (eventListeners[name] != null) {
       return eventListeners[name].push(listener);
-    } else {
-      return eventListeners[name] = [ listener ];
     }
+    return eventListeners[name] = [listener];
   },
 
   startStreaming(initialSkipTimeMs) {
@@ -115,7 +135,7 @@ var api = {
 
   getTimeUntilDTS(dts) {
     if ((firstDTS == null)) {
-      throw new Error("not yet received the first video or audio packet");
+      throw new Error('not yet received the first video or audio packet');
     }
     return (streamingStartTime + ((dts - firstDTS) / 90)) - Date.now();
   },
@@ -139,7 +159,7 @@ var api = {
     if (pendingLen > 0) {
       const pesInfo = pendingVideoPesPackets.shift();
       this.emit('video', pesInfo);
-      if (pendingLen === 1) {  // now the buffer is empty
+      if (pendingLen === 1) { // now the buffer is empty
         if ((!doNotReadNext) && (!this.checkEnd())) {
           return this.readNext();
         }
@@ -147,12 +167,9 @@ var api = {
         const timeDiff = Math.round(this.getTimeUntilDTS(pendingVideoPesPackets[0].pes.DTS) - SETTIMEOUT_ADVANCE_TIME);
         if (timeDiff <= 0) {
           return this.consumeVideo(doNotReadNext);
-        } else {
-          return setTimeout(() => {
-            return this.consumeVideo(doNotReadNext);
-          }
-          , timeDiff);
         }
+        return setTimeout(() => this.consumeVideo(doNotReadNext)
+          , timeDiff);
       }
     }
   },
@@ -163,7 +180,7 @@ var api = {
     if (pendingLen > 0) {
       const pesInfo = pendingAudioPesPackets.shift();
       this.emit('audio', pesInfo);
-      if (pendingLen === 1) {  // now the buffer is empty
+      if (pendingLen === 1) { // now the buffer is empty
         if ((!doNotReadNext) && (!this.checkEnd())) {
           return this.readNext();
         }
@@ -171,12 +188,9 @@ var api = {
         const timeDiff = Math.round(this.getTimeUntilDTS(pendingAudioPesPackets[0].pes.DTS) - SETTIMEOUT_ADVANCE_TIME);
         if (timeDiff <= 0) {
           return this.consumeAudio(doNotReadNext);
-        } else {
-          return setTimeout(() => {
-            return this.consumeAudio(doNotReadNext);
-          }
-          , timeDiff);
         }
+        return setTimeout(() => this.consumeAudio(doNotReadNext)
+          , timeDiff);
       }
     }
   },
@@ -187,15 +201,10 @@ var api = {
     if (pendingVideoPesPackets.length === 1) {
       const timeDiff = Math.round(this.getTimeUntilDTS(pesInfo.pes.DTS) - SETTIMEOUT_ADVANCE_TIME);
       if (timeDiff <= 0) {
-        return setImmediate(() => {
-          return this.consumeVideo(doNotReadNext);
-        });
-      } else {
-        return setTimeout(() => {
-          return this.consumeVideo(doNotReadNext);
-        }
-        , timeDiff);
+        return setImmediate(() => this.consumeVideo(doNotReadNext));
       }
+      return setTimeout(() => this.consumeVideo(doNotReadNext)
+        , timeDiff);
     }
   },
 
@@ -205,25 +214,20 @@ var api = {
     if (pendingAudioPesPackets.length === 1) {
       const timeDiff = Math.round(this.getTimeUntilDTS(pesInfo.pes.DTS) - SETTIMEOUT_ADVANCE_TIME);
       if (timeDiff <= 0) {
-        return setImmediate(() => {
-          return this.consumeAudio(doNotReadNext);
-        });
-      } else {
-        return setTimeout(() => {
-          return this.consumeAudio(doNotReadNext);
-        }
-        , timeDiff);
+        return setImmediate(() => this.consumeAudio(doNotReadNext));
       }
+      return setTimeout(() => this.consumeAudio(doNotReadNext)
+        , timeDiff);
     }
   },
 
   readNext() {
     const pesPacket = this.getNextPESPacket();
-    if ((pesPacket == null)) {  // maybe reached EOF
+    if ((pesPacket == null)) { // maybe reached EOF
       return;
     }
     const pesInfo = this.parsePESPacket(pesPacket.pid, pesPacket.packet, pesPacket.opts);
-    if (pesInfo.program_map != null) {  // received a program map
+    if (pesInfo.program_map != null) { // received a program map
       // parse and consume unparsedPESPackets
       this.consumeUnparsedPESPackets();
     }
@@ -231,7 +235,7 @@ var api = {
       // postpone the parsing process after received a program map
       unparsedPESPackets.push(pesPacket);
     }
-    if ((pesInfo.pes == null)) {  // not an video/audio packet
+    if ((pesInfo.pes == null)) { // not an video/audio packet
       // such as program association section or program map section
       return this.readNext();
     }
@@ -268,7 +272,7 @@ var api = {
     const table_id = bits.read_byte();
     const section_syntax_indicator = bits.read_bit();
     if (section_syntax_indicator !== 1) {
-      throw new Error("section_syntax_indicator must be 1");
+      throw new Error('section_syntax_indicator must be 1');
     }
     let reserved_future_use = bits.read_bit();
     let reserved = bits.read_bits(2);
@@ -285,7 +289,7 @@ var api = {
     const original_network_id = bits.read_bits(16);
     reserved_future_use = bits.read_byte();
 
-    let remaining_section_length = section_length - 8 - 4;  // 4 is for CRC
+    let remaining_section_length = section_length - 8 - 4; // 4 is for CRC
     while (remaining_section_length > 0) {
       const service_id = bits.read_bits(16);
       // service_id is the same as the program_number in the corresponding program_map_section
@@ -327,13 +331,13 @@ var api = {
     // ISO_639_language_descriptor
     const num_loops = info.descriptor_length / 4;
     info.languages = [];
-    for (let i = 0, end = num_loops, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+    for (let i = 0, end = num_loops, asc = end >= 0; asc ? i < end : i > end; asc ? i++ : i--) {
       const ISO_639_language_code = bits.read_bytes(3).toString('utf-8');
       // "und" means Undetermined
       const audio_type = bits.read_byte();
       info.languages.push({
         ISO_639_language_code,
-        audio_type
+        audio_type,
       });
     }
     return info;
@@ -373,15 +377,17 @@ var api = {
     const descriptor_tag = bits.read_byte();
     bits.push_back_byte();
     // descriptor_tag table is described in Table 2-45
-    const info = (() => { switch (descriptor_tag) {
-      case 9: return api.read_CA_descriptor(bits);
-      case 10: return api.read_ISO_639_language_descriptor(bits);
-      case 0x48: return api.read_DVB_service_descriptor(bits);  // 72
-      case 0x52: return api.read_DVB_stream_identifier_descriptor(bits);  // 82
-      case 193: case 200: case 246: case 253: return api.read_unknown_descriptor(bits);
-      default:
-        throw new Error(`descriptor_tag ${descriptor_tag} is not implemented`);
-    } })();
+    const info = (() => {
+      switch (descriptor_tag) {
+        case 9: return api.read_CA_descriptor(bits);
+        case 10: return api.read_ISO_639_language_descriptor(bits);
+        case 0x48: return api.read_DVB_service_descriptor(bits); // 72
+        case 0x52: return api.read_DVB_stream_identifier_descriptor(bits); // 82
+        case 193: case 200: case 246: case 253: return api.read_unknown_descriptor(bits);
+        default:
+          throw new Error(`descriptor_tag ${descriptor_tag} is not implemented`);
+      }
+    })();
     info.total_length = info.descriptor_length + 2;
     return info;
   },
@@ -433,7 +439,7 @@ var api = {
       remaining_program_info_length -= descriptor.total_length;
     }
 
-    let remaining_section_length = info.section_length - 9 - info.program_info_length - 4;  // 4 for CRC
+    let remaining_section_length = info.section_length - 9 - info.program_info_length - 4; // 4 for CRC
     info.streams = [];
     while (remaining_section_length > 0) {
       const stream_type = bits.read_byte();
@@ -461,7 +467,7 @@ var api = {
         stream_type,
         elementary_PID,
         ES_info_length,
-        descriptors
+        descriptors,
       });
     }
 
@@ -476,7 +482,7 @@ var api = {
     info.pointer_field = bits.read_byte();
     info.table_id = bits.read_byte();
     if (info.table_id !== 0x00) {
-      throw new Error("table_id for program_association_section must be 0x00");
+      throw new Error('table_id for program_association_section must be 0x00');
     }
     info.section_syntax_indicator = bits.read_bit();
     if (info.section_syntax_indicator !== 1) {
@@ -489,7 +495,7 @@ var api = {
     let reserved = bits.read_bits(2);
     info.section_length = bits.read_bits(12);
     if (info.section_length > 1021) {
-      throw new Error("section_length shall not exceed 1021 (0x3FD)");
+      throw new Error('section_length shall not exceed 1021 (0x3FD)');
     }
     info.transport_stream_id = bits.read_bits(16);
     reserved = bits.read_bits(2);
@@ -500,15 +506,15 @@ var api = {
 
     const num_programs = (info.section_length - 9) / 4;
     info.programTable = {};
-    for (let i = 0, end = num_programs, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+    for (let i = 0, end = num_programs, asc = end >= 0; asc ? i < end : i > end; asc ? i++ : i--) {
       const program_number = bits.read_bits(16);
-      reserved  = bits.read_bits(3);
+      reserved = bits.read_bits(3);
       if (program_number === 0) {
         info.programTable[program_number] =
-          {network_PID: bits.read_bits(13)};
+          { network_PID: bits.read_bits(13) };
       } else {
         info.programTable[program_number] =
-          {program_map_PID: bits.read_bits(13)};
+          { program_map_PID: bits.read_bits(13) };
       }
     }
     ({ programTable } = info);
@@ -519,12 +525,12 @@ var api = {
   },
 
   consumeUnparsedPESPackets() {
-    for (let pesPacket of Array.from(unparsedPESPackets)) {
+    for (const pesPacket of Array.from(unparsedPESPackets)) {
       const pesInfo = this.parsePESPacket(pesPacket.pid, pesPacket.packet, pesPacket.opts);
       if (pesInfo.not_parsed) {
         continue;
       }
-      if ((pesInfo.pes == null)) {  // not an video/audio packet
+      if ((pesInfo.pes == null)) { // not an video/audio packet
         continue;
       }
       if ((pesInfo.pes.PTS == null)) {
@@ -553,7 +559,7 @@ var api = {
 
     // Described in Table 2-3 - PID table
     switch (pid) {
-      case PID_PROGRAM_ASSOCIATION_TABLE:  // 0
+      case PID_PROGRAM_ASSOCIATION_TABLE: // 0
         var bits = new Bits(pes_data);
         info.program_association = api.read_program_association_section(bits);
         break;
@@ -567,7 +573,7 @@ var api = {
         break;
       default:
         var isParsed = false;
-        for (let programNumber in programTable) {
+        for (const programNumber in programTable) {
           const pidInfo = programTable[programNumber];
           if (pid === pidInfo.program_map_PID) {
             bits = new Bits(pes_data);
@@ -588,7 +594,7 @@ var api = {
     const info = {};
     const system_header_start_code = bits.read_bits(32);
     if (system_header_start_code !== 0x000001BB) {
-      throw new Error("system_header_start_code must be 0x000001BB");
+      throw new Error('system_header_start_code must be 0x000001BB');
     }
     info.header_length = bits.read_bits(16);
     let marker_bit = bits.read_bit();
@@ -615,7 +621,7 @@ var api = {
       const P_STD_buffer_size_bound = bits.read_bits(13);
       info.bufferBounds[stream_id] = {
         P_STD_buffer_bound_scale,
-        P_STD_buffer_size_bound
+        P_STD_buffer_size_bound,
       };
       info.total_length += 3;
     }
@@ -628,7 +634,7 @@ var api = {
     const info = {};
     const pack_start_code = bits.read_bits(32);
     if (pack_start_code !== 0x000001BA) {
-      throw new Error("pack_start_code must be 0x000001BA");
+      throw new Error('pack_start_code must be 0x000001BA');
     }
     const bits_01 = bits.read_bits(2);
     if (bits_01 !== 1) {
@@ -670,7 +676,7 @@ var api = {
     const info = {};
     // Start code emulation is not possible in video elementary streams.
     // It is possible in audio and data elementary streams.
-    const packet_start_code_prefix = bits.read_bits(24);  // must be 0x000001
+    const packet_start_code_prefix = bits.read_bits(24); // must be 0x000001
     if (packet_start_code_prefix !== 0x000001) {
       bits.push_back_bytes(3);
       bits.peek();
@@ -681,7 +687,7 @@ var api = {
 
     // PES_packet_length is the length between the last byte of
     // PES_packet_length and the first byte of PES_packet_data.
-    info.PES_packet_length = bits.read_bits(16);  // do not use read_bytes(2)!
+    info.PES_packet_length = bits.read_bits(16); // do not use read_bytes(2)!
     let remaining_pes_len = info.PES_packet_length;
 
     // PES_packet_length == 0 indicates that the PES packet length is unbounded.
@@ -699,9 +705,10 @@ var api = {
       PES_STREAM_ID_EMM,
       PES_STREAM_ID_PROGRAM_STREAM_DIRECTORY,
       PES_STREAM_ID_DSMCC_STREAM,
-      PES_STREAM_ID_ITU_T_REC_H_222_1_TYPE_E_STREAM
+      PES_STREAM_ID_ITU_T_REC_H_222_1_TYPE_E_STREAM,
     ].includes(info.stream_id)) {
-      let marker_bit, reserved;
+      let marker_bit,
+        reserved;
       const bits_10 = bits.read_bits(2);
       if (bits_10 !== 2) {
         throw new Error(`bits must be '10': ${bits_10}`);
@@ -866,11 +873,11 @@ var api = {
           info.stream_id_extension_flag = bits.read_bit();
           if (info.stream_id_extension_flag === 0) {
             info.stream_id_extension = bits.read_bits(7);
-            bits.skip_bytes(info.PES_extension_field_length);  // reserved
+            bits.skip_bytes(info.PES_extension_field_length); // reserved
             remaining_pes_len -= 2 + info.PES_extension_field_length;
             remaining_header_len -= 2 + info.PES_extension_field_length;
           } else {
-            throw new Error("stream_id_extension_flag == 1 is reserved");
+            throw new Error('stream_id_extension_flag == 1 is reserved');
           }
         }
       }
@@ -883,12 +890,11 @@ var api = {
       PES_packet_data_byte = bits.read_bytes(remaining_pes_len, 1);
       info.data = PES_packet_data_byte;
 
-      if ((info.stream_id & 0b11110000) === 0b11100000) {  // video stream
+      if ((info.stream_id & 0b11110000) === 0b11100000) { // video stream
         info.stream_id_type = 'video';
-      } else if ((info.stream_id & 0b11100000) === 0b11000000) {  // audio stream
+      } else if ((info.stream_id & 0b11100000) === 0b11000000) { // audio stream
         info.stream_id_type = 'audio';
       }
-
     } else if ([
       PES_STREAM_ID_PROGRAM_STREAM_MAP,
       PES_STREAM_ID_PRIVATE_STREAM_2,
@@ -896,13 +902,13 @@ var api = {
       PES_STREAM_ID_EMM,
       PES_STREAM_ID_PROGRAM_STREAM_DIRECTORY,
       PES_STREAM_ID_DSMCC_STREAM,
-      PES_STREAM_ID_ITU_T_REC_H_222_1_TYPE_E_STREAM
+      PES_STREAM_ID_ITU_T_REC_H_222_1_TYPE_E_STREAM,
     ].includes(info.stream_id)) {
-      throw new Error("stream_id type 2");
+      throw new Error('stream_id type 2');
       PES_packet_data_byte = bits.read_bytes(remaining_pes_len, 1);
       info.data = PES_packet_data_byte;
     } else if (info.stream_id === PES_STREAM_ID_PADDING_STREAM) {
-      throw new Error("stream_id type padding");
+      throw new Error('stream_id type padding');
       const padding_byte = bits.read_bytes(remaining_pes_len, 1); // all 0xff
     }
 
@@ -917,7 +923,7 @@ var api = {
   search_sync_byte(bits) {
     if (isSyncByteDetermined) {
       if (!bits.is_byte_aligned()) {
-        throw new Error("search_sync_byte: byte is not aligned");
+        throw new Error('search_sync_byte: byte is not aligned');
       }
       if (bits.get_current_byte() !== SYNC_BYTE) {
         throw new Error(`sync byte must be here: ${bits.get_current_byte()}`);
@@ -930,7 +936,7 @@ var api = {
           // sync byte at the same position.
           for (let i = 1; i <= 4; i++) {
             if (bits.get_byte_at((i * TS_PACKET_SIZE) - 1) !== SYNC_BYTE) {
-              logger.debug("mpegts: sync byte was false positive");
+              logger.debug('mpegts: sync byte was false positive');
               // false positive (sync byte emulation)
               continue;
             }
@@ -1086,32 +1092,30 @@ var api = {
                   pid: ts_packet.pid,
                   packet: pid_pes.tmp,
                   opts: {
-                    adaptation_field: ts_packet.adaptation_field
-                  }
+                    adaptation_field: ts_packet.adaptation_field,
+                  },
                 };
               }
 
               pid_pes.tmp = {
                 data: [],
-                adaptation_field: ts_packet.adaptation_field
+                adaptation_field: ts_packet.adaptation_field,
               };
             }
             pid_pes.tmp.data.push(ts_packet.data);
             if (pesPacket != null) {
               return pesPacket;
             }
+          } else if (!ts_packet.payload_unit_start_indicator) {
+            logger.warn(`mpegts: dropping residual PES packet for PID ${ts_packet.pid}`);
           } else {
-            if (!ts_packet.payload_unit_start_indicator) {
-              logger.warn(`mpegts: dropping residual PES packet for PID ${ts_packet.pid}`);
-            } else {
-              bufferingPESData[ts_packet.pid] = {
-                packets: [],
-                tmp: {
-                  data: [ts_packet.data],
-                  adaptation_field: ts_packet.adaptation_field
-                }
-              };
-            }
+            bufferingPESData[ts_packet.pid] = {
+              packets: [],
+              tmp: {
+                data: [ts_packet.data],
+                adaptation_field: ts_packet.adaptation_field,
+              },
+            };
           }
         } catch (e) {
           isEOF = true;
@@ -1120,7 +1124,7 @@ var api = {
         }
       }
     }
-    for (let pid in bufferingPESData) {
+    for (const pid in bufferingPESData) {
       pid_pes = bufferingPESData[pid];
       delete bufferingPESData[pid];
       if (pid_pes.tmp.data.length > 0) {
@@ -1130,8 +1134,8 @@ var api = {
           packet: pid_pes.tmp,
           opts: {
             adaptation_field: pid_pes.adaptation_field,
-            is_last: true
-          }
+            is_last: true,
+          },
         };
         pid_pes.tmp = null;
         if (pesPacket != null) {
@@ -1140,7 +1144,7 @@ var api = {
       }
     }
     return null;
-  }
+  },
 };
 
 module.exports = api;

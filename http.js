@@ -1,3 +1,20 @@
+/* eslint-disable
+    consistent-return,
+    guard-for-in,
+    no-cond-assign,
+    no-param-reassign,
+    no-restricted-syntax,
+    no-return-assign,
+    no-shadow,
+    no-underscore-dangle,
+    no-unused-vars,
+    no-var,
+    one-var,
+    radix,
+    vars-on-top,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -31,7 +48,7 @@ const DEFAULT_SERVER_NAME = 'node-rtsp-rtmp-server';
 const GZIP_SIZE_THRESHOLD = 300;
 
 const DAY_NAMES = [
-  'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'
+  'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat',
 ];
 
 const MONTH_NAMES = [
@@ -39,7 +56,7 @@ const MONTH_NAMES = [
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
 ];
 
-const zeropad = function(width, num) {
+const zeropad = function (width, num) {
   num += '';
   while (num.length < width) {
     num = `0${num}`;
@@ -65,17 +82,16 @@ class HTTPHandler {
       return this.respondText('pong', req, callback);
     } else if (filepath === '/list') {
       const opts =
-        {files: [ 'foo', 'bar', 'baz' ]};
+        { files: ['foo', 'bar', 'baz'] };
       return fs.readFile(`${TEMPLATE_DIR}/list.ejs`, {
-        encoding: 'utf8'
+        encoding: 'utf8',
       }, (err, template) => {
         if (err) {
           logger.error(err);
           return this.serverError(req, callback);
-        } else {
-          const html = ejs.render(template, opts);
-          return this.respondHTML(html, req, callback);
         }
+        const html = ejs.render(template, opts);
+        return this.respondHTML(html, req, callback);
       });
     } else if (filepath === '/302') {
       return this.redirect('/new-url', req, callback);
@@ -85,9 +101,8 @@ class HTTPHandler {
       return this.badRequest(req, callback);
     } else if (filepath === '/500') {
       return this.serverError(req, callback);
-    } else {
-      return this.respondStaticPath(`${this.documentRoot}/${filepath.slice(1)}`, req, callback);
     }
+    return this.respondStaticPath(`${this.documentRoot}/${filepath.slice(1)}`, req, callback);
   }
 
   createHeader(params) {
@@ -117,7 +132,7 @@ Server: ${this.serverName}
 \
 `;
 
-    if (__guard__(__guard__(params != null ? params.req : undefined, x1 => x1.headers.connection), x => x.toLowerCase()) === 'keep-alive') {
+    if (__guard__(__guard__(params != null ? params.req : undefined, (x1) => x1.headers.connection), (x) => x.toLowerCase()) === 'keep-alive') {
       header += 'Connection: keep-alive\n';
     } else {
       header += 'Connection: close\n';
@@ -141,7 +156,7 @@ Server: ${this.serverName}
     if ((params != null ? params.authenticate : undefined) != null) {
       header += `WWW-Authenticate: ${params.authenticate}\n`;
     }
-    return header.replace(/\n/g, '\r\n') + '\r\n';
+    return `${header.replace(/\n/g, '\r\n')}\r\n`;
   }
 
   redirect(path, req, callback) {
@@ -149,8 +164,8 @@ Server: ${this.serverName}
       statusCode: 302,
       location: path,
       req,
-      contentLength: 0
-    })
+      contentLength: 0,
+    }),
     );
     return callback(null, headerBytes);
   }
@@ -162,23 +177,23 @@ Server: ${this.serverName}
       statusCode: 404,
       contentLength: bodyLength,
       req,
-      contentType: "text/plain; charset=utf-8"
+      contentType: 'text/plain; charset=utf-8',
     }), 'utf8');
     const allBytes = Buffer.concat([headerBytes, bodyBytes], headerBytes.length + bodyLength);
     return callback(null, allBytes);
   }
 
   respondTextWithHeader(str, req, opts, callback) {
-    const textBytes = new Buffer((str+''), 'utf8');
+    const textBytes = new Buffer((`${str}`), 'utf8');
     const textLength = textBytes.length;
     const headerOpts = {
       statusCode: 200,
       contentLength: textLength,
       req,
-      contentType: "text/plain; charset=utf-8"
+      contentType: 'text/plain; charset=utf-8',
     };
     if (opts != null) {
-      for (let name in opts) {
+      for (const name in opts) {
         const value = opts[name];
         headerOpts[name] = value;
       }
@@ -189,7 +204,7 @@ Server: ${this.serverName}
   }
 
   respondJavaScript(str, req, callback) {
-    return this.respondTextWithHeader(str, req, {contentType: 'application/javascript; charset=utf-8'}, callback);
+    return this.respondTextWithHeader(str, req, { contentType: 'application/javascript; charset=utf-8' }, callback);
   }
 
   respondText(str, req, callback) {
@@ -212,7 +227,7 @@ Server: ${this.serverName}
     acceptEncoding = acceptEncoding.toLowerCase();
 
     if (/\bgzip\b/.test(acceptEncoding)) {
-      return zlib.gzip(bytes, function(err, compressedBytes) {
+      return zlib.gzip(bytes, (err, compressedBytes) => {
         if (err) {
           callback(err);
         } else {
@@ -220,16 +235,14 @@ Server: ${this.serverName}
         }
       });
     } else if (/\bdeflate\b/.test(acceptEncoding)) {
-      return zlib.deflate(bytes, function(err, compressedBytes) {
+      return zlib.deflate(bytes, (err, compressedBytes) => {
         if (err) {
           return callback(err);
-        } else {
-          return callback(null, compressedBytes, 'deflate');
         }
+        return callback(null, compressedBytes, 'deflate');
       });
-    } else {
-      return callback(null, bytes, null);
     }
+    return callback(null, bytes, null);
   }
 
   respondJS(content, req, callback) {
@@ -244,7 +257,7 @@ Server: ${this.serverName}
         contentLength,
         req,
         contentEncoding: encoding,
-        contentType: 'application/javascript'
+        contentType: 'application/javascript',
       }), 'utf8');
       const allBytes = Buffer.concat([headerBytes, contentBytes], headerBytes.length + contentLength);
       return callback(null, allBytes);
@@ -263,7 +276,7 @@ Server: ${this.serverName}
         contentLength: htmlLength,
         req,
         contentEncoding: encoding,
-        contentType: "text/html; charset=utf-8"
+        contentType: 'text/html; charset=utf-8',
       }), 'utf8');
       const allBytes = Buffer.concat([headerBytes, htmlBytes], headerBytes.length + htmlLength);
       return callback(null, allBytes);
@@ -277,7 +290,7 @@ Server: ${this.serverName}
       statusCode: 400,
       contentLength: bodyLength,
       req,
-      contentType: "text/plain; charset=utf-8"
+      contentType: 'text/plain; charset=utf-8',
     }), 'utf8');
     const allBytes = Buffer.concat([headerBytes, bodyBytes], headerBytes.length + bodyLength);
     return callback(null, allBytes);
@@ -290,7 +303,7 @@ Server: ${this.serverName}
       statusCode: 500,
       contentLength: bodyLength,
       req,
-      contentType: "text/plain; charset=utf-8"
+      contentType: 'text/plain; charset=utf-8',
     }), 'utf8');
     const allBytes = Buffer.concat([headerBytes, bodyBytes], headerBytes.length + bodyLength);
     return callback(null, allBytes);
@@ -325,7 +338,7 @@ Server: ${this.serverName}
   }
 
   respondFile(filepath, req, callback) {
-    return fs.exists(filepath, exists => {
+    return fs.exists(filepath, (exists) => {
       if (exists) {
         return fs.stat(filepath, (err, stat) => {
           if (err) {
@@ -333,126 +346,121 @@ Server: ${this.serverName}
             this.serverError(req, callback);
             return;
           }
-          const seq = new Sequent;
+          const seq = new Sequent();
           if (stat.isDirectory()) {
             filepath += `/${DIRECTORY_INDEX_FILENAME}`;
-            fs.exists(filepath, exists => {
+            fs.exists(filepath, (exists) => {
               if (exists) {
                 return seq.done();
-              } else {
-                return this.notFound(req, callback);
               }
+              return this.notFound(req, callback);
             });
           } else {
             seq.done();
           }
-          return seq.wait(1, () => {
-            return fs.readFile(filepath, {encoding:null, flag:'r'}, (err, contentBuf) => {
-              let statusCode;
-              if (err) {
-                logger.error(`readFile error: ${filepath}`);
-                this.serverError(req, callback);
-                return;
-              }
-              let contentRangeHeader = null;
-              if (req.headers.range != null) {
-                let match;
-                if ((match = /^bytes=(\d+)?-(\d+)?$/.exec(req.headers.range)) != null) {
-                  const from = (match[1] != null) ? parseInt(match[1]) : null;
-                  const to = (match[2] != null) ? parseInt(match[2]) : null;
-                  logger.debug(`Range from ${from} to ${to}`);
-                  if ((from == null) && (to != null)) {  // last n bytes
-                    contentRangeHeader = `bytes ${contentBuf.length-to}-${contentBuf.length-1}/${contentBuf.length}`;
-                    contentBuf = contentBuf.slice(contentBuf.length-to, contentBuf.length);
-                  } else if ((from != null) && (to == null)) {
-                    if (from > 0) {
-                      contentRangeHeader = `bytes ${from}-${contentBuf.length-1}/${contentBuf.length}`;
-                      contentBuf = contentBuf.slice(from, contentBuf.length);
-                    }
-                  } else if ((from != null) && (to != null)) {
-                    contentRangeHeader = `bytes ${from}-${to}/${contentBuf.length}`;
-                    contentBuf = contentBuf.slice(from, to + 1);
+          return seq.wait(1, () => fs.readFile(filepath, { encoding: null, flag: 'r' }, (err, contentBuf) => {
+            let statusCode;
+            if (err) {
+              logger.error(`readFile error: ${filepath}`);
+              this.serverError(req, callback);
+              return;
+            }
+            let contentRangeHeader = null;
+            if (req.headers.range != null) {
+              let match;
+              if ((match = /^bytes=(\d+)?-(\d+)?$/.exec(req.headers.range)) != null) {
+                const from = (match[1] != null) ? parseInt(match[1]) : null;
+                const to = (match[2] != null) ? parseInt(match[2]) : null;
+                logger.debug(`Range from ${from} to ${to}`);
+                if ((from == null) && (to != null)) { // last n bytes
+                  contentRangeHeader = `bytes ${contentBuf.length - to}-${contentBuf.length - 1}/${contentBuf.length}`;
+                  contentBuf = contentBuf.slice(contentBuf.length - to, contentBuf.length);
+                } else if ((from != null) && (to == null)) {
+                  if (from > 0) {
+                    contentRangeHeader = `bytes ${from}-${contentBuf.length - 1}/${contentBuf.length}`;
+                    contentBuf = contentBuf.slice(from, contentBuf.length);
                   }
-                } else {
-                  logger.error(`[Range spec ${req.headers.range} is not supported]`);
+                } else if ((from != null) && (to != null)) {
+                  contentRangeHeader = `bytes ${from}-${to}/${contentBuf.length}`;
+                  contentBuf = contentBuf.slice(from, to + 1);
                 }
-              }
-              if (err) {
-                this.serverError(req, callback);
-                return;
-              }
-              let contentType = 'text/html; charset=utf-8';
-              let doCompress = true;
-              if (/\.m3u8$/.test(filepath)) {
-                contentType = 'application/x-mpegURL';
-              } else if (/\.ts$/.test(filepath)) {
-                contentType = 'video/MP2T';
-                doCompress = false;
-              } else if (/\.mp4$/.test(filepath)) {
-                contentType = 'video/mp4';
-                doCompress = false;
-              } else if (/\.3gpp?$/.test(filepath)) {
-                contentType = 'video/3gpp';
-                doCompress = false;
-              } else if (/\.jpg$/.test(filepath)) {
-                contentType = 'image/jpeg';
-                doCompress = false;
-              } else if (/\.gif$/.test(filepath)) {
-                contentType = 'image/gif';
-                doCompress = false;
-              } else if (/\.png$/.test(filepath)) {
-                contentType = 'image/png';
-                doCompress = false;
-              } else if (/\.swf$/.test(filepath)) {
-                contentType = 'application/x-shockwave-flash';
-                doCompress = false;
-              } else if (/\.css$/.test(filepath)) {
-                contentType = 'text/css';
-              } else if (/\.js$/.test(filepath)) {
-                contentType = 'application/javascript';
-              } else if (/\.txt$/.test(filepath)) {
-                contentType = 'text/plain; charset=utf-8';
-              }
-              if (contentRangeHeader != null) {
-                statusCode = 206;
               } else {
-                statusCode = 200;
+                logger.error(`[Range spec ${req.headers.range} is not supported]`);
               }
-              if (doCompress) {
-                return this.treatCompress(contentBuf, req, (err, compressedBytes, encoding) => {
-                  if (err) {
-                    callback(err);
-                    return;
-                  }
-                  const header = this.createHeader({
-                    statusCode,
-                    contentType,
-                    contentLength: compressedBytes.length,
-                    req,
-                    contentRange: contentRangeHeader,
-                    contentEncoding: encoding
-                  });
-                  const headerBuf = new Buffer(header, 'utf8');
-                  return callback(null, [ headerBuf, compressedBytes ]);
-              });
-              } else {
+            }
+            if (err) {
+              this.serverError(req, callback);
+              return;
+            }
+            let contentType = 'text/html; charset=utf-8';
+            let doCompress = true;
+            if (/\.m3u8$/.test(filepath)) {
+              contentType = 'application/x-mpegURL';
+            } else if (/\.ts$/.test(filepath)) {
+              contentType = 'video/MP2T';
+              doCompress = false;
+            } else if (/\.mp4$/.test(filepath)) {
+              contentType = 'video/mp4';
+              doCompress = false;
+            } else if (/\.3gpp?$/.test(filepath)) {
+              contentType = 'video/3gpp';
+              doCompress = false;
+            } else if (/\.jpg$/.test(filepath)) {
+              contentType = 'image/jpeg';
+              doCompress = false;
+            } else if (/\.gif$/.test(filepath)) {
+              contentType = 'image/gif';
+              doCompress = false;
+            } else if (/\.png$/.test(filepath)) {
+              contentType = 'image/png';
+              doCompress = false;
+            } else if (/\.swf$/.test(filepath)) {
+              contentType = 'application/x-shockwave-flash';
+              doCompress = false;
+            } else if (/\.css$/.test(filepath)) {
+              contentType = 'text/css';
+            } else if (/\.js$/.test(filepath)) {
+              contentType = 'application/javascript';
+            } else if (/\.txt$/.test(filepath)) {
+              contentType = 'text/plain; charset=utf-8';
+            }
+            if (contentRangeHeader != null) {
+              statusCode = 206;
+            } else {
+              statusCode = 200;
+            }
+            if (doCompress) {
+              return this.treatCompress(contentBuf, req, (err, compressedBytes, encoding) => {
+                if (err) {
+                  callback(err);
+                  return;
+                }
                 const header = this.createHeader({
                   statusCode,
                   contentType,
-                  contentLength: contentBuf.length,
+                  contentLength: compressedBytes.length,
                   req,
-                  contentRange: contentRangeHeader
+                  contentRange: contentRangeHeader,
+                  contentEncoding: encoding,
                 });
                 const headerBuf = new Buffer(header, 'utf8');
-                return callback(null, [ headerBuf, contentBuf ]);
-              }
-          });
+                return callback(null, [headerBuf, compressedBytes]);
+              });
+            }
+            const header = this.createHeader({
+              statusCode,
+              contentType,
+              contentLength: contentBuf.length,
+              req,
+              contentRange: contentRangeHeader,
+            });
+            const headerBuf = new Buffer(header, 'utf8');
+            return callback(null, [headerBuf, contentBuf]);
+          }));
         });
-      });
-      } else {
-        logger.warn(`[http] Requested file not found: ${filepath}`);
-        return this.notFound(req, callback);
       }
+      logger.warn(`[http] Requested file not found: ${filepath}`);
+      return this.notFound(req, callback);
     });
   }
 }
@@ -461,14 +469,16 @@ var api = {
   HTTPHandler,
 
   getDateHeader() {
-    const d = new Date;
+    const d = new Date();
     return `${DAY_NAMES[d.getUTCDay()]}, ${d.getUTCDate()} ${MONTH_NAMES[d.getUTCMonth()]}` +
     ` ${d.getUTCFullYear()} ${zeropad(2, d.getUTCHours())}:${zeropad(2, d.getUTCMinutes())}` +
     `:${zeropad(2, d.getUTCSeconds())} UTC`;
   },
 
   parseRequest(str) {
-    let decodedURI, protocolName, protocolVersion;
+    let decodedURI,
+      protocolName,
+      protocolVersion;
     const [headerPart, body] = Array.from(str.split('\r\n\r\n'));
 
     const lines = headerPart.split(/\r\n/);
@@ -478,7 +488,7 @@ var api = {
       const slashPos = protocol.indexOf('/');
       if (slashPos !== -1) {
         protocolName = protocol.slice(0, slashPos);
-        protocolVersion = protocol.slice(slashPos+1);
+        protocolVersion = protocol.slice(slashPos + 1);
       }
     }
     const headers = {};
@@ -486,7 +496,7 @@ var api = {
       const line = lines[i];
       if (i === 0) { continue; }
       if (/^\s*$/.test(line)) { continue; }
-      const params = line.split(": ");
+      const params = line.split(': ');
       headers[params[0].toLowerCase()] = params[1];
     }
 
@@ -505,9 +515,9 @@ var api = {
       protocolVersion,
       headers,
       body,
-      headerBytes: Buffer.byteLength(headerPart, 'utf8')
+      headerBytes: Buffer.byteLength(headerPart, 'utf8'),
     };
-  }
+  },
 };
 
 module.exports = api;

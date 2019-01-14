@@ -1,3 +1,18 @@
+/* eslint-disable
+    camelcase,
+    consistent-return,
+    global-require,
+    import/no-unresolved,
+    no-console,
+    no-constant-condition,
+    no-empty,
+    no-param-reassign,
+    no-restricted-properties,
+    no-return-assign,
+    radix,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -55,11 +70,10 @@ let buffertools;
 try {
   buffertools = require('buffertools');
 } catch (e) {}
-  // buffertools is not available
+// buffertools is not available
 
 class Bits {
   static initClass() {
-  
     this.DISABLE_BUFFER_INDEXOF = false;
   }
   constructor(buffer) {
@@ -97,7 +111,7 @@ class Bits {
   // @param  numBits (int) number of bits to fill with 1
   fill_bits_with_1(numBits) {
     if (numBits > 32) {
-      throw new Error("numBits must be <= 32");
+      throw new Error('numBits must be <= 32');
     }
     const value = Math.pow(2, numBits) - 1;
     return this.add_bits(numBits, value);
@@ -106,20 +120,20 @@ class Bits {
   // value is up to 32-bit unsigned integer
   add_bits(numBits, value) {
     if (value > 0xffffffff) {
-      throw new Error("value must be <= 0xffffffff (uint32)");
+      throw new Error('value must be <= 0xffffffff (uint32)');
     }
     if (value < 0) {
-      throw new Error("value must be >= 0 (uint32)");
+      throw new Error('value must be >= 0 (uint32)');
     }
     let remaining_len = numBits;
     return (() => {
       const result = [];
       while (remaining_len > 0) {
-        if ((this.c_buf[this.c_byte_index] == null)) {  // not initialized
-          this.c_buf[this.c_byte_index] = 0x00;  // initialize
+        if ((this.c_buf[this.c_byte_index] == null)) { // not initialized
+          this.c_buf[this.c_byte_index] = 0x00; // initialize
         }
         const available_len = 8 - this.c_bit_index;
-        if (remaining_len <= available_len) {  // fits into current byte
+        if (remaining_len <= available_len) { // fits into current byte
           this.c_buf[this.c_byte_index] |= value << (available_len - remaining_len);
           this.c_bit_index += remaining_len;
           remaining_len = 0;
@@ -150,19 +164,19 @@ class Bits {
   current_position() {
     return {
       byte: this.byte_index,
-      bit : this.bit_index
+      bit: this.bit_index,
     };
   }
 
   print_position() {
     const remaining_bits = this.get_remaining_bits();
-    return console.log(`byteIndex=${this.byte_index+1} bitIndex=${this.bit_index} remaining_bits=${remaining_bits}`);
+    return console.log(`byteIndex=${this.byte_index + 1} bitIndex=${this.bit_index} remaining_bits=${remaining_bits}`);
   }
 
   peek() {
     console.log(this.buf.slice(this.byte_index));
     const remainingBits = this.get_remaining_bits();
-    return console.log(`bit=${this.bit_index} bytes_read=${this.byte_index} remaining=${remainingBits} bits (${Math.ceil(remainingBits/8)} bytes)`);
+    return console.log(`bit=${this.bit_index} bytes_read=${this.byte_index} remaining=${remainingBits} bits (${Math.ceil(remainingBits / 8)} bytes)`);
   }
 
   skip_bits(len) {
@@ -209,11 +223,10 @@ class Bits {
     }
     const sign_bit = this.read_bit();
     const value = this.read_bits(bits - 1);
-    if (sign_bit === 1) {  // negative number
+    if (sign_bit === 1) { // negative number
       return -Math.pow(2, bits - 1) + value;
-    } else {  // positive number
-      return value;
-    }
+    } // positive number
+    return value;
   }
 
   // unsigned integer Exp-Golomb-coded syntax element
@@ -242,11 +255,11 @@ class Bits {
   read_bytes(len, suppress_boundary_warning) {
     if (suppress_boundary_warning == null) { suppress_boundary_warning = 0; }
     if (this.bit_index !== 0) {
-      throw new Error("read_bytes: bit_index must be 0");
+      throw new Error('read_bytes: bit_index must be 0');
     }
 
     if ((!suppress_boundary_warning) && ((this.byte_index + len) > this.buf.length)) {
-      const errmsg = `read_bytes exceeded boundary: ${this.byte_index+len} > ${this.buf.length}`;
+      const errmsg = `read_bytes exceeded boundary: ${this.byte_index + len} > ${this.buf.length}`;
       if (Bits.is_warning_fatal) {
         throw new Error(errmsg);
       } else {
@@ -254,7 +267,7 @@ class Bits {
       }
     }
 
-    const range = this.buf.slice(this.byte_index, this.byte_index+len);
+    const range = this.buf.slice(this.byte_index, this.byte_index + len);
     this.byte_index += len;
     return range;
   }
@@ -271,7 +284,7 @@ class Bits {
     let value;
     if (this.bit_index === 0) {
       if (this.byte_index >= this.buf.length) {
-        throw new Error("read_byte error: no more data");
+        throw new Error('read_byte error: no more data');
       }
       value = this.buf[this.byte_index++];
     } else {
@@ -286,7 +299,7 @@ class Bits {
     }
 
     let bit_buf = '';
-    for (let i = 0, end = len, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+    for (let i = 0, end = len, asc = end >= 0; asc ? i < end : i > end; asc ? i++ : i--) {
       bit_buf += this.read_bit().toString();
     }
     return parseInt(bit_buf, 2);
@@ -294,7 +307,7 @@ class Bits {
 
   read_bit() {
     if (this.byte_index >= this.buf.length) {
-      throw new Error("read_bit error: no more data");
+      throw new Error('read_bit error: no more data');
     }
     const value = this.bit(this.bit_index++, this.buf[this.byte_index]);
     if (this.bit_index === 8) {
@@ -326,7 +339,7 @@ class Bits {
     let result = null;
     if (index instanceof Array) {
       result = [];
-      for (let idx of Array.from(result)) {
+      for (const idx of Array.from(result)) {
         result.push((byte >> (7 - idx)) & 0x01);
       }
     } else {
@@ -365,7 +378,7 @@ class Bits {
 
   get_remaining_bytes() {
     if (this.bit_index !== 0) {
-      console.warn("warning: bits.get_remaining_bytes: bit_index is not 0");
+      console.warn('warning: bits.get_remaining_bytes: bit_index is not 0');
     }
     let remainingLen = this.buf.length - this.byte_index;
     if (remainingLen < 0) {
@@ -376,7 +389,7 @@ class Bits {
 
   remaining_buffer() {
     if (this.bit_index !== 0) {
-      console.warn("warning: bits.remaining_buffer: bit_index is not 0");
+      console.warn('warning: bits.remaining_buffer: bit_index is not 0');
     }
     return this.buf.slice(this.byte_index);
   }
@@ -401,13 +414,13 @@ class Bits {
   //   bit : (number) bit index (starts from 0)
   // }. If it is not found, returns null.
   lastIndexOfBit(bitVal) {
-    for (let start = this.buf.length-1, i = start, end = this.byte_index, asc = start <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
+    for (let start = this.buf.length - 1, i = start, end = this.byte_index, asc = start <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
       const byte = this.buf[i];
       if (((bitVal === 1) && (byte !== 0x00)) || ((bitVal === 0) && (byte !== 0xff))) {
         // this byte contains the target bit
         for (let col = 0; col <= 7; col++) {
           if (((byte >> col) & 0x01) === bitVal) {
-            return {byte: i, bit: 7 - col};
+            return { byte: i, bit: 7 - col };
           }
           if ((i === this.byte_index) && ((7 - col) === this.bit_index)) {
             return null;
@@ -415,7 +428,7 @@ class Bits {
         }
       }
     }
-    return null;  // not found
+    return null; // not found
   }
 
   get_current_byte() {
@@ -425,15 +438,14 @@ class Bits {
   get_byte_at(byteOffset) {
     if (this.bit_index === 0) {
       return this.buf[this.byte_index + byteOffset];
-    } else {
-      return Bits.parse_bits_uint(this.buf, byteOffset * 8, 8);
     }
+    return Bits.parse_bits_uint(this.buf, byteOffset * 8, 8);
   }
 
   last_get_byte_at(offsetFromEnd) {
     const offsetFromStart = this.buf.length - 1 - offsetFromEnd;
     if (offsetFromStart < 0) {
-      throw new Error("error: last_get_byte_at: index out of range");
+      throw new Error('error: last_get_byte_at: index out of range');
     }
     return this.buf[offsetFromStart];
   }
@@ -443,24 +455,23 @@ class Bits {
       console.warn(`warning: bits.remove_trailing_bytes: Buffer length (${this.buf.length}) is less than numBytes (${numBytes})`);
       this.buf = new Buffer([]);
     } else {
-      this.buf = this.buf.slice(0, this.buf.length-numBytes);
+      this.buf = this.buf.slice(0, this.buf.length - numBytes);
     }
   }
 
   mark() {
     if ((this.marks == null)) {
-      return this.marks = [ this.byte_index ];
-    } else {
-      return this.marks.push(this.byte_index);
+      return this.marks = [this.byte_index];
     }
+    return this.marks.push(this.byte_index);
   }
 
   marked_bytes() {
     if (((this.marks == null)) || (this.marks.length === 0)) {
-      throw new Error("The buffer has not been marked");
+      throw new Error('The buffer has not been marked');
     }
     const startIndex = this.marks.pop();
-    return this.buf.slice(startIndex, +(this.byte_index-1) + 1 || undefined);
+    return this.buf.slice(startIndex, +(this.byte_index - 1) + 1 || undefined);
   }
 
   // Returns a null-terminated string
@@ -468,7 +479,7 @@ class Bits {
     if (encoding == null) { encoding = 'utf8'; }
     const nullPos = Bits.searchByteInBuffer(this.buf, 0x00, this.byte_index);
     if (nullPos === -1) {
-      throw new Error("bits.get_string: the string is not null-terminated");
+      throw new Error('bits.get_string: the string is not null-terminated');
     }
     const str = this.buf.slice(this.byte_index, nullPos).toString(encoding);
     this.byte_index = nullPos + 1;
@@ -480,7 +491,7 @@ class Bits {
     if (encoding == null) { encoding = 'utf8'; }
     const arr = [];
     for (let i = numBytes, asc = numBytes <= 1; asc ? i <= 1 : i >= 1; asc ? i++ : i--) {
-      arr.push((num * Math.pow(2, -(i-1)*8)) & 0xff);
+      arr.push((num * Math.pow(2, -(i - 1) * 8)) & 0xff);
     }
     return new Buffer(arr).toString(encoding);
   }
@@ -489,24 +500,23 @@ class Bits {
   // found in the Buffer (buf), or -1 if it is not found.
   static searchByteInBuffer(buf, byte, from_pos) {
     if (from_pos == null) { from_pos = 0; }
-    if ((!Bits.DISABLE_BUFFER_INDEXOF) && (typeof(buf.indexOf) === 'function')) {
+    if ((!Bits.DISABLE_BUFFER_INDEXOF) && (typeof (buf.indexOf) === 'function')) {
       return buf.indexOf(byte, from_pos);
-    } else {
-      if (from_pos < 0) {
-        from_pos = buf.length + from_pos;
-      }
-      for (let i = from_pos, end = buf.length, asc = from_pos <= end; asc ? i < end : i > end; asc ? i++ : i--) {
-        if (buf[i] === byte) {
-          return i;
-        }
-      }
-      return -1;
     }
+    if (from_pos < 0) {
+      from_pos = buf.length + from_pos;
+    }
+    for (let i = from_pos, end = buf.length, asc = from_pos <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+      if (buf[i] === byte) {
+        return i;
+      }
+    }
+    return -1;
   }
 
   static searchBytesInArray(haystack, needle, from_pos) {
     if (from_pos == null) { from_pos = 0; }
-    if (buffertools != null) {  // buffertools is available
+    if (buffertools != null) { // buffertools is available
       if (!(haystack instanceof Buffer)) {
         haystack = new Buffer(haystack);
       }
@@ -514,29 +524,28 @@ class Bits {
         needle = new Buffer(needle);
       }
       return buffertools.indexOf(haystack, needle, from_pos);
-    } else {  // buffertools is not available
-      const haystack_len = haystack.length;
-      if (from_pos >= haystack_len) {
-        return -1;
-      }
+    } // buffertools is not available
+    const haystack_len = haystack.length;
+    if (from_pos >= haystack_len) {
+      return -1;
+    }
 
-      let needle_idx = 0;
-      const needle_len = needle.length;
-      let haystack_idx = from_pos;
-      while (true) {
-        if (haystack[haystack_idx] === needle[needle_idx]) {
-          needle_idx++;
-          if (needle_idx === needle_len) {
-            return (haystack_idx - needle_len) + 1;
-          }
-        } else if (needle_idx > 0) {
-          haystack_idx -= needle_idx;
-          needle_idx = 0;
+    let needle_idx = 0;
+    const needle_len = needle.length;
+    let haystack_idx = from_pos;
+    while (true) {
+      if (haystack[haystack_idx] === needle[needle_idx]) {
+        needle_idx++;
+        if (needle_idx === needle_len) {
+          return (haystack_idx - needle_len) + 1;
         }
-        haystack_idx++;
-        if (haystack_idx === haystack_len) {
-          return -1;
-        }
+      } else if (needle_idx > 0) {
+        haystack_idx -= needle_idx;
+        needle_idx = 0;
+      }
+      haystack_idx++;
+      if (haystack_idx === haystack_len) {
+        return -1;
       }
     }
   }
@@ -556,11 +565,9 @@ class Bits {
         if (needleIdx === needle.length) {
           return (haystackIdx - needle.length) + 1;
         }
-      } else {
-        if (needleIdx > 0) {
-          haystackIdx -= needleIdx;
-          needleIdx = 0;
-        }
+      } else if (needleIdx > 0) {
+        haystackIdx -= needleIdx;
+        needleIdx = 0;
       }
       haystackIdx++;
       if (haystackIdx === haystackLen) {
@@ -602,7 +609,7 @@ class Bits {
 
   static printBinary(buffer) {
     let col = 0;
-    for (let byte of Array.from(buffer)) {
+    for (const byte of Array.from(buffer)) {
       process.stdout.write(Bits.toBinary(byte));
       col++;
       if (col === 4) {
@@ -622,7 +629,7 @@ class Bits {
     let strline = '';
     let dump = '';
 
-    const endline = function() {
+    const endline = function () {
       let pad = '  ';
       while (col < 16) {
         pad += '  ';
@@ -631,12 +638,12 @@ class Bits {
         }
         col++;
       }
-      dump += pad + strline + '\n';
+      dump += `${pad + strline}\n`;
       return strline = '';
     };
 
-    for (let byte of Array.from(buffer)) {
-      if (0x20 <= byte && byte <= 0x7e) {  // printable char
+    for (const byte of Array.from(buffer)) {
+      if (byte >= 0x20 && byte <= 0x7e) { // printable char
         strline += String.fromCharCode(byte);
       } else {
         strline += ' ';

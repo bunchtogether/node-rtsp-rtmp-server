@@ -1,3 +1,20 @@
+/* eslint-disable
+    camelcase,
+    consistent-return,
+    default-case,
+    no-console,
+    no-constant-condition,
+    no-param-reassign,
+    no-return-assign,
+    no-self-compare,
+    no-unreachable,
+    no-unused-vars,
+    no-var,
+    one-var,
+    vars-on-top,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -19,18 +36,18 @@ const MPEG_IDENTIFIER_MPEG4 = 0;
 const eventListeners = {};
 
 var api = {
-  SYN_ID_SCE: 0x0,  // single_channel_element
-  SYN_ID_CPE: 0x1,  // channel_pair_element
-  SYN_ID_CCE: 0x2,  // coupling_channel_element
-  SYN_ID_LFE: 0x3,  // lfe_channel_element
-  SYN_ID_DSE: 0x4,  // data_stream_elemen
-  SYN_ID_PCE: 0x5,  // program_config_element
-  SYN_ID_FIL: 0x6,  // fill_element
-  SYN_ID_END: 0x7,  // TERM
+  SYN_ID_SCE: 0x0, // single_channel_element
+  SYN_ID_CPE: 0x1, // channel_pair_element
+  SYN_ID_CCE: 0x2, // coupling_channel_element
+  SYN_ID_LFE: 0x3, // lfe_channel_element
+  SYN_ID_DSE: 0x4, // data_stream_elemen
+  SYN_ID_PCE: 0x5, // program_config_element
+  SYN_ID_FIL: 0x6, // fill_element
+  SYN_ID_END: 0x7, // TERM
 
   open(file) {
     return audioBuf = fs.readFileSync(file);
-  },  // up to 1GB
+  }, // up to 1GB
 
   close() {
     return audioBuf = null;
@@ -38,7 +55,7 @@ var api = {
 
   emit(name, ...data) {
     if (eventListeners[name] != null) {
-      for (let listener of Array.from(eventListeners[name])) {
+      for (const listener of Array.from(eventListeners[name])) {
         listener(...Array.from(data || []));
       }
     }
@@ -47,9 +64,8 @@ var api = {
   on(name, listener) {
     if (eventListeners[name] != null) {
       return eventListeners[name].push(listener);
-    } else {
-      return eventListeners[name] = [ listener ];
     }
+    return eventListeners[name] = [listener];
   },
 
   end() {
@@ -84,35 +100,35 @@ var api = {
 
   // For ascInfo argument, pass a return value of readAudioSpecificConfig()
   createADTSHeader(ascInfo, aac_frame_length) {
-    const bits = new Bits;
+    const bits = new Bits();
     bits.create_buf();
     // adts_fixed_header()
-    bits.add_bits(12, 0xfff);  // syncword
-    bits.add_bit(0);  // ID (1=MPEG-2 AAC; 0=MPEG-4)
-    bits.add_bits(2, 0);  // layer
-    bits.add_bit(1);  // protection_absent
+    bits.add_bits(12, 0xfff); // syncword
+    bits.add_bit(0); // ID (1=MPEG-2 AAC; 0=MPEG-4)
+    bits.add_bits(2, 0); // layer
+    bits.add_bit(1); // protection_absent
     if ((ascInfo.audioObjectType - 1) > 0b11) {
       throw new Error(`invalid audioObjectType: ${ascInfo.audioObjectType} (must be <= 4)`);
     }
-    bits.add_bits(2, ascInfo.audioObjectType - 1);  // profile_ObjectType
-    bits.add_bits(4, ascInfo.samplingFrequencyIndex);  // sampling_frequency_index
-    bits.add_bit(0);  // private_bit
+    bits.add_bits(2, ascInfo.audioObjectType - 1); // profile_ObjectType
+    bits.add_bits(4, ascInfo.samplingFrequencyIndex); // sampling_frequency_index
+    bits.add_bit(0); // private_bit
     if (ascInfo.channelConfiguration > 0b111) {
       throw new Error(`invalid channelConfiguration: ${ascInfo.channelConfiguration} (must be <= 7)`);
     }
-    bits.add_bits(3, ascInfo.channelConfiguration);  // channel_configuration
-    bits.add_bit(0);  // original_copy
-    bits.add_bit(0);  // home
+    bits.add_bits(3, ascInfo.channelConfiguration); // channel_configuration
+    bits.add_bit(0); // original_copy
+    bits.add_bit(0); // home
 
     // adts_variable_header()
-    bits.add_bit(0);  // copyright_identification_bit
-    bits.add_bit(0);  // copyright_identification_start
-    if (aac_frame_length > (8192 - 7)) {  // 7 == length of ADTS header
+    bits.add_bit(0); // copyright_identification_bit
+    bits.add_bit(0); // copyright_identification_start
+    if (aac_frame_length > (8192 - 7)) { // 7 == length of ADTS header
       throw new Error(`invalid aac_frame_length: ${aac_frame_length} (must be <= 8192)`);
     }
-    bits.add_bits(13, aac_frame_length + 7);  // aac_frame_length (7 == ADTS header length)
-    bits.add_bits(11, 0x7ff);  // adts_buffer_fullness (0x7ff = VBR)
-    bits.add_bits(2, 0);  // number_of_raw_data_blocks_in_frame (actual - 1)
+    bits.add_bits(13, aac_frame_length + 7); // aac_frame_length (7 == ADTS header length)
+    bits.add_bits(11, 0x7ff); // adts_buffer_fullness (0x7ff = VBR)
+    bits.add_bits(2, 0); // number_of_raw_data_blocks_in_frame (actual - 1)
 
     return bits.get_created_buf();
   },
@@ -147,7 +163,7 @@ var api = {
         break;
       }
       if ((buffer[0] !== 0xff) || (buffer[1] & (0xf0 !== 0xf0))) {
-        console.log("aac: syncword is not at current position");
+        console.log('aac: syncword is not at current position');
         syncwordPos = this.getNextPossibleSyncwordPosition();
         buffer = buffer.slice(syncwordPos);
         continue;
@@ -162,8 +178,8 @@ var api = {
       if (buffer.length >= (aac_frame_length + 2)) {
         // check next syncword
         if ((buffer[aac_frame_length] !== 0xff) ||
-        (buffer[aac_frame_length+1] & (0xf0 !== 0xf0))) {  // false syncword
-          console.log("aac:splitIntoADTSFrames(): syncword was false positive (emulated syncword)");
+        (buffer[aac_frame_length + 1] & (0xf0 !== 0xf0))) { // false syncword
+          console.log('aac:splitIntoADTSFrames(): syncword was false positive (emulated syncword)');
           syncwordPos = this.getNextPossibleSyncwordPosition();
           buffer = buffer.slice(syncwordPos);
           continue;
@@ -197,7 +213,7 @@ var api = {
         break;
       }
       if ((audioBuf[0] !== 0xff) || (audioBuf[1] & (0xf0 !== 0xf0))) {
-        console.log("aac: syncword is not at current position");
+        console.log('aac: syncword is not at current position');
         this.skipToNextPossibleSyncword();
         continue;
       }
@@ -211,8 +227,8 @@ var api = {
       if (audioBuf.length >= (aac_frame_length + 2)) {
         // check next syncword
         if ((audioBuf[aac_frame_length] !== 0xff) ||
-        (audioBuf[aac_frame_length+1] & (0xf0 !== 0xf0))) {  // false syncword
-          console.log("aac:feedPESPacket(): syncword was false positive (emulated syncword)");
+        (audioBuf[aac_frame_length + 1] & (0xf0 !== 0xf0))) { // false syncword
+          console.log('aac:feedPESPacket(): syncword was false positive (emulated syncword)');
           this.skipToNextPossibleSyncword();
           continue;
         }
@@ -245,7 +261,7 @@ var api = {
         break;
       }
       if ((audioBuf[0] !== 0xff) || (audioBuf[1] & (0xf0 !== 0xf0))) {
-        console.log("aac: syncword is not at current position");
+        console.log('aac: syncword is not at current position');
         this.skipToNextPossibleSyncword();
         continue;
       }
@@ -259,8 +275,8 @@ var api = {
       if (audioBuf.length >= (aac_frame_length + 2)) {
         // check next syncword
         if ((audioBuf[aac_frame_length] !== 0xff) ||
-        (audioBuf[aac_frame_length+1] & (0xf0 !== 0xf0))) {  // false syncword
-          console.log("aac:feed(): syncword was false positive (emulated syncword)");
+        (audioBuf[aac_frame_length + 1] & (0xf0 !== 0xf0))) { // false syncword
+          console.log('aac:feed(): syncword was false positive (emulated syncword)');
           this.skipToNextPossibleSyncword();
           continue;
         }
@@ -300,7 +316,7 @@ var api = {
       case 0xc: return 7350;
       default: return null;
     }
-  },  // escape value
+  }, // escape value
 
   // ISO 14496-3 - Table 1.16
   getSamplingFreqIndex(sampleRate) {
@@ -320,7 +336,7 @@ var api = {
       case 7350: return 0xc;
       default: return 0xf;
     }
-  },  // escape value
+  }, // escape value
 
   getChannelConfiguration(channels) {
     switch (channels) {
@@ -360,14 +376,12 @@ var api = {
     // frameLengthFlag (1 bit)
     if (opts.frameLengthFlag != null) {
       bits.add_bit(opts.frameLengthFlag);
+    } else if (opts.frameLength === 1024) {
+      bits.add_bit(0);
+    } else if (opts.frameLength === 960) {
+      bits.add_bit(1);
     } else {
-      if (opts.frameLength === 1024) {
-        bits.add_bit(0);
-      } else if (opts.frameLength === 960) {
-        bits.add_bit(1);
-      } else {
-        throw new Error(`Invalid frameLength: ${opts.frameLength} (must be 1024 or 960)`);
-      }
+      throw new Error(`Invalid frameLength: ${opts.frameLength} (must be 1024 or 960)`);
     }
 
     // dependsOnCoreCoder (1 bit)
@@ -380,14 +394,12 @@ var api = {
 
     if (opts.extensionFlag != null) {
       return bits.add_bit(opts.extensionFlag);
-    } else {
-      // extensionFlag (1 bit)
-      if ([1, 2, 3, 4, 6, 7].includes(opts.audioObjectType)) {
-        return bits.add_bit(0);
-      } else {
-        throw new Error(`audio object type ${opts.audioObjectType} is not implemented`);
-      }
     }
+    // extensionFlag (1 bit)
+    if ([1, 2, 3, 4, 6, 7].includes(opts.audioObjectType)) {
+      return bits.add_bit(0);
+    }
+    throw new Error(`audio object type ${opts.audioObjectType} is not implemented`);
   },
 
   // ISO 14496-3 GetAudioObjectType()
@@ -430,7 +442,7 @@ var api = {
       }
       info.extensionFlag3 = bits.read_bit();
     }
-      // ISO 14496-3 says: tbd in version 3
+    // ISO 14496-3 says: tbd in version 3
     return info;
   },
 
@@ -543,7 +555,7 @@ var api = {
       extensionIdentifier = bits.read_bits(11);
     }
     if (extensionIdentifier === 0x76a) {
-      logger.warn("aac: this audio config may not be supported (extensionIdentifier == 0x76a)");
+      logger.warn('aac: this audio config may not be supported (extensionIdentifier == 0x76a)');
       if ((info.audioObjectType !== 30) && (bits.get_remaining_bits() >= 1)) {
         info.mpsPresentFlag = bits.read_bit();
         if (info.mpsPresentFlag === 1) {
@@ -562,17 +574,16 @@ var api = {
   },
 
   readSpatialSpecificConfig(bits) {
-    throw new Error("SpatialSpecificConfig is not implemented");
+    throw new Error('SpatialSpecificConfig is not implemented');
   },
 
   // Inverse of GetAudioObjectType() in ISO 14496-3 Table 1.14
   addAudioObjectType(bits, audioObjectType) {
     if (audioObjectType >= 32) {
-      bits.add_bits(5, 31);  // 0b11111
+      bits.add_bits(5, 31); // 0b11111
       return bits.add_bits(6, audioObjectType - 32);
-    } else {
-      return bits.add_bits(5, audioObjectType);
     }
+    return bits.add_bits(5, audioObjectType);
   },
 
   // @param opts: A return value of parseAudioSpecificConfig(), or an object: {
@@ -584,9 +595,10 @@ var api = {
   //   frameLength (int): 1024 or 960
   // }
   createAudioSpecificConfig(opts, explicitHierarchicalSBR) {
-    let audioObjectType, channelConfiguration;
+    let audioObjectType,
+      channelConfiguration;
     if (explicitHierarchicalSBR == null) { explicitHierarchicalSBR = false; }
-    const bits = new Bits;
+    const bits = new Bits();
     bits.create_buf();
 
     // Table 1.13 - AudioSpecificConfig()
@@ -595,7 +607,7 @@ var api = {
       if (opts.psPresentFlag === 1) {
         audioObjectType = 29; // HE-AAC v2
       } else {
-        audioObjectType = 5;  // HE-AAC v1
+        audioObjectType = 5; // HE-AAC v1
       }
     } else {
       ({ audioObjectType } = opts);
@@ -676,7 +688,7 @@ var api = {
           // psPresentFlag
           bits.add_bit(1);
         }
-      } else {  // opts.audioObjectType is 22
+      } else { // opts.audioObjectType is 22
         // extensionAudioObjectType
         api.addAudioObjectType(bits, 22);
         // sbrPresentFlag
@@ -721,15 +733,15 @@ var api = {
     info.sampleRate = api.getSampleRateFromFreqIndex(freq);
     info.channels = Bits.parse_bits_uint(adtsFrame, 23, 3);
 
-//    # raw_data_block starts from byte index 7
-//    id_syn_ele = Bits.parse_bits_uint adtsFrame, 56, 3
+    //    # raw_data_block starts from byte index 7
+    //    id_syn_ele = Bits.parse_bits_uint adtsFrame, 56, 3
 
     return info;
   },
 
   getNextADTSFrame() {
     if ((audioBuf == null)) {
-      throw new Error("aac error: file is not opened yet");
+      throw new Error('aac error: file is not opened yet');
     }
 
     while (true) {
@@ -738,7 +750,7 @@ var api = {
       }
 
       if ((audioBuf[0] !== 0xff) || (audioBuf[1] & (0xf0 !== 0xf0))) {
-        console.log("aac: syncword is not at current position");
+        console.log('aac: syncword is not at current position');
         this.skipToNextPossibleSyncword();
         continue;
       }
@@ -752,8 +764,8 @@ var api = {
       if (audioBuf.length >= (aac_frame_length + 2)) {
         // check next syncword
         if ((audioBuf[aac_frame_length] !== 0xff) ||
-        (audioBuf[aac_frame_length+1] & (0xf0 !== 0xf0))) {  // false syncword
-          console.log("aac:getNextADTSFrame(): syncword was false positive (emulated syncword)");
+        (audioBuf[aac_frame_length + 1] & (0xf0 !== 0xf0))) { // false syncword
+          console.log('aac:getNextADTSFrame(): syncword was false positive (emulated syncword)');
           this.skipToNextPossibleSyncword();
           continue;
         }
@@ -766,7 +778,7 @@ var api = {
 
       return adtsFrame;
     }
-  }
+  },
 };
 
 module.exports = api;

@@ -1,3 +1,23 @@
+/* eslint-disable
+    camelcase,
+    consistent-return,
+    guard-for-in,
+    no-cond-assign,
+    no-param-reassign,
+    no-restricted-syntax,
+    no-return-assign,
+    no-shadow,
+    no-undef,
+    no-underscore-dangle,
+    no-unused-vars,
+    no-useless-escape,
+    no-var,
+    one-var,
+    radix,
+    vars-on-top,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -52,7 +72,7 @@ const ENABLE_START_PLAYING_FROM_KEYFRAME = false;
 const SINGLE_NAL_UNIT_MAX_SIZE = 1358;
 
 const DAY_NAMES = [
-  'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'
+  'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat',
 ];
 
 const MONTH_NAMES = [
@@ -79,15 +99,15 @@ const DEBUG_HTTP_TUNNEL = false;
 const DEBUG_DISABLE_UDP_TRANSPORT = false;
 
 // Two CRLFs
-const CRLF_CRLF = [ 0x0d, 0x0a, 0x0d, 0x0a ];
+const CRLF_CRLF = [0x0d, 0x0a, 0x0d, 0x0a];
 
-const TIMESTAMP_ROUNDOFF = 4294967296;  // 32 bits
+const TIMESTAMP_ROUNDOFF = 4294967296; // 32 bits
 
 if (DEBUG_OUTGOING_PACKET_DATA) {
   logger.enableTag('rtsp:out');
 }
 
-const zeropad = function(columns, num) {
+const zeropad = function (columns, num) {
   num += '';
   while (num.length < columns) {
     num = `0${num}`;
@@ -95,8 +115,8 @@ const zeropad = function(columns, num) {
   return num;
 };
 
-const pad = function(digits, n) {
-  n = n + '';
+const pad = function (digits, n) {
+  n += '';
   while (n.length < digits) {
     n = `0${n}`;
   }
@@ -105,7 +125,7 @@ const pad = function(digits, n) {
 
 // Generate new random session ID
 // NOTE: Samsung SC-02B doesn't work with some hex string
-const generateNewSessionID = function(callback) {
+const generateNewSessionID = function (callback) {
   let id = '';
   for (let i = 0; i <= 7; i++) {
     id += parseInt(Math.random() * 9) + 1;
@@ -115,16 +135,15 @@ const generateNewSessionID = function(callback) {
 
 // Generate random 32 bit unsigned integer.
 // Return value is intended to be used as an SSRC identifier.
-const generateRandom32 = function() {
-  const str = `${new Date().getTime()}${process.pid}${os.hostname()}` + 
-        (1 + (Math.random() * 1000000000));
+const generateRandom32 = function () {
+  const str = `${new Date().getTime()}${process.pid}${os.hostname()}${1 + (Math.random() * 1000000000)}`;
 
   const md5sum = crypto.createHash('md5');
   md5sum.update(str);
   return md5sum.digest().slice(0, 4).readUInt32BE(0);
 };
 
-const resetStreamParams = function(stream) {
+const resetStreamParams = function (stream) {
   stream.rtspUploadingClient = null;
   stream.videoSequenceNumber = 0;
   stream.audioSequenceNumber = 0;
@@ -136,13 +155,13 @@ const resetStreamParams = function(stream) {
 
 avstreams.on('update_frame_rate', (stream, frameRate) => stream.videoRTPTimestampInterval = Math.round(90000 / frameRate));
 
-avstreams.on('new', function(stream) {
+avstreams.on('new', (stream) => {
   stream.rtspNumClients = 0;
   stream.rtspClients = {};
   return resetStreamParams(stream);
 });
 
-avstreams.on('reset', stream => resetStreamParams(stream));
+avstreams.on('reset', (stream) => resetStreamParams(stream));
 
 class RTSPServer {
   constructor(opts) {
@@ -160,11 +179,11 @@ class RTSPServer {
     this.rtspUploadingClients = {};
     this.highestClientID = 0;
 
-    this.rtpParser = new rtp.RTPParser;
+    this.rtpParser = new rtp.RTPParser();
 
     this.rtpParser.on('h264_nal_units', (streamId, nalUnits, rtpTimestamp) => {
       const stream = avstreams.get(streamId);
-      if ((stream == null)) {  // No matching stream
+      if ((stream == null)) { // No matching stream
         logger.warn(`warn: No matching stream to id ${streamId}`);
         return;
       }
@@ -181,7 +200,7 @@ class RTSPServer {
 
     this.rtpParser.on('aac_access_units', (streamId, accessUnits, rtpTimestamp) => {
       const stream = avstreams.get(streamId);
-      if ((stream == null)) {  // No matching stream
+      if ((stream == null)) { // No matching stream
         logger.warn(`warn: No matching stream to id ${streamId}`);
         return;
       }
@@ -222,18 +241,16 @@ class RTSPServer {
   getNextVideoRTPTimestamp(stream) {
     if (stream.lastVideoRTPTimestamp != null) {
       return stream.lastVideoRTPTimestamp + stream.videoRTPTimestampInterval;
-    } else {
-      return 0;
     }
+    return 0;
   }
 
   // TODO: Adjust RTP timestamp based on play start time
   getNextAudioRTPTimestamp(stream) {
     if (stream.lastAudioRTPTimestamp != null) {
       return stream.lastAudioRTPTimestamp + stream.audioRTPTimestampInterval;
-    } else {
-      return 0;
     }
+    return 0;
   }
 
   getVideoRTPTimestamp(stream, time) {
@@ -242,7 +259,7 @@ class RTSPServer {
 
   getAudioRTPTimestamp(stream, time) {
     if ((stream.audioClockRate == null)) {
-      throw new Error("audioClockRate is null");
+      throw new Error('audioClockRate is null');
     }
     return Math.round((time * (stream.audioClockRate / 1000)) % TIMESTAMP_ROUNDOFF);
   }
@@ -253,9 +270,8 @@ class RTSPServer {
       const rtpDiff = rtpTimestamp - videoTimestampInfo.rtpTimestamp; // 90 kHz clock
       const timeDiff = rtpDiff / 90;
       return videoTimestampInfo.time + timeDiff;
-    } else {
-      return Date.now();
     }
+    return Date.now();
   }
 
   getAudioSendTimeForUploadingRTPTimestamp(stream, rtpTimestamp) {
@@ -264,9 +280,8 @@ class RTSPServer {
       const rtpDiff = rtpTimestamp - audioTimestampInfo.rtpTimestamp;
       const timeDiff = (rtpDiff * 1000) / stream.audioClockRate;
       return audioTimestampInfo.time + timeDiff;
-    } else {
-      return Date.now();
     }
+    return Date.now();
   }
 
   // @public
@@ -283,50 +298,48 @@ class RTSPServer {
         // ignore access unit delimiters
         continue;
       }
-      if (nalUnitType === h264.NAL_UNIT_TYPE_SPS) {  // 7
+      if (nalUnitType === h264.NAL_UNIT_TYPE_SPS) { // 7
         isSPSSent = true;
-      } else if (nalUnitType === h264.NAL_UNIT_TYPE_PPS) {  // 8
+      } else if (nalUnitType === h264.NAL_UNIT_TYPE_PPS) { // 8
         isPPSSent = true;
       }
 
       // If this is keyframe but SPS and PPS do not exist in the
       // same timestamp, we insert them before the keyframe.
       // TODO: Send SPS and PPS as an aggregation packet (STAP-A).
-      if (nalUnitType === 5) {  // keyframe
+      if (nalUnitType === 5) { // keyframe
         // Compensate SPS/PPS if they are not included in nalUnits
-        if (!isSPSSent) {  // nal_unit_type 7
+        if (!isSPSSent) { // nal_unit_type 7
           if (stream.spsNALUnit != null) {
             this.sendNALUnitOverRTSP(stream, stream.spsNALUnit, pts, dts, false);
             // there is a case where timestamps of two keyframes are identical
             // (i.e. nalUnits argument contains multiple keyframes)
             isSPSSent = true;
           } else {
-            logger.error("Error: SPS is not set");
+            logger.error('Error: SPS is not set');
           }
         }
-        if (!isPPSSent) {  // nal_unit_type 8
+        if (!isPPSSent) { // nal_unit_type 8
           if (stream.ppsNALUnit != null) {
             this.sendNALUnitOverRTSP(stream, stream.ppsNALUnit, pts, dts, false);
             // there is a case where timestamps of two keyframes are identical
             // (i.e. nalUnits argument contains multiple keyframes)
             isPPSSent = true;
           } else {
-            logger.error("Error: PPS is not set");
+            logger.error('Error: PPS is not set');
           }
         }
       }
 
       this.sendNALUnitOverRTSP(stream, nalUnit, pts, dts, isLastPacket);
     }
-
   }
 
   sendNALUnitOverRTSP(stream, nalUnit, pts, dts, marker) {
     if (nalUnit.length > SINGLE_NAL_UNIT_MAX_SIZE) {
-      return this.sendVideoPacketWithFragment(stream, nalUnit, pts, marker);  // TODO what about dts?
-    } else {
-      return this.sendVideoPacketAsSingleNALUnit(stream, nalUnit, pts, marker);  // TODO what about dts?
+      return this.sendVideoPacketWithFragment(stream, nalUnit, pts, marker); // TODO what about dts?
     }
+    return this.sendVideoPacketAsSingleNALUnit(stream, nalUnit, pts, marker); // TODO what about dts?
   }
 
   // @public
@@ -338,7 +351,7 @@ class RTSPServer {
 
     // timestamp: RTP timestamp in audioClockRate
     // pts: PTS in 90 kHz clock
-    if (stream.audioClockRate !== 90000) {  // given pts is not in 90 kHz clock
+    if (stream.audioClockRate !== 90000) { // given pts is not in 90 kHz clock
       timestamp = (pts * stream.audioClockRate) / 90000;
     } else {
       timestamp = pts;
@@ -375,7 +388,7 @@ class RTSPServer {
         payloadType: 96,
         sequenceNumber: stream.audioSequenceNumber,
         timestamp: ts,
-        ssrc: null
+        ssrc: null,
       });
 
       const accessUnitLength = concatRawDataBlock.length;
@@ -384,11 +397,11 @@ class RTSPServer {
       // TODO: sequence number should start at a random number
 
       const audioHeader = rtp.createAudioHeader({
-        accessUnits: group});
+        accessUnits: group });
 
       rtpData = rtpData.concat(audioHeader);
 
-      for (let clientID in stream.rtspClients) {
+      for (const clientID in stream.rtspClients) {
         // Append the access unit (rawDataBlock)
         const client = stream.rtspClients[clientID];
         const rtpBuffer = Buffer.concat([new Buffer(rtpData), concatRawDataBlock],
@@ -407,14 +420,12 @@ class RTSPServer {
             } else {
               this.sendDataByTCP(client.socket, client.audioTCPDataChannel, rtpBuffer);
             }
-          } else {
-            if (client.clientAudioRTPPort != null) {
-              this.audioRTPSocket.send(rtpBuffer, 0, rtpBuffer.length, client.clientAudioRTPPort, client.ip, function(err, bytes) {
-                if (err) {
-                  return logger.error(`[audioRTPSend] error: ${err.message}`);
-                }
-              });
-            }
+          } else if (client.clientAudioRTPPort != null) {
+            this.audioRTPSocket.send(rtpBuffer, 0, rtpBuffer.length, client.clientAudioRTPPort, client.ip, (err, bytes) => {
+              if (err) {
+                return logger.error(`[audioRTPSend] error: ${err.message}`);
+              }
+            });
           }
         }
       }
@@ -424,11 +435,11 @@ class RTSPServer {
   sendEOS(stream) {
     return (() => {
       const result = [];
-      for (let clientID in stream.rtspClients) {
+      for (const clientID in stream.rtspClients) {
         const client = stream.rtspClients[clientID];
         logger.debug(`[${TAG}:client=${clientID}] sending goodbye for stream ${stream.id}`);
         let buf = new Buffer(rtp.createGoodbye({
-          ssrcs: [ client.videoSSRC ]}));
+          ssrcs: [client.videoSSRC] }));
         if (client.useTCPForVideo) {
           if (client.useHTTP) {
             if (client.httpClientType === 'GET') {
@@ -437,18 +448,16 @@ class RTSPServer {
           } else {
             this.sendDataByTCP(client.socket, client.videoTCPControlChannel, buf);
           }
-        } else {
-          if (client.clientVideoRTCPPort != null) {
-            this.videoRTCPSocket.send(buf, 0, buf.length, client.clientVideoRTCPPort, client.ip, function(err, bytes) {
-              if (err) {
-                return logger.error(`[videoRTCPSend] error: ${err.message}`);
-              }
-            });
-          }
+        } else if (client.clientVideoRTCPPort != null) {
+          this.videoRTCPSocket.send(buf, 0, buf.length, client.clientVideoRTCPPort, client.ip, (err, bytes) => {
+            if (err) {
+              return logger.error(`[videoRTCPSend] error: ${err.message}`);
+            }
+          });
         }
 
         buf = new Buffer(rtp.createGoodbye({
-          ssrcs: [ client.audioSSRC ]}));
+          ssrcs: [client.audioSSRC] }));
         if (client.useTCPForAudio) {
           if (client.useHTTP) {
             if (client.httpClientType === 'GET') {
@@ -459,16 +468,14 @@ class RTSPServer {
           } else {
             result.push(this.sendDataByTCP(client.socket, client.audioTCPControlChannel, buf));
           }
+        } else if (client.clientAudioRTCPPort != null) {
+          result.push(this.audioRTCPSocket.send(buf, 0, buf.length, client.clientAudioRTCPPort, client.ip, (err, bytes) => {
+            if (err) {
+              return logger.error(`[audioRTCPSend] error: ${err.message}`);
+            }
+          }));
         } else {
-          if (client.clientAudioRTCPPort != null) {
-            result.push(this.audioRTCPSocket.send(buf, 0, buf.length, client.clientAudioRTCPPort, client.ip, function(err, bytes) {
-              if (err) {
-                return logger.error(`[audioRTCPSend] error: ${err.message}`);
-              }
-            }));
-          } else {
-            result.push(undefined);
-          }
+          result.push(undefined);
         }
       }
       return result;
@@ -477,7 +484,7 @@ class RTSPServer {
 
   dumpClients() {
     logger.raw(`[rtsp/http: ${Object.keys(this.clients).length} clients]`);
-    for (let clientID in this.clients) {
+    for (const clientID in this.clients) {
       const client = this.clients[clientID];
       logger.raw(` ${client.toString()}`);
     }
@@ -504,7 +511,7 @@ class RTSPServer {
     this.audioRTCPSocket = dgram.createSocket('udp4');
     this.audioRTCPSocket.bind(config.audioRTCPServerPort);
 
-    this.server = net.createServer(c => {
+    this.server = net.createServer((c) => {
       // New client is connected
       this.highestClientID++;
       const id_str = `c${this.highestClientID}`;
@@ -515,11 +522,11 @@ class RTSPServer {
           id: id_str,
           sessionID,
           socket: c,
-          ip: c.remoteAddress
+          ip: c.remoteAddress,
         }));
         this.numClients++;
         c.setKeepAlive(true, 120000);
-        c.clientID = id_str;  // TODO: Is this safe?
+        c.clientID = id_str; // TODO: Is this safe?
         c.isAuthenticated = false;
         c.requestCount = 0;
         c.responseCount = 0;
@@ -538,7 +545,7 @@ class RTSPServer {
           this.stopSendingRTCP(client);
 
           // TODO: Is this fast enough?
-          for (let addr in this.rtspUploadingClients) {
+          for (const addr in this.rtspUploadingClients) {
             const _client = this.rtspUploadingClients[addr];
             if (_client === client) {
               delete this.rtspUploadingClients[addr];
@@ -548,20 +555,18 @@ class RTSPServer {
           return this.dumpClients();
         });
         c.buf = null;
-        c.on('error', function(err) {
+        c.on('error', (err) => {
           logger.error(`Socket error (${c.clientID}): ${err}`);
           return c.destroy();
         });
-        return c.on('data', data => {
-          return this.handleOnData(c, data);
-        });
+        return c.on('data', (data) => this.handleOnData(c, data));
       });
     });
 
-    this.server.on('error', err => logger.error(`[${TAG}] server error: ${err.message}`));
+    this.server.on('error', (err) => logger.error(`[${TAG}] server error: ${err.message}`));
 
     const udpVideoDataServer = dgram.createSocket('udp4');
-    udpVideoDataServer.on('error', function(err) {
+    udpVideoDataServer.on('error', (err) => {
       logger.error(`[${TAG}] udp video data receiver error: ${err.message}`);
       throw err;
     });
@@ -571,16 +576,16 @@ class RTSPServer {
         return this.onUploadVideoData(stream, msg, rinfo);
       }
     });
-//      else
-//        logger.warn "[#{TAG}] warn: received UDP video data but no existing client found: #{rinfo.address}:#{rinfo.port}"
-    udpVideoDataServer.on('listening', function() {
+    //      else
+    //        logger.warn "[#{TAG}] warn: received UDP video data but no existing client found: #{rinfo.address}:#{rinfo.port}"
+    udpVideoDataServer.on('listening', () => {
       const addr = udpVideoDataServer.address();
       return logger.debug(`[${TAG}] udp video data receiver is listening on port ${addr.port}`);
     });
     udpVideoDataServer.bind(config.rtspVideoDataUDPListenPort);
 
     const udpVideoControlServer = dgram.createSocket('udp4');
-    udpVideoControlServer.on('error', function(err) {
+    udpVideoControlServer.on('error', (err) => {
       logger.error(`[${TAG}] udp video control receiver error: ${err.message}`);
       throw err;
     });
@@ -590,16 +595,16 @@ class RTSPServer {
         return this.onUploadVideoControl(stream, msg, rinfo);
       }
     });
-//      else
-//        logger.warn "[#{TAG}] warn: received UDP video control data but no existing client found: #{rinfo.address}:#{rinfo.port}"
-    udpVideoControlServer.on('listening', function() {
+    //      else
+    //        logger.warn "[#{TAG}] warn: received UDP video control data but no existing client found: #{rinfo.address}:#{rinfo.port}"
+    udpVideoControlServer.on('listening', () => {
       const addr = udpVideoControlServer.address();
       return logger.debug(`[${TAG}] udp video control receiver is listening on port ${addr.port}`);
     });
     udpVideoControlServer.bind(config.rtspVideoControlUDPListenPort);
 
     const udpAudioDataServer = dgram.createSocket('udp4');
-    udpAudioDataServer.on('error', function(err) {
+    udpAudioDataServer.on('error', (err) => {
       logger.error(`[${TAG}] udp audio data receiver error: ${err.message}`);
       throw err;
     });
@@ -609,16 +614,16 @@ class RTSPServer {
         return this.onUploadAudioData(stream, msg, rinfo);
       }
     });
-//      else
-//        logger.warn "[#{TAG}] warn: received UDP audio data but no existing client found: #{rinfo.address}:#{rinfo.port}"
-    udpAudioDataServer.on('listening', function() {
+    //      else
+    //        logger.warn "[#{TAG}] warn: received UDP audio data but no existing client found: #{rinfo.address}:#{rinfo.port}"
+    udpAudioDataServer.on('listening', () => {
       const addr = udpAudioDataServer.address();
       return logger.debug(`[${TAG}] udp audio data receiver is listening on port ${addr.port}`);
     });
     udpAudioDataServer.bind(config.rtspAudioDataUDPListenPort);
 
     const udpAudioControlServer = dgram.createSocket('udp4');
-    udpAudioControlServer.on('error', function(err) {
+    udpAudioControlServer.on('error', (err) => {
       logger.error(`[${TAG}] udp audio control receiver error: ${err.message}`);
       throw err;
     });
@@ -628,9 +633,9 @@ class RTSPServer {
         return this.onUploadAudioControl(stream, msg, rinfo);
       }
     });
-//      else
-//        logger.warn "[#{TAG}] warn: received UDP audio control data but no existing client found: #{rinfo.address}:#{rinfo.port}"
-    udpAudioControlServer.on('listening', function() {
+    //      else
+    //        logger.warn "[#{TAG}] warn: received UDP audio control data but no existing client found: #{rinfo.address}:#{rinfo.port}"
+    udpAudioControlServer.on('listening', () => {
       const addr = udpAudioControlServer.address();
       return logger.debug(`[${TAG}] udp audio control receiver is listening on port ${addr.port}`);
     });
@@ -651,13 +656,13 @@ class RTSPServer {
     if (this.eventListeners[event] != null) {
       this.eventListeners[event].push(listener);
     } else {
-      this.eventListeners[event] = [ listener ];
+      this.eventListeners[event] = [listener];
     }
   }
 
   emit(event, ...args) {
     if (this.eventListeners[event] != null) {
-      for (let listener of Array.from(this.eventListeners[event])) {
+      for (const listener of Array.from(this.eventListeners[event])) {
         listener(...Array.from(args || []));
       }
     }
@@ -679,8 +684,8 @@ class RTSPServer {
       pathname = pathname.slice(1);
 
       // Remove trailing slash
-      if (pathname[pathname.length-1] === '/') {
-        pathname = pathname.slice(0, +(pathname.length-2) + 1 || undefined);
+      if (pathname[pathname.length - 1] === '/') {
+        pathname = pathname.slice(0, +(pathname.length - 2) + 1 || undefined);
       }
 
       // Go up directories if removeDepthFromEnd is specified
@@ -698,7 +703,7 @@ class RTSPServer {
   }
 
   getStreamByRTSPUDPAddress(addr, port, channelType) {
-    const client = this.rtspUploadingClients[addr + ':' + port];
+    const client = this.rtspUploadingClients[`${addr}:${port}`];
     if (client != null) {
       return client.uploadingStream;
     }
@@ -709,9 +714,8 @@ class RTSPServer {
     const streamId = RTSPServer.getStreamIdFromUri(uri);
     if (streamId != null) {
       return avstreams.get(streamId);
-    } else {
-      return null;
     }
+    return null;
   }
 
   sendVideoSenderReport(stream, client) {
@@ -729,8 +733,8 @@ class RTSPServer {
       rtpTime,
       ssrc: client.videoSSRC,
       packetCount: client.videoPacketCount,
-      octetCount: client.videoOctetCount
-    })
+      octetCount: client.videoOctetCount,
+    }),
     );
 
     if (client.useTCPForVideo) {
@@ -741,14 +745,12 @@ class RTSPServer {
       } else {
         return this.sendDataByTCP(client.socket, client.videoTCPControlChannel, buf);
       }
-    } else {
-      if (client.clientVideoRTCPPort != null) {
-        return this.videoRTCPSocket.send(buf, 0, buf.length, client.clientVideoRTCPPort, client.ip, function(err, bytes) {
-          if (err) {
-            return logger.error(`[videoRTCPSend] error: ${err.message}`);
-          }
-        });
-      }
+    } else if (client.clientVideoRTCPPort != null) {
+      return this.videoRTCPSocket.send(buf, 0, buf.length, client.clientVideoRTCPPort, client.ip, (err, bytes) => {
+        if (err) {
+          return logger.error(`[videoRTCPSend] error: ${err.message}`);
+        }
+      });
     }
   }
 
@@ -767,8 +769,8 @@ class RTSPServer {
       rtpTime,
       ssrc: client.audioSSRC,
       packetCount: client.audioPacketCount,
-      octetCount: client.audioOctetCount
-    })
+      octetCount: client.audioOctetCount,
+    }),
     );
 
     if (client.useTCPForAudio) {
@@ -779,14 +781,12 @@ class RTSPServer {
       } else {
         return this.sendDataByTCP(client.socket, client.audioTCPControlChannel, buf);
       }
-    } else {
-      if (client.clientAudioRTCPPort != null) {
-        return this.audioRTCPSocket.send(buf, 0, buf.length, client.clientAudioRTCPPort, client.ip, function(err, bytes) {
-          if (err) {
-            return logger.error(`[audioRTCPSend] error: ${err.message}`);
-          }
-        });
-      }
+    } else if (client.clientAudioRTCPPort != null) {
+      return this.audioRTCPSocket.send(buf, 0, buf.length, client.clientAudioRTCPPort, client.ip, (err, bytes) => {
+        if (err) {
+          return logger.error(`[audioRTCPSend] error: ${err.message}`);
+        }
+      });
     }
   }
 
@@ -799,7 +799,7 @@ class RTSPServer {
 
   // Send RTCP sender report packets for audio and video streams
   sendSenderReports(stream, client) {
-    if ((this.clients[client.id] == null)) {  // client socket is already closed
+    if ((this.clients[client.id] == null)) { // client socket is already closed
       this.stopSendingRTCP(client);
       return;
     }
@@ -811,10 +811,8 @@ class RTSPServer {
       this.sendVideoSenderReport(stream, client);
     }
 
-    return client.timeoutID = setTimeout(() => {
-      return this.sendSenderReports(stream, client);
-    }
-    , config.rtcpSenderReportIntervalMs);
+    return client.timeoutID = setTimeout(() => this.sendSenderReports(stream, client)
+      , config.rtcpSenderReportIntervalMs);
   }
 
   startSendingRTCP(stream, client) {
@@ -824,26 +822,28 @@ class RTSPServer {
   }
 
   onReceiveVideoRTCP(buf) {}
-    // TODO: handle BYE message
+  // TODO: handle BYE message
 
   onReceiveAudioRTCP(buf) {}
-    // TODO: handle BYE message
+  // TODO: handle BYE message
 
   sendDataByTCP(socket, channel, rtpBuffer) {
     const rtpLen = rtpBuffer.length;
     const tcpHeader = api.createInterleavedHeader({
       channel,
-      payloadLength: rtpLen
+      payloadLength: rtpLen,
     });
     return socket.write(Buffer.concat([tcpHeader, rtpBuffer],
-      api.INTERLEAVED_HEADER_LEN + rtpBuffer.length)
+      api.INTERLEAVED_HEADER_LEN + rtpBuffer.length),
     );
   }
 
   // Process incoming RTSP data that is tunneled in HTTP POST
   handleTunneledPOSTData(client, data, callback) {
     // Concatenate outstanding base64 string
-    let base64Buf, decodedBuf, postData;
+    let base64Buf,
+      decodedBuf,
+      postData;
     if (data == null) { data = ''; }
     if (client.postBase64Buf != null) {
       base64Buf = client.postBase64Buf + data;
@@ -864,7 +864,7 @@ class RTSPServer {
 
       // Decode base64-encoded data
       decodedBuf = new Buffer(base64Buf, 'base64');
-    } else {  // no base64 input
+    } else { // no base64 input
       decodedBuf = new Buffer([]);
     }
 
@@ -876,7 +876,7 @@ class RTSPServer {
       postData = decodedBuf;
     }
 
-    if (postData.length === 0) {  // no data to process
+    if (postData.length === 0) { // no data to process
       if (typeof callback === 'function') {
         callback(null);
       }
@@ -887,15 +887,13 @@ class RTSPServer {
     const processRemainingBuffer = () => {
       if ((client.postBase64Buf != null) || (client.postBuf != null)) {
         this.handleTunneledPOSTData(client, '', callback);
-      } else {
-        if (typeof callback === 'function') {
-          callback(null);
-        }
+      } else if (typeof callback === 'function') {
+        callback(null);
       }
     };
 
     // TODO: Do we have to interpret interleaved data here?
-    if (config.enableRTSP && (postData[0] === api.INTERLEAVED_SIGN)) {  // interleaved data
+    if (config.enableRTSP && (postData[0] === api.INTERLEAVED_SIGN)) { // interleaved data
       const interleavedData = api.getInterleavedData(postData);
       if ((interleavedData == null)) {
         // not enough buffer for an interleaved data
@@ -914,92 +912,89 @@ class RTSPServer {
       }
 
       return processRemainingBuffer();
-    } else {
-      const delimiterPos = Bits.searchBytesInArray(postData, CRLF_CRLF);
-      if (delimiterPos === -1) {  // not found (not enough buffer)
+    }
+    const delimiterPos = Bits.searchBytesInArray(postData, CRLF_CRLF);
+    if (delimiterPos === -1) { // not found (not enough buffer)
+      client.postBuf = postData;
+      if (typeof callback === 'function') {
+        callback(null);
+      }
+      return;
+    }
+
+    const decodedRequest = postData.slice(0, delimiterPos).toString('utf8');
+    const remainingPostData = postData.slice(delimiterPos + CRLF_CRLF.length);
+    const req = http.parseRequest(decodedRequest);
+    if ((req == null)) { // parse error
+      logger.error(`Unable to parse request: ${decodedRequest}`);
+      if (typeof callback === 'function') {
+        callback(new Error('malformed request'));
+      }
+      return;
+    }
+
+    if (req.headers['content-length'] != null) {
+      req.contentLength = parseInt(req.headers['content-length']);
+      if (remainingPostData.length < req.contentLength) {
+        // not enough buffer for the body
         client.postBuf = postData;
         if (typeof callback === 'function') {
           callback(null);
         }
         return;
       }
+      if (remainingPostData.length > req.contentLength) {
+        req.rawbody = remainingPostData.slice(0, req.contentLength);
+        client.postBuf = remainingPostData.slice(req.contentLength);
+      } else { // remainingPostData.length == req.contentLength
+        req.rawbody = remainingPostData;
+      }
+    } else if (remainingPostData.length > 0) {
+      client.postBuf = remainingPostData;
+    }
 
-      const decodedRequest = postData.slice(0, delimiterPos).toString('utf8');
-      const remainingPostData = postData.slice(delimiterPos+CRLF_CRLF.length);
-      const req = http.parseRequest(decodedRequest);
-      if ((req == null)) {  // parse error
-        logger.error(`Unable to parse request: ${decodedRequest}`);
+    if (DEBUG_HTTP_TUNNEL) {
+      logger.info('===request (HTTP tunneled/decoded)===');
+      process.stdout.write(decodedRequest);
+      logger.info('=============');
+    }
+    return this.respond(client.socket, req, (err, output) => {
+      if (err) {
+        logger.error(`[respond] Error: ${err}`);
         if (typeof callback === 'function') {
-          callback(new Error("malformed request"));
+          callback(err);
         }
         return;
       }
-
-      if (req.headers['content-length'] != null) {
-        req.contentLength = parseInt(req.headers['content-length']);
-        if (remainingPostData.length < req.contentLength) {
-          // not enough buffer for the body
-          client.postBuf = postData;
-          if (typeof callback === 'function') {
-            callback(null);
-          }
-          return;
+      if (output != null) {
+        if (DEBUG_HTTP_TUNNEL) {
+          logger.info('===response (HTTP tunneled)===');
+          process.stdout.write(output);
+          logger.info('=============');
         }
-        if (remainingPostData.length > req.contentLength) {
-          req.rawbody = remainingPostData.slice(0, req.contentLength);
-          client.postBuf = remainingPostData.slice(req.contentLength);
-        } else { // remainingPostData.length == req.contentLength
-          req.rawbody = remainingPostData;
-        }
-      } else if (remainingPostData.length > 0) {
-        client.postBuf = remainingPostData;
+        client.getClient.socket.write(output);
+      } else if (DEBUG_HTTP_TUNNEL) {
+        logger.info('===empty response (HTTP tunneled)===');
       }
-
-      if (DEBUG_HTTP_TUNNEL) {
-        logger.info("===request (HTTP tunneled/decoded)===");
-        process.stdout.write(decodedRequest);
-        logger.info("=============");
-      }
-      return this.respond(client.socket, req, function(err, output) {
-        if (err) {
-          logger.error(`[respond] Error: ${err}`);
-          if (typeof callback === 'function') {
-            callback(err);
-          }
-          return;
-        }
-        if (output != null) {
-          if (DEBUG_HTTP_TUNNEL) {
-            logger.info("===response (HTTP tunneled)===");
-            process.stdout.write(output);
-            logger.info("=============");
-          }
-          client.getClient.socket.write(output);
-        } else {
-          if (DEBUG_HTTP_TUNNEL) {
-            logger.info("===empty response (HTTP tunneled)===");
-          }
-        }
-        return processRemainingBuffer();
-      });
-    }
+      return processRemainingBuffer();
+    });
   }
 
-//  cancelTimeout: (socket) ->
-//    if socket.timeoutTimer?
-//      clearTimeout socket.timeoutTimer
-//
-//  scheduleTimeout: (socket) ->
-//    @cancelTimeout socket
-//    socket.scheduledTimeoutTime = Date.now() + config.keepaliveTimeoutMs
-//    socket.timeoutTimer = setTimeout =>
-//      if not clients[socket.clientID]?
-//        return
-//      if Date.now() < socket.scheduledTimeoutTime
-//        return
-//      logger.info "keepalive timeout: #{socket.clientID}"
-//      @teardownClient socket.clientID
-//    , config.keepaliveTimeoutMs
+  //  cancelTimeout: (socket) ->
+  //    if socket.timeoutTimer?
+  //      clearTimeout socket.timeoutTimer
+  //
+  //  scheduleTimeout: (socket) ->
+  //    @cancelTimeout socket
+  //    socket.scheduledTimeoutTime = Date.now() + config.keepaliveTimeoutMs
+  //    socket.timeoutTimer = setTimeout =>
+  //      if not clients[socket.clientID]?
+  //        return
+  //      if Date.now() < socket.scheduledTimeoutTime
+  //        return
+  //      logger.info "keepalive timeout: #{socket.clientID}"
+  //      @teardownClient socket.clientID
+  //    , config.keepaliveTimeoutMs
 
   // Called when the server received an interleaved RTP packet
   onInterleavedRTPPacketFromClient(client, interleavedData) {
@@ -1008,7 +1003,7 @@ class RTSPServer {
       // TODO: Support multiple streams
       const senderInfo = {
         address: null,
-        port: null
+        port: null,
       };
       switch (interleavedData.channel) {
         case stream.rtspUploadingClient.uploadingChannels.videoData:
@@ -1024,13 +1019,14 @@ class RTSPServer {
       }
     }
   }
-    // Discard incoming RTP packets if the client is not uploading streams
+  // Discard incoming RTP packets if the client is not uploading streams
 
   // Called when new data comes from TCP connection
   handleOnData(c, data) {
-    let buf, req;
+    let buf,
+      req;
     const id_str = c.clientID;
-    if ((this.clients[id_str] == null)) {  // client socket is already closed
+    if ((this.clients[id_str] == null)) { // client socket is already closed
       logger.error(`error: invalid client ID: ${id_str}`);
       return;
     }
@@ -1088,11 +1084,11 @@ class RTSPServer {
       if (DEBUG_RTSP) {
         logger.info(`===RTSP/HTTP request (cont) from ${id_str}===`);
         if (DEBUG_RTSP_HEADERS_ONLY) {
-          logger.info("(redacted)");
+          logger.info('(redacted)');
         } else {
           process.stdout.write(data.toString('utf8'));
         }
-        logger.info("==================");
+        logger.info('==================');
       }
     } else {
       const bufString = c.buf.toString('utf8');
@@ -1106,7 +1102,7 @@ class RTSPServer {
         } else {
           process.stdout.write(bufString);
         }
-        logger.info("==================");
+        logger.info('==================');
       }
       req = http.parseRequest(bufString);
       if ((req == null)) {
@@ -1114,7 +1110,7 @@ class RTSPServer {
         c.buf = null;
         return;
       }
-      req.rawbody = c.buf.slice(req.headerBytes+4);
+      req.rawbody = c.buf.slice(req.headerBytes + 4);
       req.socket = c;
       if (req.headers['content-length'] != null) {
         if (req.headers['content-type'] === 'application/x-rtsp-tunnelled') {
@@ -1133,12 +1129,10 @@ class RTSPServer {
         } else {
           c.buf = null;
         }
+      } else if (req.rawbody.length > 0) {
+        c.buf = req.rawbody;
       } else {
-        if (req.rawbody.length > 0) {
-          c.buf = req.rawbody;
-        } else {
-          c.buf = null;
-        }
+        c.buf = null;
       }
     }
     c.ongoingRequest = null;
@@ -1164,9 +1158,9 @@ class RTSPServer {
           if (DEBUG_RTSP) {
             if (DEBUG_RTSP_HEADERS_ONLY) {
               let headerBytes;
-              const delimPos = Bits.searchBytesInArray(output, [ 0x0d, 0x0a, 0x0d, 0x0a ]);
+              const delimPos = Bits.searchBytesInArray(output, [0x0d, 0x0a, 0x0d, 0x0a]);
               if (delimPos !== -1) {
-                headerBytes = output.slice(0, +(delimPos+1) + 1 || undefined);
+                headerBytes = output.slice(0, +(delimPos + 1) + 1 || undefined);
               } else {
                 headerBytes = output;
               }
@@ -1178,12 +1172,10 @@ class RTSPServer {
           c.write(output);
         }
         if (DEBUG_RTSP) {
-          logger.info("===================");
+          logger.info('===================');
         }
-      } else {
-        if (DEBUG_RTSP) {
-          logger.info(`===RTSP/HTTP empty response to ${id_str}===`);
-        }
+      } else if (DEBUG_RTSP) {
+        logger.info(`===RTSP/HTTP empty response to ${id_str}===`);
       }
       if (resultOpts != null ? resultOpts.close : undefined) {
         // Half-close the socket
@@ -1199,7 +1191,10 @@ class RTSPServer {
   }
 
   sendVideoPacketWithFragment(stream, nalUnit, timestamp, marker) {
-    let client, clientID, rtpBuffer, rtpData;
+    let client,
+      clientID,
+      rtpBuffer,
+      rtpData;
     if (marker == null) { marker = true; }
     const ts = timestamp % TIMESTAMP_ROUNDOFF;
     stream.lastVideoRTPTimestamp = ts;
@@ -1215,7 +1210,7 @@ class RTSPServer {
 
     const nalUnitType = nalUnit[0] & 0x1f;
     const isKeyFrame = nalUnitType === 5;
-    const nal_ref_idc = nalUnit[0] & 0b01100000;  // skip ">> 5" operation
+    const nal_ref_idc = nalUnit[0] & 0b01100000; // skip ">> 5" operation
 
     nalUnit = nalUnit.slice(1);
 
@@ -1238,15 +1233,15 @@ class RTSPServer {
         payloadType: 97,
         sequenceNumber: stream.videoSequenceNumber,
         timestamp: ts,
-        ssrc: null
+        ssrc: null,
       });
 
       rtpData = rtpData.concat(rtp.createFragmentationUnitHeader({
         nal_ref_idc,
         nal_unit_type: nalUnitType,
         isStart: fragmentNumber === 1,
-        isEnd: false
-      })
+        isEnd: false,
+      }),
       );
 
       // Append NAL unit
@@ -1276,14 +1271,12 @@ class RTSPServer {
             } else {
               this.sendDataByTCP(client.socket, client.videoTCPDataChannel, rtpBuffer);
             }
-          } else {
-            if (client.clientVideoRTPPort != null) {
-              this.videoRTPSocket.send(rtpBuffer, 0, rtpBuffer.length, client.clientVideoRTPPort, client.ip, function(err, bytes) {
-                if (err) {
-                  return logger.error(`[videoRTPSend] error: ${err.message}`);
-                }
-              });
-            }
+          } else if (client.clientVideoRTPPort != null) {
+            this.videoRTPSocket.send(rtpBuffer, 0, rtpBuffer.length, client.clientVideoRTPPort, client.ip, (err, bytes) => {
+              if (err) {
+                return logger.error(`[videoRTPSend] error: ${err.message}`);
+              }
+            });
           }
         }
       }
@@ -1300,15 +1293,15 @@ class RTSPServer {
       payloadType: 97,
       sequenceNumber: stream.videoSequenceNumber,
       timestamp: ts,
-      ssrc: null
+      ssrc: null,
     });
 
     rtpData = rtpData.concat(rtp.createFragmentationUnitHeader({
       nal_ref_idc,
       nal_unit_type: nalUnitType,
       isStart: false,
-      isEnd: true
-    })
+      isEnd: true,
+    }),
     );
 
     const nalUnitLen = nalUnit.length;
@@ -1327,7 +1320,7 @@ class RTSPServer {
 
         client.videoPacketCount++;
         client.videoOctetCount += nalUnitLen;
-        logger.tag('rtsp:out', `[rtsp:stream:${stream.id}] send video to ${client.id}: fragment-last n=${fragmentNumber+1} timestamp=${ts} bytes=${rtpBuffer.length} marker=${marker} keyframe=${isKeyFrame}`);
+        logger.tag('rtsp:out', `[rtsp:stream:${stream.id}] send video to ${client.id}: fragment-last n=${fragmentNumber + 1} timestamp=${ts} bytes=${rtpBuffer.length} marker=${marker} keyframe=${isKeyFrame}`);
         if (client.useTCPForVideo) {
           if (client.useHTTP) {
             if (client.httpClientType === 'GET') {
@@ -1336,14 +1329,12 @@ class RTSPServer {
           } else {
             this.sendDataByTCP(client.socket, client.videoTCPDataChannel, rtpBuffer);
           }
-        } else {
-          if (client.clientVideoRTPPort != null) {
-            this.videoRTPSocket.send(rtpBuffer, 0, rtpBuffer.length, client.clientVideoRTPPort, client.ip, function(err, bytes) {
-              if (err) {
-                return logger.error(`[videoRTPSend] error: ${err.message}`);
-              }
-            });
-          }
+        } else if (client.clientVideoRTPPort != null) {
+          this.videoRTPSocket.send(rtpBuffer, 0, rtpBuffer.length, client.clientVideoRTPPort, client.ip, (err, bytes) => {
+            if (err) {
+              return logger.error(`[videoRTPSend] error: ${err.message}`);
+            }
+          });
         }
       }
     }
@@ -1377,12 +1368,12 @@ class RTSPServer {
       payloadType: 97,
       sequenceNumber: stream.videoSequenceNumber,
       timestamp: ts,
-      ssrc: null
+      ssrc: null,
     });
 
     const nalUnitLen = nalUnit.length;
 
-    for (let clientID in stream.rtspClients) {
+    for (const clientID in stream.rtspClients) {
       const client = stream.rtspClients[clientID];
       if (client.isWaitingForKeyFrame && isKeyFrame) {
         client.isPlaying = true;
@@ -1405,23 +1396,21 @@ class RTSPServer {
           } else {
             this.sendDataByTCP(client.socket, client.videoTCPDataChannel, rtpBuffer);
           }
-        } else {
-          if (client.clientVideoRTPPort != null) {
-            this.videoRTPSocket.send(rtpBuffer, 0, rtpBuffer.length, client.clientVideoRTPPort, client.ip, function(err, bytes) {
-              if (err) {
-                return logger.error(`[videoRTPSend] error: ${err.message}`);
-              }
-            });
-          }
+        } else if (client.clientVideoRTPPort != null) {
+          this.videoRTPSocket.send(rtpBuffer, 0, rtpBuffer.length, client.clientVideoRTPPort, client.ip, (err, bytes) => {
+            if (err) {
+              return logger.error(`[videoRTPSend] error: ${err.message}`);
+            }
+          });
         }
       }
     }
   }
 
   static getISO8601DateString() {
-    const d = new Date;
-    const str = `${d.getUTCFullYear()}-${pad(2, d.getUTCMonth()+1)}-${pad(2, d.getUTCDate())}T` + 
-          `${pad(2, d.getUTCHours())}:${pad(2, d.getUTCMinutes())}:${pad(2, d.getUTCSeconds())}.` + 
+    const d = new Date();
+    const str = `${d.getUTCFullYear()}-${pad(2, d.getUTCMonth() + 1)}-${pad(2, d.getUTCDate())}T` +
+          `${pad(2, d.getUTCHours())}:${pad(2, d.getUTCMinutes())}:${pad(2, d.getUTCSeconds())}.` +
           `${pad(4, d.getUTCMilliseconds())}Z`;
     return str;
   }
@@ -1448,24 +1437,22 @@ class RTSPServer {
   consumePathname(uri, callback) {
     if (this.livePathConsumer != null) {
       return this.livePathConsumer(uri, callback);
-    } else {
-      const pathname = url.parse(uri).pathname.slice(1);
-
-      // TODO: Implement authentication yourself
-      const authSuccess = true;
-
-      if (authSuccess) {
-        return callback(null);
-      } else {
-        return callback(new Error('Invalid access'));
-      }
     }
+    const pathname = url.parse(uri).pathname.slice(1);
+
+    // TODO: Implement authentication yourself
+    const authSuccess = true;
+
+    if (authSuccess) {
+      return callback(null);
+    }
+    return callback(new Error('Invalid access'));
   }
 
   respondWithUnsupportedTransport(callback, headers) {
     let res = 'RTSP/1.0 461 Unsupported Transport\n';
     if (headers != null) {
-      for (let name in headers) {
+      for (const name in headers) {
         const value = headers[name];
         res += `${name}: ${value}\n`;
       }
@@ -1482,15 +1469,15 @@ Content-Type: text/plain
 \
 `;
     if ((opts != null ? opts.keepalive : undefined)) {
-      res += "Connection: keep-alive\n";
+      res += 'Connection: keep-alive\n';
     } else {
-      res += "Connection: close\n";
+      res += 'Connection: close\n';
     }
     res += `\
 
 Not Found\
 `;
-    return callback(null, res.replace(/\n/g, "\r\n"));
+    return callback(null, res.replace(/\n/g, '\r\n'));
   }
 
   respondWithServerError(req, protocol, callback) {
@@ -1504,9 +1491,9 @@ Content-Length: 21
 Content-Type: text/plain
 
 Internal Server Error\
-`.replace(/\n/g, "\r\n");
+`.replace(/\n/g, '\r\n');
     return callback(null, res,
-      {close: (protocol === 'HTTP') && ((req.headers.connection != null ? req.headers.connection.toLowerCase() : undefined) !== 'keep-alive')});
+      { close: (protocol === 'HTTP') && ((req.headers.connection != null ? req.headers.connection.toLowerCase() : undefined) !== 'keep-alive') });
   }
 
   respondWithNotFound(req, protocol, callback) {
@@ -1520,9 +1507,9 @@ Content-Length: 9
 Content-Type: text/plain
 
 Not Found\
-`.replace(/\n/g, "\r\n");
+`.replace(/\n/g, '\r\n');
     return callback(null, res,
-      {close: (protocol === 'HTTP') && ((req.headers.connection != null ? req.headers.connection.toLowerCase() : undefined) !== 'keep-alive')});
+      { close: (protocol === 'HTTP') && ((req.headers.connection != null ? req.headers.connection.toLowerCase() : undefined) !== 'keep-alive') });
   }
 
   respondWithUnauthorized(req, protocol, callback) {
@@ -1537,9 +1524,9 @@ Content-Type: text/plain
 WWW-Authenticate: Basic realm="Restricted"
 
 Unauthorized\
-`.replace(/\n/g, "\r\n");
+`.replace(/\n/g, '\r\n');
     return callback(null, res,
-      {close: (protocol === 'HTTP') && ((req.headers.connection != null ? req.headers.connection.toLowerCase() : undefined) !== 'keep-alive')});
+      { close: (protocol === 'HTTP') && ((req.headers.connection != null ? req.headers.connection.toLowerCase() : undefined) !== 'keep-alive') });
   }
 
   respondOptions(socket, req, callback) {
@@ -1549,7 +1536,7 @@ CSeq: ${req.headers.cseq != null ? req.headers.cseq : 0}
 Public: DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, ANNOUNCE, RECORD
 
 \
-`.replace(/\n/g, "\r\n");
+`.replace(/\n/g, '\r\n');
     return callback(null, res);
   }
 
@@ -1566,9 +1553,8 @@ Public: DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, ANNOUNCE, RECORD
           if (err) {
             logger.error(`[rtmpt] Error: ${err}`);
             return this.respondWithNotFound(req, 'HTTP', callback);
-          } else {
-            return callback(err, output);
           }
+          return callback(err, output);
         });
       } else {
         this.respondWithNotFound(req, 'HTTP', callback);
@@ -1582,7 +1568,7 @@ Public: DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, ANNOUNCE, RECORD
         } else {
           // Request cannot be handled; close the connection
           callback(null, null,
-            {close: true});
+            { close: true });
         }
         return;
       }
@@ -1605,12 +1591,12 @@ Public: DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, ANNOUNCE, RECORD
     } else if (this.httpHandler != null) {
       this.httpHandler.handlePath(pathname, req, (err, output) =>
         callback(err, output,
-          {close: (req.headers.connection != null ? req.headers.connection.toLowerCase() : undefined) !== 'keep-alive'})
+          { close: (req.headers.connection != null ? req.headers.connection.toLowerCase() : undefined) !== 'keep-alive' }),
       );
     } else {
       // Request cannot be handled; close the connection
       callback(null, null,
-        {close: true});
+        { close: true });
     }
   }
 
@@ -1622,7 +1608,7 @@ Public: DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, ANNOUNCE, RECORD
     const { pathname } = url.parse(req.uri);
     if (config.enableRTSP && ((match = liveRegex.exec(req.uri)) != null)) {
       // Outgoing channel
-      this.consumePathname(req.uri, err => {
+      this.consumePathname(req.uri, (err) => {
         if (err) {
           logger.warn(`Failed to consume pathname: ${err}`);
           this.respondWithNotFound(req, 'HTTP', callback);
@@ -1663,7 +1649,7 @@ Pragma: no-cache
 Content-Type: application/x-rtsp-tunnelled
 
 \
-`.replace(/\n/g, "\r\n");
+`.replace(/\n/g, '\r\n');
 
           // Do not close the connection
           return callback(null, res);
@@ -1671,7 +1657,7 @@ Content-Type: application/x-rtsp-tunnelled
       });
     } else if (config.enableRTSP && ((match = recordedRegex.exec(req.uri)) != null)) {
       // Outgoing channel
-      this.consumePathname(req.uri, err => {
+      this.consumePathname(req.uri, (err) => {
         if (err) {
           logger.warn(`Failed to consume pathname: ${err}`);
           this.respondWithNotFound(req, 'HTTP', callback);
@@ -1712,7 +1698,7 @@ Pragma: no-cache
 Content-Type: application/x-rtsp-tunnelled
 
 \
-`.replace(/\n/g, "\r\n");
+`.replace(/\n/g, '\r\n');
 
           // Do not close the connection
           return callback(null, res);
@@ -1721,24 +1707,25 @@ Content-Type: application/x-rtsp-tunnelled
     } else if (this.httpHandler != null) {
       this.httpHandler.handlePath(pathname, req, (err, output) =>
         callback(err, output,
-          {close: (req.headers.connection != null ? req.headers.connection.toLowerCase() : undefined) !== 'keep-alive'})
+          { close: (req.headers.connection != null ? req.headers.connection.toLowerCase() : undefined) !== 'keep-alive' }),
       );
     } else {
       // Request cannot be handled; close the connection
       callback(null, null,
-        {close: true});
+        { close: true });
     }
   }
 
   respondDescribe(socket, req, callback) {
     const client = this.clients[socket.clientID];
-    return this.consumePathname(req.uri, err => {
+    return this.consumePathname(req.uri, (err) => {
       if (err) {
         this.respondWithNotFound(req, 'RTSP', callback);
         return;
       }
       return this.authenticate(req, (err, ok) => {
-        let body, res;
+        let body,
+          res;
         if (err) {
           logger.error(`[${TAG}:client=${socket.clientID}] authenticate() error: ${err.message}`);
           this.respondWithServerError(req, req.protocolName, callback);
@@ -1767,28 +1754,28 @@ Content-Type: application/x-rtsp-tunnelled
         }
 
         const sdpData = {
-          username      : '-',
-          sessionID     : client.sessionID,
+          username: '-',
+          sessionID: client.sessionID,
           sessionVersion: client.sessionID,
-          addressType   : 'IP4',
-          unicastAddress: api.getMeaningfulIPTo(socket)
+          addressType: 'IP4',
+          unicastAddress: api.getMeaningfulIPTo(socket),
         };
 
         if (stream.isAudioStarted) {
-          sdpData.hasAudio          = true;
-          sdpData.audioPayloadType  = 96;
+          sdpData.hasAudio = true;
+          sdpData.audioPayloadType = 96;
           sdpData.audioEncodingName = 'mpeg4-generic';
-          sdpData.audioClockRate    = stream.audioClockRate;
-          sdpData.audioChannels     = stream.audioChannels;
-          sdpData.audioSampleRate   = stream.audioSampleRate;
-          sdpData.audioObjectType   = stream.audioObjectType;
+          sdpData.audioClockRate = stream.audioClockRate;
+          sdpData.audioChannels = stream.audioChannels;
+          sdpData.audioSampleRate = stream.audioSampleRate;
+          sdpData.audioObjectType = stream.audioObjectType;
 
           const ascInfo = stream.audioASCInfo;
           // Check whether explicit hierarchical signaling of SBR is used
           if ((ascInfo != null ? ascInfo.explicitHierarchicalSBR : undefined) && config.rtspDisableHierarchicalSBR) {
             logger.debug(`[${TAG}:client=${client.id}] converting hierarchical signaling of SBR` +
               ` (AudioSpecificConfig=0x${stream.audioSpecificConfig.toString('hex')})` +
-              " to backward compatible signaling"
+              ' to backward compatible signaling',
             );
             sdpData.audioSpecificConfig = new Buffer(aac.createAudioSpecificConfig(ascInfo));
           } else if (stream.audioSpecificConfig != null) {
@@ -1799,25 +1786,25 @@ Content-Type: application/x-rtsp-tunnelled
               audioObjectType: stream.audioObjectType,
               samplingFrequency: stream.audioSampleRate,
               channels: stream.audioChannels,
-              frameLength: 1024
-            })
-            );  // TODO: How to detect 960?
+              frameLength: 1024,
+            }),
+            ); // TODO: How to detect 960?
           }
           logger.debug(`[${TAG}:client=${client.id}] sending AudioSpecificConfig: 0x${sdpData.audioSpecificConfig.toString('hex')}`);
         }
 
         if (stream.isVideoStarted) {
-          sdpData.hasVideo                = true;
-          sdpData.videoPayloadType        = 97;
-          sdpData.videoEncodingName       = 'H264';  // must be H264
-          sdpData.videoClockRate          = 90000;  // must be 90000
-          sdpData.videoProfileLevelId     = stream.videoProfileLevelId;
+          sdpData.hasVideo = true;
+          sdpData.videoPayloadType = 97;
+          sdpData.videoEncodingName = 'H264'; // must be H264
+          sdpData.videoClockRate = 90000; // must be 90000
+          sdpData.videoProfileLevelId = stream.videoProfileLevelId;
           if (stream.spropParameterSets !== '') {
             sdpData.videoSpropParameterSets = stream.spropParameterSets;
           }
-          sdpData.videoHeight             = stream.videoHeight;
-          sdpData.videoWidth              = stream.videoWidth;
-          sdpData.videoFrameRate          = stream.videoFrameRate.toFixed(1);
+          sdpData.videoHeight = stream.videoHeight;
+          sdpData.videoWidth = stream.videoWidth;
+          sdpData.videoFrameRate = stream.videoFrameRate.toFixed(1);
         }
 
         if (stream.isRecorded()) {
@@ -1854,13 +1841,16 @@ Cache-Control: no-cache
 \
 `;
 
-        return callback(null, res.replace(/\n/g, "\r\n") + body);
+        return callback(null, res.replace(/\n/g, '\r\n') + body);
       });
     });
   }
 
   respondSetup(socket, req, callback) {
-    let dateHeader, match, res, transportHeader;
+    let dateHeader,
+      match,
+      res,
+      transportHeader;
     const client = this.clients[socket.clientID];
     if (!socket.isAuthenticated) {
       this.respondWithNotFound(req, 'RTSP', callback);
@@ -1872,23 +1862,23 @@ Cache-Control: no-cache
     if (DEBUG_DISABLE_UDP_TRANSPORT &&
     (!/\bTCP\b/.test(req.headers.transport))) {
       // Disable UDP transport and force the client to switch to TCP transport
-      logger.info("Unsupported transport: UDP is disabled");
-      this.respondWithUnsupportedTransport(callback, {CSeq: req.headers.cseq});
+      logger.info('Unsupported transport: UDP is disabled');
+      this.respondWithUnsupportedTransport(callback, { CSeq: req.headers.cseq });
       return;
     }
 
     client.mode = 'PLAY';
     if ((match = /;mode=([^;]*)/.exec(req.headers.transport)) != null) {
-      client.mode = match[1].toUpperCase();  // PLAY or RECORD
+      client.mode = match[1].toUpperCase(); // PLAY or RECORD
     }
 
     if (client.mode === 'RECORD') {
       let mediaType;
       const sdpInfo = client.announceSDPInfo;
       if ((match = /\/([^/]+)$/.exec(req.uri)) != null) {
-        const setupStreamId = match[1];  // e.g. "streamid=0"
+        const setupStreamId = match[1]; // e.g. "streamid=0"
         mediaType = null;
-        for (let media of Array.from(sdpInfo.media)) {
+        for (const media of Array.from(sdpInfo.media)) {
           if ((media.attributes != null ? media.attributes.control : undefined) === setupStreamId) {
             mediaType = media.media;
             break;
@@ -1905,7 +1895,7 @@ Cache-Control: no-cache
       let stream = avstreams.get(streamId);
       if ((stream == null)) {
         logger.warn(`warning: SETUP specified non-existent stream: ${streamId}`);
-        logger.warn("         Stream has to be created by ANNOUNCE method.");
+        logger.warn('         Stream has to be created by ANNOUNCE method.');
         stream = avstreams.create(streamId);
         stream.type = avstreams.STREAM_TYPE_LIVE;
       }
@@ -1923,14 +1913,15 @@ Cache-Control: no-cache
         if (mediaType === 'video') {
           stream.rtspUploadingClient.uploadingChannels.videoData = parseInt(match[1]);
           stream.rtspUploadingClient.uploadingChannels.videoControl = parseInt(match[2]);
-        } else {  // audio
+        } else { // audio
           stream.rtspUploadingClient.uploadingChannels.audioData = parseInt(match[1]);
           stream.rtspUploadingClient.uploadingChannels.audioControl = parseInt(match[2]);
         }
         // interleaved mode (use current connection)
         transportHeader = req.headers.transport.replace(/mode=[^;]*/, '');
       } else {
-        let controlPort, dataPort;
+        let controlPort,
+          dataPort;
         if ((client.clientType == null)) {
           client.clientType = 'publish-udp';
           this.dumpClients();
@@ -1940,23 +1931,23 @@ Cache-Control: no-cache
           if ((match = /;client_port=(\d+)-(\d+)/.exec(req.headers.transport)) != null) {
             logger.debug(`registering video rtspUploadingClient ${client.ip}:${parseInt(match[1])}`);
             logger.debug(`registering video rtspUploadingClient ${client.ip}:${parseInt(match[2])}`);
-            this.rtspUploadingClients[client.ip + ':' + parseInt(match[1])] = client;
-            this.rtspUploadingClients[client.ip + ':' + parseInt(match[2])] = client;
+            this.rtspUploadingClients[`${client.ip}:${parseInt(match[1])}`] = client;
+            this.rtspUploadingClients[`${client.ip}:${parseInt(match[2])}`] = client;
           }
-        } else {  // audio
+        } else { // audio
           [dataPort, controlPort] = Array.from([config.rtspAudioDataUDPListenPort, config.rtspAudioControlUDPListenPort]);
           if ((match = /;client_port=(\d+)-(\d+)/.exec(req.headers.transport)) != null) {
             logger.debug(`registering audio rtspUploadingClient ${client.ip}:${parseInt(match[1])}`);
             logger.debug(`registering audio rtspUploadingClient ${client.ip}:${parseInt(match[2])}`);
-            this.rtspUploadingClients[client.ip + ':' + parseInt(match[1])] = client;
-            this.rtspUploadingClients[client.ip + ':' + parseInt(match[2])] = client;
+            this.rtspUploadingClients[`${client.ip}:${parseInt(match[1])}`] = client;
+            this.rtspUploadingClients[`${client.ip}:${parseInt(match[2])}`] = client;
           }
         }
 
         // client will send packets to "source" address which is specified here
-        transportHeader = req.headers.transport.replace(/mode=[^;]*/, '') +
-//                          "source=#{api.getMeaningfulIPTo socket};" +
-                          `server_port=${dataPort}-${controlPort}`;
+        transportHeader = `${req.headers.transport.replace(/mode=[^;]*/, '')
+          //                          "source=#{api.getMeaningfulIPTo socket};" +
+        }server_port=${dataPort}-${controlPort}`;
       }
       dateHeader = api.getDateHeader();
       res = `\
@@ -1970,130 +1961,131 @@ Server: ${this.serverName}
 Cache-Control: no-cache
 
 \
-`.replace(/\n/g, "\r\n");
+`.replace(/\n/g, '\r\n');
       return callback(null, res);
-    } else {  // PLAY mode
-      let control_ch, data_ch, ssrc, useTCPTransport;
-      if (/trackID=1\/?$/.test(req.uri)) {  // audio
-        track = 'audio';
-        if (client.useHTTP) {
-          ssrc = client.getClient.audioSSRC;
-        } else {
-          ssrc = client.audioSSRC;
-        }
-        serverPort = `${config.audioRTPServerPort}-${config.audioRTCPServerPort}`;
-        if ((match = /;client_port=(\d+)-(\d+)/.exec(req.headers.transport)) != null) {
-          client.clientAudioRTPPort = parseInt(match[1]);
-          client.clientAudioRTCPPort = parseInt(match[2]);
-        }
-      } else {  // video
-        track = 'video';
-        if (client.useHTTP) {
-          ssrc = client.getClient.videoSSRC;
-        } else {
-          ssrc = client.videoSSRC;
-        }
-        serverPort = `${config.videoRTPServerPort}-${config.videoRTCPServerPort}`;
-        if ((match = /;client_port=(\d+)-(\d+)/.exec(req.headers.transport)) != null) {
-          client.clientVideoRTPPort = parseInt(match[1]);
-          client.clientVideoRTCPPort = parseInt(match[2]);
-        }
-      }
-
-      if (/\bTCP\b/.test(req.headers.transport)) {
-        let target;
-        useTCPTransport = true;
-        if ((match = /;interleaved=(\d+)-(\d+)/.exec(req.headers.transport)) != null) {
-          const ch1 = parseInt(match[1]);
-          const ch2 = parseInt(match[2]);
-          // even channel number is used for data, odd number is for control
-          if ((ch1 % 2) === 0) {
-            [data_ch, control_ch] = Array.from([ch1, ch2]);
-          } else {
-            [data_ch, control_ch] = Array.from([ch2, ch1]);
-          }
-        } else {
-          if (track === 'audio') {
-            data_ch = 0;
-            control_ch = 1;
-          } else {
-            data_ch = 2;
-            control_ch = 3;
-          }
-        }
-        if (track === 'video') {
-          if (client.useHTTP) {
-            target = client.getClient;
-          } else {
-            target = client;
-          }
-          target.videoTCPDataChannel = data_ch;
-          target.videoTCPControlChannel = control_ch;
-          target.useTCPForVideo = true;
-        } else {
-          if (client.useHTTP) {
-            target = client.getClient;
-          } else {
-            target = client;
-          }
-          target.audioTCPDataChannel = data_ch;
-          target.audioTCPControlChannel = control_ch;
-          target.useTCPForAudio = true;
-        }
+    } // PLAY mode
+    let control_ch,
+      data_ch,
+      ssrc,
+      useTCPTransport;
+    if (/trackID=1\/?$/.test(req.uri)) { // audio
+      track = 'audio';
+      if (client.useHTTP) {
+        ssrc = client.getClient.audioSSRC;
       } else {
-        useTCPTransport = false;
-        if (track === 'video') {
-          client.useTCPForVideo = false;
-        } else {
-          client.useTCPForAudio = false;
-        }
+        ssrc = client.audioSSRC;
       }
-
-      client.supportsReliableRTP = req.headers['x-retransmit'] === 'our-retransmit';
-      if (req.headers['x-dynamic-rate'] != null) {
-        client.supportsDynamicRate = req.headers['x-dynamic-rate'] === '1';
+      serverPort = `${config.audioRTPServerPort}-${config.audioRTCPServerPort}`;
+      if ((match = /;client_port=(\d+)-(\d+)/.exec(req.headers.transport)) != null) {
+        client.clientAudioRTPPort = parseInt(match[1]);
+        client.clientAudioRTCPPort = parseInt(match[2]);
+      }
+    } else { // video
+      track = 'video';
+      if (client.useHTTP) {
+        ssrc = client.getClient.videoSSRC;
       } else {
-        client.supportsDynamicRate = client.supportsReliableRTP;
+        ssrc = client.videoSSRC;
       }
-      if (req.headers['x-transport-options'] != null) {
-        match = /late-tolerance=([0-9.]+)/.exec(req.headers['x-transport-options']);
-        if (match != null) {
-          client.lateTolerance = parseFloat(match[1]);
-        }
+      serverPort = `${config.videoRTPServerPort}-${config.videoRTCPServerPort}`;
+      if ((match = /;client_port=(\d+)-(\d+)/.exec(req.headers.transport)) != null) {
+        client.clientVideoRTPPort = parseInt(match[1]);
+        client.clientVideoRTCPPort = parseInt(match[2]);
       }
-
-      if (useTCPTransport) {
-        if (/;interleaved=/.test(req.headers.transport)) {
-          transportHeader = req.headers.transport;
-        } else {  // Maybe HTTP tunnelling
-          transportHeader = req.headers.transport + `;interleaved=${data_ch}-${control_ch}` +
-                            `;ssrc=${zeropad(8, ssrc.toString(16))}`;
-        }
-      } else {
-        transportHeader = req.headers.transport +
-//                          ";source=#{api.getMeaningfulIPTo socket}" +
-                          `;server_port=${serverPort};ssrc=${zeropad(8, ssrc.toString(16))}`;
-      }
-      dateHeader = api.getDateHeader();
-      res = `\
-RTSP/1.0 200 OK
-Date: ${dateHeader}
-Expires: ${dateHeader}
-Transport: ${transportHeader}
-Session: ${client.sessionID};timeout=60
-CSeq: ${req.headers.cseq}
-Server: ${this.serverName}
-Cache-Control: no-cache
-
-\
-`.replace(/\n/g, "\r\n");
-      return callback(null, res);
     }
+
+    if (/\bTCP\b/.test(req.headers.transport)) {
+      let target;
+      useTCPTransport = true;
+      if ((match = /;interleaved=(\d+)-(\d+)/.exec(req.headers.transport)) != null) {
+        const ch1 = parseInt(match[1]);
+        const ch2 = parseInt(match[2]);
+        // even channel number is used for data, odd number is for control
+        if ((ch1 % 2) === 0) {
+          [data_ch, control_ch] = Array.from([ch1, ch2]);
+        } else {
+          [data_ch, control_ch] = Array.from([ch2, ch1]);
+        }
+      } else if (track === 'audio') {
+        data_ch = 0;
+        control_ch = 1;
+      } else {
+        data_ch = 2;
+        control_ch = 3;
+      }
+      if (track === 'video') {
+        if (client.useHTTP) {
+          target = client.getClient;
+        } else {
+          target = client;
+        }
+        target.videoTCPDataChannel = data_ch;
+        target.videoTCPControlChannel = control_ch;
+        target.useTCPForVideo = true;
+      } else {
+        if (client.useHTTP) {
+          target = client.getClient;
+        } else {
+          target = client;
+        }
+        target.audioTCPDataChannel = data_ch;
+        target.audioTCPControlChannel = control_ch;
+        target.useTCPForAudio = true;
+      }
+    } else {
+      useTCPTransport = false;
+      if (track === 'video') {
+        client.useTCPForVideo = false;
+      } else {
+        client.useTCPForAudio = false;
+      }
+    }
+
+    client.supportsReliableRTP = req.headers['x-retransmit'] === 'our-retransmit';
+    if (req.headers['x-dynamic-rate'] != null) {
+      client.supportsDynamicRate = req.headers['x-dynamic-rate'] === '1';
+    } else {
+      client.supportsDynamicRate = client.supportsReliableRTP;
+    }
+    if (req.headers['x-transport-options'] != null) {
+      match = /late-tolerance=([0-9.]+)/.exec(req.headers['x-transport-options']);
+      if (match != null) {
+        client.lateTolerance = parseFloat(match[1]);
+      }
+    }
+
+    if (useTCPTransport) {
+      if (/;interleaved=/.test(req.headers.transport)) {
+        transportHeader = req.headers.transport;
+      } else { // Maybe HTTP tunnelling
+        transportHeader = `${req.headers.transport};interleaved=${data_ch}-${control_ch}` +
+                            `;ssrc=${zeropad(8, ssrc.toString(16))}`;
+      }
+    } else {
+      transportHeader = `${req.headers.transport
+        //                          ";source=#{api.getMeaningfulIPTo socket}" +
+      };server_port=${serverPort};ssrc=${zeropad(8, ssrc.toString(16))}`;
+    }
+    dateHeader = api.getDateHeader();
+    res = `\
+RTSP/1.0 200 OK
+Date: ${dateHeader}
+Expires: ${dateHeader}
+Transport: ${transportHeader}
+Session: ${client.sessionID};timeout=60
+CSeq: ${req.headers.cseq}
+Server: ${this.serverName}
+Cache-Control: no-cache
+
+\
+`.replace(/\n/g, '\r\n');
+    return callback(null, res);
   }
-    // after the response, client will send one or two RTP packets to this server
+  // after the response, client will send one or two RTP packets to this server
 
   respondPlay(socket, req, callback) {
-    let match, startTime;
+    let match,
+      startTime;
     if ((req.headers.range != null) && ((match = /npt=([\d.]+)-/.exec(req.headers.range)) != null)) {
       startTime = parseFloat(match[1]);
     } else {
@@ -2116,7 +2108,7 @@ Cache-Control: no-cache
     let doResumeLater = false;
 
     let rangeStartTime = 0;
-    const seq = new Sequent;
+    const seq = new Sequent();
     if (stream.isRecorded()) {
       if ((startTime == null) && stream.isPaused()) {
         startTime = stream.getCurrentPlayTime();
@@ -2126,13 +2118,13 @@ Cache-Control: no-cache
         logger.info(`[${TAG}:client=${client.id}] seek to ${startTime}`);
         stream.pause();
         rangeStartTime = startTime;
-        stream.seek(startTime, function(err, actualStartTime) {
+        stream.seek(startTime, (err, actualStartTime) => {
           if (err) {
             logger.error(`[${TAG}:client=${client.id}] error: seek failed: ${err}`);
             return;
           }
           logger.debug(`[${TAG}:client=${client.id}] finished seeking stream to ${startTime}`);
-          return stream.sendVideoPacketsSinceLastKeyFrame(startTime, function() {
+          return stream.sendVideoPacketsSinceLastKeyFrame(startTime, () => {
             doResumeLater = true;
             return seq.done();
           });
@@ -2145,14 +2137,14 @@ Cache-Control: no-cache
     }
 
 
-//    if (req.headers['user-agent']?.indexOf('QuickTime') > -1) and
-//    not client.getClient?.useTCPForVideo
-//      # QuickTime produces poor quality image over UDP.
-//      # So we let QuickTime switch transport.
-//      logger.info "UDP is disabled for QuickTime"
-//      preventFromPlaying = true
+    //    if (req.headers['user-agent']?.indexOf('QuickTime') > -1) and
+    //    not client.getClient?.useTCPForVideo
+    //      # QuickTime produces poor quality image over UDP.
+    //      # So we let QuickTime switch transport.
+    //      logger.info "UDP is disabled for QuickTime"
+    //      preventFromPlaying = true
 
-//    Range: clock=#{RTSPServer.getISO8601DateString()}-
+    //    Range: clock=#{RTSPServer.getISO8601DateString()}-
     // RTP-Info is defined in Section 12.33 in RFC 2326
     // seq: Indicates the sequence number of the first packet of the stream.
     // rtptime: Indicates the RTP timestamp corresponding to the time value in
@@ -2177,7 +2169,7 @@ Server: ${this.serverName}
 Cache-Control: no-cache
 
 \
-`.replace(/\n/g, "\r\n");
+`.replace(/\n/g, '\r\n');
       if (!preventFromPlaying) {
         stream.rtspNumClients++;
         client.enablePlaying();
@@ -2187,7 +2179,7 @@ Cache-Control: no-cache
           client.clientType = 'http-post';
           client.getClient.clientType = 'http-get';
           this.dumpClients();
-        } else if (client.useTCPForVideo) {  // or client.useTCPForAudio?
+        } else if (client.useTCPForVideo) { // or client.useTCPForAudio?
           logger.info(`[${TAG}:client=${client.id}] start streaming over TCP`);
           stream.rtspClients[client.id] = client;
           client.clientType = 'tcp';
@@ -2237,7 +2229,7 @@ CSeq: ${req.headers.cseq}
 Cache-Control: no-cache
 
 \
-`.replace(/\n/g, "\r\n");
+`.replace(/\n/g, '\r\n');
     return callback(null, res);
   }
 
@@ -2270,7 +2262,7 @@ CSeq: ${req.headers.cseq}
 Cache-Control: no-cache
 
 \
-`.replace(/\n/g, "\r\n");
+`.replace(/\n/g, '\r\n');
     return callback(null, res);
   }
 
@@ -2289,7 +2281,7 @@ Cache-Control: no-cache
 
     const sdpInfo = sdp.parse(req.body);
 
-    for (let media of Array.from(sdpInfo.media)) {
+    for (const media of Array.from(sdpInfo.media)) {
       if (media.media === 'video') {
         sdpInfo.video = media;
         if ((media.fmtpParams != null ? media.fmtpParams['packetization-mode'] : undefined) != null) {
@@ -2300,13 +2292,13 @@ Cache-Control: no-cache
         }
         if ((media.fmtpParams != null ? media.fmtpParams['sprop-parameter-sets'] : undefined) != null) {
           const nalUnits = h264.parseSpropParameterSets(media.fmtpParams['sprop-parameter-sets']);
-          for (let nalUnit of Array.from(nalUnits)) {
+          for (const nalUnit of Array.from(nalUnits)) {
             const nalUnitType = nalUnit[0] & 0x1f;
             switch (nalUnitType) {
-              case h264.NAL_UNIT_TYPE_SPS:  // 7
+              case h264.NAL_UNIT_TYPE_SPS: // 7
                 stream.updateSPS(nalUnit);
                 break;
-              case h264.NAL_UNIT_TYPE_PPS:  // 8
+              case h264.NAL_UNIT_TYPE_PPS: // 8
                 stream.updatePPS(nalUnit);
                 break;
               default:
@@ -2319,19 +2311,19 @@ Cache-Control: no-cache
         sdpInfo.audio = media;
 
         if ((media.clockRate == null)) {
-          logger.error("Error: rtpmap attribute in SDP must have audio clock rate; assuming 44100");
+          logger.error('Error: rtpmap attribute in SDP must have audio clock rate; assuming 44100');
           media.clockRate = 44100;
         }
 
         if ((media.audioChannels == null)) {
-          logger.error("Error: rtpmap attribute in SDP must have audio channels; assuming 2");
+          logger.error('Error: rtpmap attribute in SDP must have audio channels; assuming 2');
           media.audioChannels = 2;
         }
 
         logger.debug(`[${TAG}:client=${client.id}] audio fmtp: ${JSON.stringify(media.fmtpParams)}`);
 
         if ((media.fmtpParams == null)) {
-          logger.error("Error: fmtp attribute does not exist in SDP");
+          logger.error('Error: fmtp attribute does not exist in SDP');
           media.fmtpParams = {};
         }
 
@@ -2342,7 +2334,7 @@ Cache-Control: no-cache
           ascInfo = aac.parseAudioSpecificConfig(audioSpecificConfig);
           ({ audioObjectType } = ascInfo);
         } else {
-          logger.error("Error: fmtp attribute in SDP does not have config parameter; assuming audioObjectType=2");
+          logger.error('Error: fmtp attribute in SDP does not have config parameter; assuming audioObjectType=2');
           audioObjectType = 2;
         }
 
@@ -2352,25 +2344,25 @@ Cache-Control: no-cache
           audioChannels: media.audioChannels,
           audioObjectType,
           audioSpecificConfig,
-          audioASCInfo: ascInfo
+          audioASCInfo: ascInfo,
         });
 
         if (media.fmtpParams.sizelength != null) {
           media.fmtpParams.sizelength = parseInt(media.fmtpParams.sizelength);
         } else {
-          logger.error("Error: fmtp attribute in SDP must have sizelength parameter; assuming 13");
+          logger.error('Error: fmtp attribute in SDP must have sizelength parameter; assuming 13');
           media.fmtpParams.sizelength = 13;
         }
         if (media.fmtpParams.indexlength != null) {
           media.fmtpParams.indexlength = parseInt(media.fmtpParams.indexlength);
         } else {
-          logger.error("Error: fmtp attribute in SDP must have indexlength parameter; assuming 3");
+          logger.error('Error: fmtp attribute in SDP must have indexlength parameter; assuming 3');
           media.fmtpParams.indexlength = 3;
         }
         if (media.fmtpParams.indexdeltalength != null) {
           media.fmtpParams.indexdeltalength = parseInt(media.fmtpParams.indexdeltalength);
         } else {
-          logger.error("Error: fmtp attribute in SDP must have indexdeltalength parameter; assuming 3");
+          logger.error('Error: fmtp attribute in SDP must have indexdeltalength parameter; assuming 3');
           media.fmtpParams.indexdeltalength = 3;
         }
       }
@@ -2389,7 +2381,7 @@ RTSP/1.0 200 OK
 CSeq: ${req.headers.cseq}
 
 \
-`.replace(/\n/g, "\r\n");
+`.replace(/\n/g, '\r\n');
     return callback(null, res);
   }
 
@@ -2403,17 +2395,17 @@ RTSP/1.0 405 Method Not Allowed
 CSeq: ${req.headers.cseq}
 
 \
-`.replace(/\n/g, "\r\n");
+`.replace(/\n/g, '\r\n');
       return callback(null, res);
     }
 
     const streamId = RTSPServer.getStreamIdFromUri(req.uri);
     logger.info(`[${TAG}:client=${client.id}] started uploading stream ${streamId}`);
     const stream = avstreams.getOrCreate(streamId);
-    if (client.announceSDPInfo.video != null) {  // has video
+    if (client.announceSDPInfo.video != null) { // has video
       this.emit('video_start', stream);
     }
-    if (client.announceSDPInfo.audio != null) {  // has audio
+    if (client.announceSDPInfo.audio != null) { // has audio
       this.emit('audio_start', stream);
     }
     res = `\
@@ -2424,7 +2416,7 @@ Server: ${this.serverName}
 Cache-Control: no-cache
 
 \
-`.replace(/\n/g, "\r\n");
+`.replace(/\n/g, '\r\n');
     return callback(null, res);
   }
 
@@ -2432,7 +2424,7 @@ Cache-Control: no-cache
     if ((req.protocolName !== 'RTSP') && (req.protocolName !== 'HTTP')) {
       // Request cannot be handled; close the connection
       callback(null, null,
-        {close: true});
+        { close: true });
     }
     if (config.enableRTSP && (req.protocolName === 'RTSP') && (req.method === 'OPTIONS')) {
       return this.respondOptions(socket, req, callback);
@@ -2440,7 +2432,7 @@ Cache-Control: no-cache
       return this.respondPost(socket, req, callback);
     } else if ((req.method === 'GET') && (req.protocolName === 'HTTP')) { // HTTP GET
       return this.respondGet(socket, req, callback);
-    } else if (config.enableRTSP && (req.protocolName === 'RTSP') && (req.method === 'DESCRIBE')) {  // DESCRIBE for RTSP, GET for HTTP
+    } else if (config.enableRTSP && (req.protocolName === 'RTSP') && (req.method === 'DESCRIBE')) { // DESCRIBE for RTSP, GET for HTTP
       return this.respondDescribe(socket, req, callback);
     } else if (config.enableRTSP && (req.protocolName === 'RTSP') && (req.method === 'SETUP')) {
       return this.respondSetup(socket, req, callback);
@@ -2454,16 +2446,15 @@ Cache-Control: no-cache
       return this.respondAnnounce(socket, req, callback);
     } else if (config.enableRTSP && (req.protocolName === 'RTSP') && (req.method === 'RECORD')) {
       return this.respondRecord(socket, req, callback);
-    } else {
-      logger.warn(`[${TAG}] method \"${req.method}\" not implemented for protocol \"${req.protocol}\"`);
-      return this.respondWithNotFound(req, req.protocolName, callback);
     }
+    logger.warn(`[${TAG}] method \"${req.method}\" not implemented for protocol \"${req.protocol}\"`);
+    return this.respondWithNotFound(req, req.protocolName, callback);
   }
 
   // Called when received video data over RTSP
   onUploadVideoData(stream, msg, rinfo) {
     if ((stream.rtspUploadingClient == null)) {
-//      logger.warn "no client is uploading video data to stream #{stream.id}"
+      //      logger.warn "no client is uploading video data to stream #{stream.id}"
       return;
     }
     const packet = rtp.parsePacket(msg);
@@ -2473,20 +2464,19 @@ Cache-Control: no-cache
     }
     if (packet.rtpHeader.payloadType === stream.rtspUploadingClient.announceSDPInfo.video.fmt) {
       return this.rtpParser.feedUnorderedH264Buffer(msg, stream.id);
-    } else {
-      return logger.error(`Error: Unknown payload type: ${packet.rtpHeader.payloadType} as video`);
     }
+    return logger.error(`Error: Unknown payload type: ${packet.rtpHeader.payloadType} as video`);
   }
 
   onUploadVideoControl(stream, msg, rinfo) {
     if ((stream.rtspUploadingClient == null)) {
-//      logger.warn "no client is uploading audio data to stream #{stream.id}"
+      //      logger.warn "no client is uploading audio data to stream #{stream.id}"
       return;
     }
     const packets = rtp.parsePackets(msg);
     return (() => {
       const result = [];
-      for (let packet of Array.from(packets)) {
+      for (const packet of Array.from(packets)) {
         if (packet.rtcpSenderReport != null) {
           if ((stream.rtspUploadingClient.uploadingTimestampInfo.video == null)) {
             stream.rtspUploadingClient.uploadingTimestampInfo.video = {};
@@ -2503,7 +2493,7 @@ Cache-Control: no-cache
 
   onUploadAudioData(stream, msg, rinfo) {
     if ((stream.rtspUploadingClient == null)) {
-//      logger.warn "no client is uploading audio data to stream #{stream.id}"
+      //      logger.warn "no client is uploading audio data to stream #{stream.id}"
       return;
     }
     const packet = rtp.parsePacket(msg);
@@ -2513,20 +2503,19 @@ Cache-Control: no-cache
     }
     if (packet.rtpHeader.payloadType === stream.rtspUploadingClient.announceSDPInfo.audio.fmt) {
       return this.rtpParser.feedUnorderedAACBuffer(msg, stream.id, stream.rtspUploadingClient.announceSDPInfo.audio.fmtpParams);
-    } else {
-      return logger.error(`Error: Unknown payload type: ${packet.rtpHeader.payloadType} as audio`);
     }
+    return logger.error(`Error: Unknown payload type: ${packet.rtpHeader.payloadType} as audio`);
   }
 
   onUploadAudioControl(stream, msg, rinfo) {
     if ((stream.rtspUploadingClient == null)) {
-//      logger.warn "no client is uploading audio data to stream #{stream.id}"
+      //      logger.warn "no client is uploading audio data to stream #{stream.id}"
       return;
     }
     const packets = rtp.parsePackets(msg);
     return (() => {
       const result = [];
-      for (let packet of Array.from(packets)) {
+      for (const packet of Array.from(packets)) {
         if (packet.rtcpSenderReport != null) {
           if ((stream.rtspUploadingClient.uploadingTimestampInfo.audio == null)) {
             stream.rtspUploadingClient.uploadingTimestampInfo.audio = {};
@@ -2555,7 +2544,7 @@ class RTSPClient {
     this.audioSSRC = generateRandom32();
     this.supportsReliableRTP = false;
 
-    for (let name in opts) {
+    for (const name in opts) {
       const value = opts[name];
       this[name] = value;
     }
@@ -2565,45 +2554,40 @@ class RTSPClient {
     if (this.useHTTP) {
       this.getClient.isWaitingForKeyFrame = false;
       return this.getClient.isPlaying = false;
-    } else {
-      this.isWaitingForKeyFrame = false;
-      return this.isPlaying = false;
     }
+    this.isWaitingForKeyFrame = false;
+    return this.isPlaying = false;
   }
 
   enablePlaying() {
     if (this.useHTTP) {
       if (ENABLE_START_PLAYING_FROM_KEYFRAME && client.stream.isVideoStarted) {
         return this.getClient.isWaitingForKeyFrame = true;
-      } else {
-        return this.getClient.isPlaying = true;
       }
-    } else {
-      if (ENABLE_START_PLAYING_FROM_KEYFRAME && stream.isVideoStarted) {
-        return this.isWaitingForKeyFrame = true;
-      } else {
-        return this.isPlaying = true;
-      }
+      return this.getClient.isPlaying = true;
     }
+    if (ENABLE_START_PLAYING_FROM_KEYFRAME && stream.isVideoStarted) {
+      return this.isWaitingForKeyFrame = true;
+    }
+    return this.isPlaying = true;
   }
 
   toString() {
     if ((this.socket.remoteAddress == null)) {
       return `${this.id}: session=${this.sessionID} (being destroyed)`;
-    } else {
-      let transportDesc = (this.clientType != null) ? `type=${this.clientType}` : '';
-      if (['http-get', 'tcp', 'udp'].includes(this.clientType)) {
-        transportDesc += ` isPlaying=${this.isPlaying}`;
-      }
-      return `${this.id}: session=${this.sessionID} addr=${this.socket.remoteAddress} port=${this.socket.remotePort} ${transportDesc}`;
     }
+    let transportDesc = (this.clientType != null) ? `type=${this.clientType}` : '';
+    if (['http-get', 'tcp', 'udp'].includes(this.clientType)) {
+      transportDesc += ` isPlaying=${this.isPlaying}`;
+    }
+    return `${this.id}: session=${this.sessionID} addr=${this.socket.remoteAddress} port=${this.socket.remotePort} ${transportDesc}`;
   }
 }
 
 var api = {
   RTSPServer,
 
-  INTERLEAVED_SIGN: 0x24,  // '$' (dollar sign)
+  INTERLEAVED_SIGN: 0x24, // '$' (dollar sign)
   INTERLEAVED_HEADER_LEN: 4,
 
   // Creates an interleaved header and returns the buffer.
@@ -2613,10 +2597,10 @@ var api = {
   //   payloadLength: <number> payload length
   createInterleavedHeader(opts) {
     if (((opts != null ? opts.channel : undefined) == null)) {
-      throw new Error("createInterleavedHeader: channel is required");
+      throw new Error('createInterleavedHeader: channel is required');
     }
     if (((opts != null ? opts.payloadLength : undefined) == null)) {
-      throw new Error("createInterleavedHeader: payloadLength is required");
+      throw new Error('createInterleavedHeader: payloadLength is required');
     }
 
     return new Buffer([
@@ -2637,7 +2621,7 @@ var api = {
     }
 
     if (buf[0] !== api.INTERLEAVED_SIGN) {
-      throw new Error("The buffer is not an interleaved data");
+      throw new Error('The buffer is not an interleaved data');
     }
 
     const info = {};
@@ -2679,7 +2663,7 @@ var api = {
     }
     if ((match = /^172.(\d+)\./.exec(socket.remoteAddress)) != null) {
       const num = parseInt(match[1]);
-      if (16 <= num && num <= 31) {
+      if (num >= 16 && num <= 31) {
         return true;
       }
     }
@@ -2687,7 +2671,7 @@ var api = {
   },
 
   getDateHeader() {
-    const d = new Date;
+    const d = new Date();
     return `${DAY_NAMES[d.getUTCDay()]}, ${d.getUTCDate()} ${MONTH_NAMES[d.getUTCMonth()]}` +
     ` ${d.getUTCFullYear()} ${zeropad(2, d.getUTCHours())}:${zeropad(2, d.getUTCMinutes())}` +
     `:${zeropad(2, d.getUTCSeconds())} UTC`;
@@ -2696,10 +2680,10 @@ var api = {
   // Returns this machine's IP address which is attached to network interface
   // TODO: Get IP address from socket
   getLocalIP() {
-    const ifacePrecedence = [ 'wlan', 'eth', 'en' ];
+    const ifacePrecedence = ['wlan', 'eth', 'en'];
 
     // compare function for sort
-    const getPriority = function(ifaceName) {
+    const getPriority = function (ifaceName) {
       for (let i = 0; i < ifacePrecedence.length; i++) {
         const name = ifacePrecedence[i];
         if (ifaceName.indexOf(name) === 0) {
@@ -2713,19 +2697,19 @@ var api = {
     const ifaceNames = Object.keys(ifaces);
     ifaceNames.sort((a, b) => getPriority(a) - getPriority(b));
 
-    for (let ifaceName of Array.from(ifaceNames)) {
-      for (let addr of Array.from(ifaces[ifaceName])) {
+    for (const ifaceName of Array.from(ifaceNames)) {
+      for (const addr of Array.from(ifaces[ifaceName])) {
         if ((!addr.internal) && (addr.family === 'IPv4')) {
           return addr.address;
         }
       }
     }
 
-    return "127.0.0.1";
+    return '127.0.0.1';
   },
 
   getExternalIP() {
-    return "127.0.0.1";
+    return '127.0.0.1';
   }, // TODO: Fetch this from UPnP or something
 
   // Get local IP address which is meaningful to the
@@ -2735,14 +2719,13 @@ var api = {
       return '127.0.0.1';
     } else if (api.isPrivateNetwork(socket)) {
       return api.getLocalIP();
-    } else {
-      return api.getExternalIP();
     }
+    return api.getExternalIP();
   },
 
   leaveClient(client) {
     const object = avstreams.getAll();
-    for (let streamName in object) {
+    for (const streamName in object) {
       const stream = object[streamName];
       logger.debug(`[stream:${stream.id}] leaveClient: ${client.id}`);
       if (stream.rtspClients[client.id] != null) {
@@ -2750,7 +2733,7 @@ var api = {
         stream.rtspNumClients--;
       }
     }
-  }
+  },
 };
 
 module.exports = api;

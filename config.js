@@ -1,9 +1,11 @@
+// TODO: This file was created by bulk-decaffeinate.
+// Sanity-check the conversion and remove this comment.
 const os = require('os');
 
 module.exports = {
-  //###########################
+  // ###########################
   /* Basic configurations */
-  //###########################
+  // ###########################
 
   // Server listen port
   serverPort: 80,
@@ -52,15 +54,15 @@ module.exports = {
   // UNIX domain socket used for receiving audio/video data
   videoControlReceiverPath: '/tmp/node_rtsp_rtmp_videoControl',
   audioControlReceiverPath: '/tmp/node_rtsp_rtmp_audioControl',
-  videoDataReceiverPath   : '/tmp/node_rtsp_rtmp_videoData',
-  audioDataReceiverPath   : '/tmp/node_rtsp_rtmp_audioData',
+  videoDataReceiverPath: '/tmp/node_rtsp_rtmp_videoData',
+  audioDataReceiverPath: '/tmp/node_rtsp_rtmp_audioData',
 
   // For receiverType == 'tcp' or 'udp'
-  receiverListenHost      : '0.0.0.0',
+  receiverListenHost: '0.0.0.0',
   videoControlReceiverPort: 1111,
   audioControlReceiverPort: 1112,
-  videoDataReceiverPort   : 1113,
-  audioDataReceiverPort   : 1114,
+  videoDataReceiverPort: 1113,
+  audioDataReceiverPort: 1114,
 
   // For receiverType == 'tcp'
   receiverTCPBacklog: 511,
@@ -68,10 +70,10 @@ module.exports = {
   /* RTSP configurations */
 
   // Server ports for RTP and RTCP
-  audioRTPServerPort : 7042,  // even
-  audioRTCPServerPort: 7043,  // odd and contiguous
-  videoRTPServerPort : 7044,  // even
-  videoRTCPServerPort: 7045,  // odd and contiguous
+  audioRTPServerPort: 7042, // even
+  audioRTCPServerPort: 7043, // odd and contiguous
+  videoRTPServerPort: 7044, // even
+  videoRTCPServerPort: 7045, // odd and contiguous
 
   /* RTSP/RTMP configurations */
 
@@ -98,37 +100,37 @@ module.exports = {
     hasVideo: true,
 
     // See: Adobe Flash Video File Format Specification Version 10.1 - E.4.3.1 VIDEODATA
-    videocodecid: 7,  // H.264
+    videocodecid: 7, // H.264
 
     // See: Adobe Flash Video File Format Specification Version 10.1 - E.4.2.1 AUDIODATA
-    audiocodecid: 10
+    audiocodecid: 10,
   }, // AAC
 
 
-  //##############################
+  // ##############################
   /* Advanced configurations */
-  //##############################
+  // ##############################
 
   // Period size of each audio frame. Use 1024 for picam.
   audioPeriodSize: 1024,
 
   // HTTP keepalive timeout
-  keepaliveTimeoutMs: 30000,  // milliseconds
+  keepaliveTimeoutMs: 30000, // milliseconds
 
   // RTSP
-  rtcpSenderReportIntervalMs: 5000,  // milliseconds
+  rtcpSenderReportIntervalMs: 5000, // milliseconds
 
   // RTMP ping timeout
-  rtmpPingTimeoutMs: 5000,  // milliseconds
+  rtmpPingTimeoutMs: 5000, // milliseconds
 
   // RTMP session timeout
-  rtmpSessionTimeoutMs: 600000,  // milliseconds
+  rtmpSessionTimeoutMs: 600000, // milliseconds
 
   // RTMPT session timeout
-  rtmptSessionTimeoutMs: 600000,  // milliseconds
+  rtmptSessionTimeoutMs: 600000, // milliseconds
 
   // RTMP play chunk size
-  rtmpPlayChunkSize: 4096,  // bytes
+  rtmpPlayChunkSize: 4096, // bytes
 
   // Maximum number of RTMP messages being sent at once
   rtmpMessageQueueSize: 5,
@@ -150,12 +152,12 @@ module.exports = {
 
   debug: {
     // If true, all incoming data are ignored
-    dropAllData: false
+    dropAllData: false,
   },
 
   // UDP port numbers to receive incoming RTP data
-  rtspVideoDataUDPListenPort   : 5004,
+  rtspVideoDataUDPListenPort: 5004,
   rtspVideoControlUDPListenPort: 5005,
-  rtspAudioDataUDPListenPort   : 5006,
-  rtspAudioControlUDPListenPort: 5007
+  rtspAudioDataUDPListenPort: 5006,
+  rtspAudioControlUDPListenPort: 5007,
 };

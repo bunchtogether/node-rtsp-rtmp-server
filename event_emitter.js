@@ -1,3 +1,12 @@
+/* eslint-disable
+    no-param-reassign,
+    no-return-assign,
+    no-underscore-dangle,
+    no-unused-vars,
+    prefer-rest-params,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -60,14 +69,14 @@ class EventEmitterModule {
   // Apply EventEmitterModule to the class
   static mixin(cls) {
     const proto = EventEmitterModule.prototype;
-    for (let name of Array.from(Object.getOwnPropertyNames(proto))) {
+    for (const name of Array.from(Object.getOwnPropertyNames(proto))) {
       if (name === 'constructor') {
         continue;
       }
       try {
         cls.prototype[name] = proto[name];
       } catch (e) {
-        throw new Error("Call EventEmitterModule.mixin() after the class definition");
+        throw new Error('Call EventEmitterModule.mixin() after the class definition');
       }
     }
   }
@@ -75,7 +84,7 @@ class EventEmitterModule {
   // Inject EventEmitterModule into the object
   static inject(obj) {
     const proto = EventEmitterModule.prototype;
-    for (let name of Array.from(Object.getOwnPropertyNames(proto))) {
+    for (const name of Array.from(Object.getOwnPropertyNames(proto))) {
       if (name === 'constructor') {
         continue;
       }
@@ -102,9 +111,8 @@ class EventEmitterModule {
   onAny(listener) {
     if (this.catchAllEventListeners != null) {
       return this.catchAllEventListeners.push(listener);
-    } else {
-      return this.catchAllEventListeners = [ listener ];
     }
+    return this.catchAllEventListeners = [listener];
   }
 
   offAny(listener) {
@@ -112,7 +120,7 @@ class EventEmitterModule {
       for (let i = 0; i < this.catchAllEventListeners.length; i++) {
         const _listener = this.catchAllEventListeners[i];
         if (_listener === listener) {
-          this.catchAllEventListeners.splice(i, i - i + 1, ...[].concat([]));  // remove element at index i
+          this.catchAllEventListeners.splice(i, i - i + 1, ...[].concat([])); // remove element at index i
         }
       }
     }
@@ -124,9 +132,8 @@ class EventEmitterModule {
     }
     if (this.eventListeners[name] != null) {
       return this.eventListeners[name].push(listener);
-    } else {
-      return this.eventListeners[name] = [ listener ];
     }
+    return this.eventListeners[name] = [listener];
   }
 
   removeListener(name, listener) {
@@ -134,7 +141,7 @@ class EventEmitterModule {
       for (let i = 0; i < this.eventListeners[name].length; i++) {
         const _listener = this.eventListeners[name][i];
         if (_listener === listener) {
-          this.eventListeners.splice(i, i - i + 1, ...[].concat([]));  // remove element at index i
+          this.eventListeners.splice(i, i - i + 1, ...[].concat([])); // remove element at index i
         }
       }
     }

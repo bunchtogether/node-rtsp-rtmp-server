@@ -1,3 +1,21 @@
+/* eslint-disable
+    consistent-return,
+    guard-for-in,
+    no-cond-assign,
+    no-constant-condition,
+    no-ex-assign,
+    no-param-reassign,
+    no-restricted-syntax,
+    no-return-assign,
+    no-shadow,
+    no-underscore-dangle,
+    no-var,
+    one-var,
+    prefer-rest-params,
+    vars-on-top,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -19,7 +37,7 @@ const Bits = require('./bits');
 const EventEmitterModule = require('./event_emitter');
 const logger = require('./logger');
 
-const createStreamId = function() {
+const createStreamId = function () {
   let buf;
   try {
     buf = crypto.randomBytes(256);
@@ -61,7 +79,7 @@ class AVStreamGenerator {
       this.isPaused = methods.isPaused;
     }
 
-    __guardMethod__(methods, 'init', o => o.init());
+    __guardMethod__(methods, 'init', (o) => o.init());
   }
 
   generate() {}
@@ -72,32 +90,32 @@ class AVStreamGenerator {
 class AVStream extends EventEmitterModule {
   constructor(id) {
     super();
-    this.id = id;  // string
+    this.id = id; // string
     this.initAVParams();
   }
 
   initAVParams() {
-    this.audioClockRate      = null;  // int
-    this.audioSampleRate     = null;  // int
-    this.audioChannels       = null;  // int
-    this.audioPeriodSize     = 1024;  // TODO: detect this from stream?
-    this.audioObjectType     = null;  // int
-    this.videoWidth          = null;  // int
-    this.videoHeight         = null;  // int
-    this.videoProfileLevelId = null;  // string (e.g. '42C01F')
-    this.videoFrameRate      = 30.0;  // float  # TODO: default value
-    this.videoAVCLevel       = null;  // int
-    this.videoAVCProfile     = null;  // int
-    this.isVideoStarted      = false; // boolean
-    this.isAudioStarted      = false; // boolean
-    this.timeAtVideoStart    = null;  // milliseconds since the epoch
-    this.timeAtAudioStart    = null;  // milliseconds since the epoch
-    this.spsString           = '';    // string
-    this.ppsString           = '';    // string
-    this.spsNALUnit          = null;  // buffer
-    this.ppsNALUnit          = null;  // buffer
-    this.spropParameterSets  = '';    // string
-    return this.type                = null;  // string ('live' or 'recorded')
+    this.audioClockRate = null; // int
+    this.audioSampleRate = null; // int
+    this.audioChannels = null; // int
+    this.audioPeriodSize = 1024; // TODO: detect this from stream?
+    this.audioObjectType = null; // int
+    this.videoWidth = null; // int
+    this.videoHeight = null; // int
+    this.videoProfileLevelId = null; // string (e.g. '42C01F')
+    this.videoFrameRate = 30.0; // float  # TODO: default value
+    this.videoAVCLevel = null; // int
+    this.videoAVCProfile = null; // int
+    this.isVideoStarted = false; // boolean
+    this.isAudioStarted = false; // boolean
+    this.timeAtVideoStart = null; // milliseconds since the epoch
+    this.timeAtAudioStart = null; // milliseconds since the epoch
+    this.spsString = ''; // string
+    this.ppsString = ''; // string
+    this.spsNALUnit = null; // buffer
+    this.ppsNALUnit = null; // buffer
+    this.spropParameterSets = ''; // string
+    return this.type = null; // string ('live' or 'recorded')
   }
 
   destroy() {
@@ -119,20 +137,20 @@ class AVStream extends EventEmitterModule {
 
   updateSpropParam(buf) {
     const nalUnitType = buf[0] & 0x1f;
-    if (nalUnitType === 7) {  // SPS packet
+    if (nalUnitType === 7) { // SPS packet
       this.spsString = buf.toString('base64');
       this.videoProfileLevelId = buf.slice(1, 4).toString('hex').toUpperCase();
-    } else if (nalUnitType === 8) {  // PPS packet
+    } else if (nalUnitType === 8) { // PPS packet
       this.ppsString = buf.toString('base64');
     }
 
-    return this.spropParameterSets = this.spsString + ',' + this.ppsString;
+    return this.spropParameterSets = `${this.spsString},${this.ppsString}`;
   }
 
   resetFrameRate() {
     this.frameRateCalcBasePTS = null;
     this.frameRateCalcNumFrames = null;
-    return this.videoFrameRate = 30.0;  // TODO: What value should we use as a default frame rate?
+    return this.videoFrameRate = 30.0; // TODO: What value should we use as a default frame rate?
   }
 
   calcFrameRate(pts) {
@@ -162,13 +180,13 @@ class AVStream extends EventEmitterModule {
 
   updateConfig(obj) {
     let isConfigUpdated = false;
-    for (let name in obj) {
+    for (const name in obj) {
       const value = obj[name];
       if (this[name] !== value) {
         this[name] = value;
         if (value instanceof Buffer) {
           logger.debug(`[stream:${this.id}] update ${name}: Buffer=<0x${value.toString('hex')}>`);
-        } else if (typeof(value) === 'object') {
+        } else if (typeof (value) === 'object') {
           logger.debug(`[stream:${this.id}] update ${name}:`);
           logger.debug(value);
         } else {
@@ -248,12 +266,12 @@ class AVStream extends EventEmitterModule {
     if (this.videoWidth != null) {
       str += `video: ${this.videoWidth}x${this.videoHeight} profile=${this.videoAVCProfile} level=${this.videoAVCLevel}`;
     } else {
-      str += "video: (waiting for data)";
+      str += 'video: (waiting for data)';
     }
     if (this.audioSampleRate != null) {
       str += `; audio: samplerate=${this.audioSampleRate} channels=${this.audioChannels} objecttype=${this.audioObjectType}`;
     } else {
-      str += "; audio: (waiting for data)";
+      str += '; audio: (waiting for data)';
     }
     return str;
   }
@@ -293,13 +311,13 @@ class MP4Stream extends AVStream {
         audioSampleRate: ascInfo.samplingFrequency,
         audioClockRate: 90000,
         audioChannels: ascInfo.channelConfiguration,
-        audioObjectType: ascInfo.audioObjectType
+        audioObjectType: ascInfo.audioObjectType,
       });
     }
     mp4Stream.durationSeconds = mp4File.getDurationSeconds();
     mp4Stream.lastTagTimestamp = mp4File.getLastTimestamp();
     mp4Stream.mp4File = mp4File;
-    mp4File.fillBuffer(function() {
+    mp4File.fillBuffer(() => {
       if (mp4File.hasAudio()) {
         mp4Stream.emit('audio_start');
         mp4Stream.isAudioStarted = true;
@@ -364,7 +382,7 @@ var api = {
 
   emit(name, ...data) {
     if (eventListeners[name] != null) {
-      for (let listener of Array.from(eventListeners[name])) {
+      for (const listener of Array.from(eventListeners[name])) {
         listener(...Array.from(data || []));
       }
     }
@@ -373,9 +391,8 @@ var api = {
   on(name, listener) {
     if (eventListeners[name] != null) {
       return eventListeners[name].push(listener);
-    } else {
-      return eventListeners[name] = [ listener ];
     }
+    return eventListeners[name] = [listener];
   },
 
   removeListener(name, listener) {
@@ -383,7 +400,7 @@ var api = {
       for (let i = 0; i < eventListeners[name].length; i++) {
         const _listener = eventListeners[name][i];
         if (_listener === listener) {
-          eventListeners.splice(i, i - i + 1, ...[].concat([]));  // remove element at index i
+          eventListeners.splice(i, i - i + 1, ...[].concat([])); // remove element at index i
         }
       }
     }
@@ -406,11 +423,11 @@ var api = {
       if (stream != null) {
         stream.teardown = streamGenerators[streamId].teardown;
         stream.pause = streamGenerators[streamId].pause;
-        stream.resume = function() {
+        stream.resume = function () {
           stream.resetFrameRate();
           return streamGenerators[streamId].resume.apply(this, arguments);
         };
-        stream.seek = function() {
+        stream.seek = function () {
           stream.resetFrameRate();
           return streamGenerators[streamId].seek.apply(this, arguments);
         };
@@ -421,54 +438,54 @@ var api = {
         logger.debug(`created stream ${stream.id}`);
       }
       return stream;
-    } else { // recorded dir
-      for (let app in recordedAppToDir) {
-        const dir = recordedAppToDir[app];
-        if (streamId.slice(0, +app.length + 1 || undefined) === (app + '/')) {
-          var filetype, match;
-          let filename = streamId.slice(app.length+1);
+    } // recorded dir
+    for (const app in recordedAppToDir) {
+      const dir = recordedAppToDir[app];
+      if (streamId.slice(0, +app.length + 1 || undefined) === (`${app}/`)) {
+        var filetype,
+          match;
+        let filename = streamId.slice(app.length + 1);
 
-          // Strip "filetype:" from "filetype:filename"
-          if ((match = /^(\w*?):(.*)$/.exec(filename)) != null) {
-            filetype = match[1];
-            filename = match[2];
-          } else {
-            filetype = 'mp4';  // default extension
-          }
-
-          filename = path.normalize(filename);
-
-          // Check that filename is legitimate
-          let pathSep = path.sep;
-          if (pathSep === '\\') {  // Windows
-            pathSep = `\\${pathSep}`;  // Escape '\' for regex
-          }
-          if ((filename === '.') ||
-          new RegExp(`(^|${pathSep})..(${pathSep}|$)`).test(filename)) {
-            logger.warn(`rejected request to stream: ${streamId}`);
-            break;
-          }
-
-          try {
-            fs.accessSync(`${dir}/${filename}`, fs.R_OK);
-          } catch (e) {
-            // Add extension to the end and try again
-            try {
-              fs.accessSync(`${dir}/${filename}.${filetype}`, fs.R_OK);
-              filename = `${filename}.${filetype}`;
-            } catch (error) {
-              e = error;
-              logger.error(`error: failed to read ${dir}/${filename} or ${dir}/${filename}.${filetype}: ${e}`);
-              return null;
-            }
-          }
-          stream = MP4Stream.create(`${dir}/${filename}`);
-          logger.info(`created stream ${stream.id} from ${dir}/${filename}`);
-          return stream;
+        // Strip "filetype:" from "filetype:filename"
+        if ((match = /^(\w*?):(.*)$/.exec(filename)) != null) {
+          filetype = match[1];
+          filename = match[2];
+        } else {
+          filetype = 'mp4'; // default extension
         }
+
+        filename = path.normalize(filename);
+
+        // Check that filename is legitimate
+        let pathSep = path.sep;
+        if (pathSep === '\\') { // Windows
+          pathSep = `\\${pathSep}`; // Escape '\' for regex
+        }
+        if ((filename === '.') ||
+          new RegExp(`(^|${pathSep})..(${pathSep}|$)`).test(filename)) {
+          logger.warn(`rejected request to stream: ${streamId}`);
+          break;
+        }
+
+        try {
+          fs.accessSync(`${dir}/${filename}`, fs.R_OK);
+        } catch (e) {
+          // Add extension to the end and try again
+          try {
+            fs.accessSync(`${dir}/${filename}.${filetype}`, fs.R_OK);
+            filename = `${filename}.${filetype}`;
+          } catch (error) {
+            e = error;
+            logger.error(`error: failed to read ${dir}/${filename} or ${dir}/${filename}.${filetype}: ${e}`);
+            return null;
+          }
+        }
+        stream = MP4Stream.create(`${dir}/${filename}`);
+        logger.info(`created stream ${stream.id} from ${dir}/${filename}`);
+        return stream;
       }
-      return null;
     }
+    return null;
   },
 
   attachRecordedDirToApp(dir, appName) {
@@ -501,7 +518,7 @@ var api = {
       }
       retryCount++;
       if (retryCount >= 100) {
-        throw new Error("avstreams.createNewStreamId: Failed to create new stream id");
+        throw new Error('avstreams.createNewStreamId: Failed to create new stream id');
       }
     }
   },
@@ -533,8 +550,8 @@ var api = {
     }
     streams[stream.id] = stream;
     api.emit('add_stream', stream);
-    stream._onAnyListener = (stream =>
-      function(eventName, ...data) {
+    stream._onAnyListener = ((stream) =>
+      function (eventName, ...data) {
         api.emit(eventName, stream, ...Array.from(data));
         if (eventName === 'destroy') {
           return api.remove(stream.id);
@@ -546,7 +563,7 @@ var api = {
 
   remove(streamId) {
     let stream;
-    if (typeof(streamId) === 'object') {
+    if (typeof (streamId) === 'object') {
       // streamId argument might be stream object
       stream = streamId;
       streamId = stream != null ? stream.id : undefined;
@@ -569,13 +586,13 @@ var api = {
     logger.raw(`[streams: ${Object.keys(streams).length}]`);
     return (() => {
       const result = [];
-      for (let streamId in streams) {
+      for (const streamId in streams) {
         const stream = streams[streamId];
         result.push(logger.raw(` ${stream.toString()}`));
       }
       return result;
     })();
-  }
+  },
 };
 
 module.exports = api;
@@ -583,7 +600,6 @@ module.exports = api;
 function __guardMethod__(obj, methodName, transform) {
   if (typeof obj !== 'undefined' && obj !== null && typeof obj[methodName] === 'function') {
     return transform(obj, methodName);
-  } else {
-    return undefined;
   }
+  return undefined;
 }

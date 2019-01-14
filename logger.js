@@ -1,3 +1,12 @@
+/* eslint-disable
+    consistent-return,
+    no-console,
+    no-param-reassign,
+    no-return-assign,
+    no-var,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS102: Remove unnecessary code created because of implicit returns
@@ -31,7 +40,7 @@ let logLevel = null;
 
 const activeTags = {};
 
-const zeropad = function(columns, num) {
+const zeropad = function (columns, num) {
   num += '';
   while (num.length < columns) {
     num = `0${num}`;
@@ -59,10 +68,10 @@ var api = {
     if (raw == null) { raw = false; }
     if (!raw) {
       const d = new Date();
-      process.stdout.write(`${d.getFullYear()}-${zeropad(2, d.getMonth()+1)}-` +
+      process.stdout.write(`${d.getFullYear()}-${zeropad(2, d.getMonth() + 1)}-` +
         `${zeropad(2, d.getDate())} ${zeropad(2, d.getHours())}:` +
         `${zeropad(2, d.getMinutes())}:${zeropad(2, d.getSeconds())}.` +
-        `${zeropad(3, d.getMilliseconds())} `
+        `${zeropad(3, d.getMilliseconds())} `,
       );
     }
     return console.log(str);
@@ -118,9 +127,9 @@ var api = {
   fatal(str, raw) {
     if (raw == null) { raw = false; }
     return api.msg(api.LEVEL_FATAL, str, raw);
-  }
+  },
 };
 
-logLevel = api.LEVEL_INFO;  // default verbosity
+logLevel = api.LEVEL_INFO; // default verbosity
 
 module.exports = api;

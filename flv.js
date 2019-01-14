@@ -1,3 +1,9 @@
+/* eslint-disable
+    no-var,
+    radix,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS102: Remove unnecessary code created because of implicit returns
@@ -9,12 +15,12 @@ const Bits = require('./bits');
 const logger = require('./logger');
 
 var api = {
-  SOUND_FORMAT_AAC: 10,  // AAC
+  SOUND_FORMAT_AAC: 10, // AAC
 
-  SOUND_RATE_5KHZ : 0,  // 5.5 kHz
-  SOUND_RATE_11KHZ: 1,  // 11 kHz
-  SOUND_RATE_22KHZ: 2,  // 22 kHz
-  SOUND_RATE_44KHZ: 3,  // 44 kHz
+  SOUND_RATE_5KHZ: 0, // 5.5 kHz
+  SOUND_RATE_11KHZ: 1, // 11 kHz
+  SOUND_RATE_22KHZ: 2, // 22 kHz
+  SOUND_RATE_44KHZ: 3, // 44 kHz
 
   // SoundSize for compressed audio is 1 (16-bit)
   SOUND_SIZE_COMPRESSED: 1,
@@ -22,19 +28,18 @@ var api = {
   SOUND_TYPE_MONO: 0,
   SOUND_TYPE_STEREO: 1,
 
-  AAC_PACKET_TYPE_SEQUENCE_HEADER: 0,  // AAC sequence header
-  AAC_PACKET_TYPE_RAW            : 1,  // AAC raw
+  AAC_PACKET_TYPE_SEQUENCE_HEADER: 0, // AAC sequence header
+  AAC_PACKET_TYPE_RAW: 1, // AAC raw
 
-  AVC_PACKET_TYPE_SEQUENCE_HEADER: 0,  // AVC sequence header
-  AVC_PACKET_TYPE_NALU           : 1,  // AVC NALU
-  AVC_PACKET_TYPE_EOS            : 2,  // AVC end of sequence
+  AVC_PACKET_TYPE_SEQUENCE_HEADER: 0, // AVC sequence header
+  AVC_PACKET_TYPE_NALU: 1, // AVC NALU
+  AVC_PACKET_TYPE_EOS: 2, // AVC end of sequence
 
   getSoundType(channels) {
-    if (channels > 1) {  // stereo
+    if (channels > 1) { // stereo
       return 1;
-    } else {  // mono
-      return 0;
-    }
+    } // mono
+    return 0;
   },
 
   getSoundSize(numBits) {
@@ -78,22 +83,22 @@ var api = {
   createAACAudioDataTag(opts) {
     return api.createAudioDataTag({
       soundFormat: api.SOUND_FORMAT_AAC,
-      soundRate: api.SOUND_RATE_44KHZ,  // ignored by Flash Player
+      soundRate: api.SOUND_RATE_44KHZ, // ignored by Flash Player
       soundSize: api.SOUND_SIZE_COMPRESSED,
-      soundType: api.SOUND_TYPE_STEREO,  // ignored by Flash Player
-      aacPacketType: opts.aacPacketType
+      soundType: api.SOUND_TYPE_STEREO, // ignored by Flash Player
+      aacPacketType: opts.aacPacketType,
     });
   },
 
   videoCodecID2Str(codecID) {
     switch (codecID) {
-      case 2: return "Sorenson H.263";
-      case 3: return "Screen video";
-      case 4: return "On2 VP6";
-      case 5: return "On2 VP6 with alpha channel";
-      case 6: return "Screen video version 2";
-      case 7: return "AVC";
-      default: return "unknown";
+      case 2: return 'Sorenson H.263';
+      case 3: return 'Screen video';
+      case 4: return 'On2 VP6';
+      case 5: return 'On2 VP6 with alpha channel';
+      case 6: return 'Screen video version 2';
+      case 7: return 'AVC';
+      default: return 'unknown';
     }
   },
 
@@ -105,7 +110,7 @@ var api = {
     // Reject if the codec is not H.264
     if (info.videoDataTag.codecID !== 7) {
       throw new Error(`flv: Video codec ID ${info.videoDataTag.codecID} ` +
-        `(${api.videoCodecID2Str(info.videoDataTag.codecID)}) is not supported. Use H.264.`
+        `(${api.videoCodecID2Str(info.videoDataTag.codecID)}) is not supported. Use H.264.`,
       );
     }
 
@@ -136,21 +141,21 @@ var api = {
 
   soundFormat2Str(soundFormat) {
     switch (soundFormat) {
-      case 0: return "Linear PCM, platform endian";
-      case 1: return "ADPCM";
-      case 2: return "MP3";
-      case 3: return "Linear PCM, little endian";
-      case 4: return "Nellymoser 16 kHz mono";
-      case 5: return "Nellymoser 8 kHz mono";
-      case 6: return "Nellymoser";
-      case 7: return "G.711 A-law logarithmic PCM";
-      case 8: return "G.711 mu-law logarithmic PCM";
-      case 9: return "reserved";
-      case 10: return "AAC";
-      case 11: return "Speex";
-      case 14: return "MP3 8 kHz";
-      case 15: return "Device-specific sound";
-      default: return "unknown";
+      case 0: return 'Linear PCM, platform endian';
+      case 1: return 'ADPCM';
+      case 2: return 'MP3';
+      case 3: return 'Linear PCM, little endian';
+      case 4: return 'Nellymoser 16 kHz mono';
+      case 5: return 'Nellymoser 8 kHz mono';
+      case 6: return 'Nellymoser';
+      case 7: return 'G.711 A-law logarithmic PCM';
+      case 8: return 'G.711 mu-law logarithmic PCM';
+      case 9: return 'reserved';
+      case 10: return 'AAC';
+      case 11: return 'Speex';
+      case 14: return 'MP3 8 kHz';
+      case 15: return 'Device-specific sound';
+      default: return 'unknown';
     }
   },
 
@@ -162,7 +167,7 @@ var api = {
     // Reject if the sound format is not AAC
     if (info.audioDataTag.soundFormat !== api.SOUND_FORMAT_AAC) {
       throw new Error(`flv: Sound format ${info.audioDataTag.soundFormat} ` +
-        `(${api.soundFormat2Str(info.audioDataTag.soundFormat)}) is not supported. Use AAC.`
+        `(${api.soundFormat2Str(info.audioDataTag.soundFormat)}) is not supported. Use AAC.`,
       );
     }
 
@@ -173,7 +178,7 @@ var api = {
           info.ascInfo = aac.readAudioSpecificConfig(bits);
           info.audioSpecificConfig = bits.marked_bytes();
         } else {
-          logger.warn("flv:parseAudio(): warn: AAC sequence header does not contain AudioSpecificConfig");
+          logger.warn('flv:parseAudio(): warn: AAC sequence header does not contain AudioSpecificConfig');
         }
         break;
       case api.AAC_PACKET_TYPE_RAW:
@@ -194,9 +199,9 @@ var api = {
       info.avcPacketType = bits.read_byte();
       info.compositionTime = bits.read_bits(24);
     }
-//      if (info.avcPacketType isnt 1) and (info.compositionTime isnt 0)
-//        # TODO: Does this situation require special handling?
-//        logger.error "flv:readVideoDataTag(): AVCPacketType isn't 1 but CompositionTime isn't 0 (feature not implemented); AVCPacketType=#{info.avcPacketType} CompositionTime=#{info.compositionTime}"
+    //      if (info.avcPacketType isnt 1) and (info.compositionTime isnt 0)
+    //        # TODO: Does this situation require special handling?
+    //        logger.error "flv:readVideoDataTag(): AVCPacketType isn't 1 but CompositionTime isn't 0 (feature not implemented); AVCPacketType=#{info.avcPacketType} CompositionTime=#{info.compositionTime}"
     return info;
   },
 
@@ -234,13 +239,13 @@ var api = {
 
     // AUDIODATA tag: Adobe's Video File Format Spec v10.1 E.4.2.1 AUDIODATA
     const buf = [
-      (opts.soundFormat << 4)  // SoundFormat (4 bits)
-      | (soundRate << 2)       // SoundRate (2 bits): ignored by Flash Player if AAC
-      | (opts.soundSize << 1)  // SoundSize (1 bit)
-      | soundType               // SoundType (1 bit): ignored by Flash Player if AAC
+      (opts.soundFormat << 4) // SoundFormat (4 bits)
+      | (soundRate << 2) // SoundRate (2 bits): ignored by Flash Player if AAC
+      | (opts.soundSize << 1) // SoundSize (1 bit)
+      | soundType, // SoundType (1 bit): ignored by Flash Player if AAC
     ];
     if (opts.soundFormat === api.SOUND_FORMAT_AAC) {
-      buf.push(opts.aacPacketType);  // AACPacketType (1 bit)
+      buf.push(opts.aacPacketType); // AACPacketType (1 bit)
     }
     return buf;
   },
@@ -248,7 +253,7 @@ var api = {
   // Convert milliseconds into PTS (90 kHz clock)
   convertMsToPTS(ms) {
     return ms * 90;
-  }
+  },
 };
 
 module.exports = api;

@@ -1,3 +1,25 @@
+/* eslint-disable
+    camelcase,
+    consistent-return,
+    global-require,
+    guard-for-in,
+    no-cond-assign,
+    no-constant-condition,
+    no-param-reassign,
+    no-restricted-properties,
+    no-restricted-syntax,
+    no-return-assign,
+    no-undef,
+    no-underscore-dangle,
+    no-unused-vars,
+    no-useless-escape,
+    no-var,
+    one-var,
+    radix,
+    vars-on-top,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -29,19 +51,19 @@ const logger = require('./logger');
 const Bits = require('./bits');
 
 // enum
-const SESSION_STATE_NEW               = 1;
+const SESSION_STATE_NEW = 1;
 const SESSION_STATE_HANDSHAKE_ONGOING = 2;
-const SESSION_STATE_HANDSHAKE_DONE    = 3;
+const SESSION_STATE_HANDSHAKE_DONE = 3;
 
 const AVC_PACKET_TYPE_SEQUENCE_HEADER = 0;
-const AVC_PACKET_TYPE_NALU            = 1;
+const AVC_PACKET_TYPE_NALU = 1;
 const AVC_PACKET_TYPE_END_OF_SEQUENCE = 2;
 
 const EXTENDED_TIMESTAMP_TYPE_NOT_USED = 'not-used';
 const EXTENDED_TIMESTAMP_TYPE_ABSOLUTE = 'absolute';
-const EXTENDED_TIMESTAMP_TYPE_DELTA    = 'delta';
+const EXTENDED_TIMESTAMP_TYPE_DELTA = 'delta';
 
-const TIMESTAMP_ROUNDOFF = 4294967296;  // 32 bits
+const TIMESTAMP_ROUNDOFF = 4294967296; // 32 bits
 
 const DEBUG_INCOMING_STREAM_DATA = false;
 const DEBUG_INCOMING_RTMP_PACKETS = false;
@@ -67,7 +89,7 @@ let clientMaxId = 0;
 const queuedRTMPMessages = {};
 
 // Generate a new client ID without collision
-const generateNewClientID = function() {
+const generateNewClientID = function () {
   let clientID = generateClientID();
   while (sessions[clientID] != null) {
     clientID = generateClientID();
@@ -76,8 +98,8 @@ const generateNewClientID = function() {
 };
 
 // Generate a new random client ID (like Cookie)
-var generateClientID = function() {
-  const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+var generateClientID = function () {
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const numPossible = possible.length;
   let clientID = '';
   for (let i = 0; i <= 7; i++) {
@@ -86,98 +108,98 @@ var generateClientID = function() {
   return clientID;
 };
 
-const parseAcknowledgementMessage = function(buf) {
+const parseAcknowledgementMessage = function (buf) {
   const sequenceNumber = (buf[0] * Math.pow(256, 3)) + (buf[1] << 16) + (buf[2] << 8) + buf[3];
   return {
-    sequenceNumber
+    sequenceNumber,
   };
 };
 
-const convertPTSToMilliseconds = pts => Math.floor(pts / 90);
+const convertPTSToMilliseconds = (pts) => Math.floor(pts / 90);
 
-const createAudioMessage = function(params) {
+const createAudioMessage = function (params) {
   // TODO: Use type 1/2/3
   let audioMessage;
   return audioMessage = createRTMPMessage({
     chunkStreamID: 4,
     timestamp: params.timestamp,
-    messageTypeID: 0x08,  // Audio Data
+    messageTypeID: 0x08, // Audio Data
     messageStreamID: 1,
-    body: params.body
+    body: params.body,
   }
-  , params.chunkSize);
+    , params.chunkSize);
 };
 
-const clearQueuedRTMPMessages = function(stream) {
+const clearQueuedRTMPMessages = function (stream) {
   if (queuedRTMPMessages[stream.id] != null) {
     return queuedRTMPMessages[stream.id] = [];
   }
 };
 
-const queueRTMPMessages = function(stream, messages, params) {
-  for (let message of Array.from(messages)) {
+const queueRTMPMessages = function (stream, messages, params) {
+  for (const message of Array.from(messages)) {
     message.originalTimestamp = message.timestamp;
   }
   if (queuedRTMPMessages[stream.id] != null) {
     queuedRTMPMessages[stream.id].push(...Array.from(messages || []));
   } else {
-    queuedRTMPMessages[stream.id] = [ ...Array.from(messages) ]; // Prevent copying array as reference
+    queuedRTMPMessages[stream.id] = [...Array.from(messages)]; // Prevent copying array as reference
   }
 
   return flushRTMPMessages(stream, params);
 };
 
-const queueVideoMessage = function(stream, params) {
+const queueVideoMessage = function (stream, params) {
   params.avType = 'video';
   params.chunkStreamID = 4;
-  params.messageTypeID = 0x09;  // Video Data
+  params.messageTypeID = 0x09; // Video Data
   params.messageStreamID = 1;
   params.originalTimestamp = params.timestamp;
   if (queuedRTMPMessages[stream.id] != null) {
     queuedRTMPMessages[stream.id].push(params);
   } else {
-    queuedRTMPMessages[stream.id] = [ params ];
+    queuedRTMPMessages[stream.id] = [params];
   }
 
   return setImmediate(() => flushRTMPMessages(stream));
 };
 
-const queueAudioMessage = function(stream, params) {
+const queueAudioMessage = function (stream, params) {
   params.avType = 'audio';
   params.chunkStreamID = 4;
-  params.messageTypeID = 0x08;  // Audio Data
+  params.messageTypeID = 0x08; // Audio Data
   params.messageStreamID = 1;
   params.originalTimestamp = params.timestamp;
   if (queuedRTMPMessages[stream.id] != null) {
     queuedRTMPMessages[stream.id].push(params);
   } else {
-    queuedRTMPMessages[stream.id] = [ params ];
+    queuedRTMPMessages[stream.id] = [params];
   }
 
   return setImmediate(() => flushRTMPMessages(stream));
 };
 
-const createVideoMessage = function(params) {
+const createVideoMessage = function (params) {
   // TODO: Use type 1/2/3
   let videoMessage;
   return videoMessage = createRTMPMessage({
     chunkStreamID: 4,
     timestamp: params.timestamp,
-    messageTypeID: 0x09,  // Video Data
+    messageTypeID: 0x09, // Video Data
     messageStreamID: 1,
-    body: params.body
+    body: params.body,
   }
-  , params.chunkSize);
+    , params.chunkSize);
 };
 
-const parseUserControlMessage = function(buf) {
+const parseUserControlMessage = function (buf) {
   const eventType = (buf[0] << 8) + buf[1];
   const eventData = buf.slice(2);
   const message = {
     eventType,
-    eventData
+    eventData,
   };
-  if (eventType === 3) {  // SetBufferLength
+  if (eventType === 3) { // SetBufferLength
     // first 4 bytes: stream ID
     message.streamID = (eventData[0] << 24) + (eventData[1] << 16) +
       (eventData[2] << 8) + eventData[3];
@@ -188,17 +210,17 @@ const parseUserControlMessage = function(buf) {
   return message;
 };
 
-const parseIEEE754Double = function(buf) {
-  const sign = buf[0] >> 7;  // 1 == negative
+const parseIEEE754Double = function (buf) {
+  const sign = buf[0] >> 7; // 1 == negative
   let exponent = ((buf[0] & 0b1111111) << 4) + (buf[1] >> 4);
-  exponent -= 1023;  // because 1023 means zero
+  exponent -= 1023; // because 1023 means zero
   let fraction = 1;
   for (let i = 0; i <= 51; i++) {
     const byteIndex = 1 + parseInt((i + 4) / 8);
     const bitIndex = 7 - ((i + 4) % 8);
     const bitValue = (buf[byteIndex] >> bitIndex) & 0b1;
     if (bitValue > 0) {
-      fraction += Math.pow(2, -(i+1));
+      fraction += Math.pow(2, -(i + 1));
     }
   }
   let value = fraction * Math.pow(2, exponent);
@@ -208,7 +230,7 @@ const parseIEEE754Double = function(buf) {
   return value;
 };
 
-const parseAMF0StrictArray = function(buf) {
+const parseAMF0StrictArray = function (buf) {
   const arr = [];
   let len = (buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3];
   let readLen = 4;
@@ -220,7 +242,7 @@ const parseAMF0StrictArray = function(buf) {
   return { value: arr, readLen };
 };
 
-const parseAMF0ECMAArray = function(buf) {
+const parseAMF0ECMAArray = function (buf) {
   // associative-count
   const count = (buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3];
   const result = parseAMF0Object(buf.slice(4), count);
@@ -228,7 +250,7 @@ const parseAMF0ECMAArray = function(buf) {
   return result;
 };
 
-var parseAMF0Object = function(buf, maxItems=null) {
+var parseAMF0Object = function (buf, maxItems = null) {
   const obj = {};
   const bufLen = buf.length;
   let readLen = 0;
@@ -237,7 +259,7 @@ var parseAMF0Object = function(buf, maxItems=null) {
     while (readLen < bufLen) {
       var name;
       const nameLen = (buf[readLen++] << 8) + buf[readLen++];
-      if (nameLen > 0) {  // object-end-marker will follow
+      if (nameLen > 0) { // object-end-marker will follow
         name = buf.toString('utf8', readLen, readLen + nameLen);
         readLen += nameLen;
       } else {
@@ -265,16 +287,16 @@ var parseAMF0Object = function(buf, maxItems=null) {
 };
 
 // Do opposite of parseAMF0DataMessage()
-const serializeAMF0DataMessage = function(parsedObject) {
+const serializeAMF0DataMessage = function (parsedObject) {
   const bufs = [];
-  for (let object of Array.from(parsedObject.objects)) {
+  for (const object of Array.from(parsedObject.objects)) {
     bufs.push(createAMF0Data(object.value));
   }
   return Buffer.concat(bufs);
 };
 
 // Decode AMF0 data message buffer into AMF0 packets
-const parseAMF0DataMessage = function(buf) {
+const parseAMF0DataMessage = function (buf) {
   const amf0Packets = [];
   let remainingLen = buf.length;
   while (remainingLen > 0) {
@@ -284,12 +306,12 @@ const parseAMF0DataMessage = function(buf) {
     buf = buf.slice(result.readLen);
   }
   return {
-    objects: amf0Packets
+    objects: amf0Packets,
   };
 };
 
 // Decode buffer into AMF0 packets
-const parseAMF0CommandMessage = function(buf) {
+const parseAMF0CommandMessage = function (buf) {
   const amf0Packets = [];
   let remainingLen = buf.length;
   while (remainingLen > 0) {
@@ -297,7 +319,7 @@ const parseAMF0CommandMessage = function(buf) {
     try {
       result = parseAMF0Data(buf);
     } catch (e) {
-      logger.error("[rtmp] error parsing AMF0 command (maybe a bug); buf:");
+      logger.error('[rtmp] error parsing AMF0 command (maybe a bug); buf:');
       logger.error(buf);
       throw e;
     }
@@ -308,80 +330,80 @@ const parseAMF0CommandMessage = function(buf) {
   return {
     command: amf0Packets[0].value,
     transactionID: amf0Packets[1].value,
-    objects: amf0Packets.slice(2)
+    objects: amf0Packets.slice(2),
   };
 };
 
-var parseAMF0Data = function(buf) {
-  let result, value;
+var parseAMF0Data = function (buf) {
+  let result,
+    value;
   let i = 0;
   const type = buf[i++];
-  if (type === 0x00) {  // number-marker
+  if (type === 0x00) { // number-marker
     value = buf.readDoubleBE(i);
     return { type: 'number', value, readLen: i + 8 };
-  } else if (type === 0x01) {  // boolean-marker
-    value = buf[i] === 0x00 ? false : true;
+  } else if (type === 0x01) { // boolean-marker
+    value = buf[i] !== 0x00;
     return { type: 'boolean', value, readLen: i + 1 };
-  } else if (type === 0x02) {  // string-marker
+  } else if (type === 0x02) { // string-marker
     const strLen = (buf[i++] << 8) + buf[i++];
-    value = buf.toString('utf8', i, i+strLen);
+    value = buf.toString('utf8', i, i + strLen);
     return { type: 'string', value, readLen: i + strLen };
-  } else if (type === 0x03) {  // object-marker
+  } else if (type === 0x03) { // object-marker
     result = parseAMF0Object(buf.slice(i));
     return { type: 'object', value: result.value, readLen: i + result.readLen };
-  } else if (type === 0x05) {  // null-marker
+  } else if (type === 0x05) { // null-marker
     return { type: 'null', value: null, readLen: i };
-  } else if (type === 0x06) {  // undefined-marker
+  } else if (type === 0x06) { // undefined-marker
     return { type: 'undefined', value: undefined, readLen: i };
-  } else if (type === 0x08) {  // ecma-array-marker
+  } else if (type === 0x08) { // ecma-array-marker
     result = parseAMF0ECMAArray(buf.slice(i));
     return { type: 'array', value: result.value, readLen: i + result.readLen };
-  } else if (type === 0x09) {  // object-end-marker
+  } else if (type === 0x09) { // object-end-marker
     return { type: 'object-end-marker', readLen: i };
-  } else if (type === 0x0a) {  // strict-array-marker
+  } else if (type === 0x0a) { // strict-array-marker
     result = parseAMF0StrictArray(buf.slice(i));
     return { type: 'strict-array', value: result.value, readLen: i + result.readLen };
-  } else if (type === 0x0b) {  // date-marker
+  } else if (type === 0x0b) { // date-marker
     const time = buf.readDoubleBE(i);
     const date = new Date(time);
-    return { type: 'date', value: date, readLen: i + 10 };  // 8 (time) + 2 (time-zone)
-  } else {
-    throw new Error(`Unknown AMF0 data type: ${type}`);
+    return { type: 'date', value: date, readLen: i + 10 }; // 8 (time) + 2 (time-zone)
   }
+  throw new Error(`Unknown AMF0 data type: ${type}`);
 };
 
-var createAMF0Data = function(data) {
+var createAMF0Data = function (data) {
   const type = typeof data;
   let buf = null;
   if (type === 'number') {
     buf = new Buffer(9);
-    buf[0] = 0x00;  // number-marker
+    buf[0] = 0x00; // number-marker
     buf.writeDoubleBE(data, 1);
   } else if (type === 'boolean') {
     buf = new Buffer(2);
-    buf[0] = 0x01;  // boolean-marker
+    buf[0] = 0x01; // boolean-marker
     buf[1] = data ? 0x01 : 0x00;
   } else if (type === 'string') {
     buf = new Buffer(3);
-    buf[0] = 0x02;  // string-marker
+    buf[0] = 0x02; // string-marker
     const strBytes = new Buffer(data, 'utf8');
     const strLen = strBytes.length;
     buf[1] = (strLen >> 8) & 0xff;
     buf[2] = strLen & 0xff;
     buf = Buffer.concat([buf, strBytes], 3 + strLen);
   } else if (data === null) {
-    buf = new Buffer([ 0x05 ]);  // null-marker
+    buf = new Buffer([0x05]); // null-marker
   } else if (type === 'undefined') {
-    buf = new Buffer([ 0x06 ]);  // undefined-marker
+    buf = new Buffer([0x06]); // undefined-marker
   } else if (data instanceof Date) {
     buf = new Buffer(11);
-    buf[0] = 0x0b;  // date-marker
+    buf[0] = 0x0b; // date-marker
     buf.writeDoubleBE(data.getTime(), 1);
     // Time-zone should be 0x0000
     buf[9] = 0;
     buf[10] = 0;
   } else if (data instanceof Array) {
-    buf = new Buffer([ 0x0a ]);  // strict-array-marker
+    buf = new Buffer([0x0a]); // strict-array-marker
     buf = createAMF0StrictArray(data, buf);
   } else if (type === 'object') {
     buf = createAMF0Object(data);
@@ -391,7 +413,7 @@ var createAMF0Data = function(data) {
   return buf;
 };
 
-var createAMF0StrictArray = function(arr, buf=null) {
+var createAMF0StrictArray = function (arr, buf = null) {
   const bufs = [];
   let totalLength = 0;
   if (buf != null) {
@@ -405,7 +427,7 @@ var createAMF0StrictArray = function(arr, buf=null) {
     (arrLen >>> 24) & 0xff,
     (arrLen >>> 16) & 0xff,
     (arrLen >>> 8) & 0xff,
-    arrLen & 0xff
+    arrLen & 0xff,
   ]));
   totalLength += 4;
 
@@ -418,12 +440,12 @@ var createAMF0StrictArray = function(arr, buf=null) {
   return Buffer.concat(bufs, totalLength);
 };
 
-var createAMF0Object = function(obj) {
-  const buf = new Buffer([ 0x03 ]);  // object-marker
+var createAMF0Object = function (obj) {
+  const buf = new Buffer([0x03]); // object-marker
   return createAMF0PropertyList(obj, buf);
 };
 
-const createAMF0ECMAArray = function(obj) {
+const createAMF0ECMAArray = function (obj) {
   const count = Object.keys(obj).length;
   const buf = new Buffer([
     // ecma-array-marker
@@ -432,19 +454,19 @@ const createAMF0ECMAArray = function(obj) {
     (count >>> 24) & 0xff,
     (count >>> 16) & 0xff,
     (count >>> 8) & 0xff,
-    count & 0xff
+    count & 0xff,
   ]);
   return createAMF0PropertyList(obj, buf);
 };
 
-var createAMF0PropertyList = function(obj, buf=null) {
+var createAMF0PropertyList = function (obj, buf = null) {
   const bufs = [];
   let totalLength = 0;
   if (buf != null) {
     bufs.push(buf);
     totalLength += buf.length;
   }
-  for (let name in obj) {
+  for (const name in obj) {
     const value = obj[name];
     const nameBytes = new Buffer(name, 'utf8');
     const nameLen = nameBytes.length;
@@ -465,10 +487,13 @@ var createAMF0PropertyList = function(obj, buf=null) {
 
 const counter = 0;
 
-var flushRTMPMessages = function(stream, params) {
-  let clientID, i, rtmpMessage, session;
+var flushRTMPMessages = function (stream, params) {
+  let clientID,
+    i,
+    rtmpMessage,
+    session;
   if ((stream == null)) {
-    logger.error("[rtmp] error: flushRTMPMessages: Invalid stream");
+    logger.error('[rtmp] error: flushRTMPMessages: Invalid stream');
     return;
   }
 
@@ -487,21 +512,21 @@ var flushRTMPMessages = function(stream, params) {
   }
 
   // Move audio before video if the PTS are the same
-  rtmpMessagesToSend.sort(function(a, b) {
+  rtmpMessagesToSend.sort((a, b) => {
     let cmp = a.originalTimestamp - b.originalTimestamp;
     if (cmp === 0) {
       if (((a.avType == null)) || ((b.avType == null))) {
         cmp = 0;
       } else if (a.avType === b.avType) {
         cmp = 0;
-      } else if (a.avType === 'audio') {  // a=audio b=video
+      } else if (a.avType === 'audio') { // a=audio b=video
         cmp = -1;
-      } else if (b.avType === 'audio') {  // a=video b=audio
+      } else if (b.avType === 'audio') { // a=video b=audio
         cmp = 1;
       }
     }
     if (cmp === 0) {
-      cmp = a.index - b.index;  // keep the original order
+      cmp = a.index - b.index; // keep the original order
     }
     return cmp;
   });
@@ -523,7 +548,7 @@ var flushRTMPMessages = function(stream, params) {
   }
 
   for (session of Array.from(allSessions)) {
-    if ((session.stream != null ? session.stream.id : undefined) !== stream.id) {  // The session is not associated with current stream
+    if ((session.stream != null ? session.stream.id : undefined) !== stream.id) { // The session is not associated with current stream
       continue;
     }
     let msgs = null;
@@ -532,20 +557,20 @@ var flushRTMPMessages = function(stream, params) {
     // shows images looks like a glitch until the first keyframe.
     if (session.isWaitingForKeyFrame) {
       if (config.rtmpWaitForKeyFrame) {
-        if (stream.isVideoStarted) {  // has video stream
+        if (stream.isVideoStarted) { // has video stream
           for (i = 0; i < rtmpMessagesToSend.length; i++) {
             rtmpMessage = rtmpMessagesToSend[i];
             if ((rtmpMessage.avType === 'video') && rtmpMessage.isKeyFrame) {
               logger.info(`[rtmp:client=${session.clientid}] started playing stream ${stream.id}`);
               session.startPlaying();
               session.playStartTimestamp = rtmpMessage.originalTimestamp;
-              session.playStartDateTime = Date.now();  // TODO: Should we use slower process.hrtime()?
+              session.playStartDateTime = Date.now(); // TODO: Should we use slower process.hrtime()?
               session.isWaitingForKeyFrame = false;
               msgs = rtmpMessagesToSend.slice(i);
               break;
             }
           }
-        } else {  // audio only
+        } else { // audio only
           logger.info(`[rtmp:client=${session.clientid}] started playing stream ${stream.id}`);
           session.startPlaying();
           session.playStartTimestamp = rtmpMessagesToSend[0].originalTimestamp;
@@ -553,7 +578,7 @@ var flushRTMPMessages = function(stream, params) {
           session.isWaitingForKeyFrame = false;
           msgs = rtmpMessagesToSend;
         }
-      } else {  // Do not wait for a keyframe
+      } else { // Do not wait for a keyframe
         logger.info(`[rtmp:client=${session.clientid}] started playing stream ${stream.id}`);
         session.startPlaying();
         session.playStartTimestamp = rtmpMessagesToSend[0].originalTimestamp;
@@ -570,7 +595,8 @@ var flushRTMPMessages = function(stream, params) {
     }
 
     if (session.isPlaying) {
-      var buf, filteredMsgs;
+      var buf,
+        filteredMsgs;
       for (rtmpMessage of Array.from(msgs)) {
         // get milliseconds elapsed since play start
         rtmpMessage.timestamp = session.getScaledTimestamp(rtmpMessage.originalTimestamp) % TIMESTAMP_ROUNDOFF;
@@ -600,7 +626,7 @@ var flushRTMPMessages = function(stream, params) {
       if (((params != null ? params.hasControlMessage : undefined) !== true) && (filteredMsgs.length > 1)) {
         buf = createRTMPAggregateMessage(filteredMsgs, session.chunkSize);
         if (DEBUG_OUTGOING_RTMP_PACKETS) {
-          logger.info(`send RTMP agg msg: ${buf.length} bytes; time=` + filteredMsgs.map(item => `${(item.avType != null ? item.avType[0] : undefined) != null ? (item.avType != null ? item.avType[0] : undefined) : 'other'}${(item.avType === 'video') && item.isKeyFrame ? '(key)' : ''}:${item.timestamp}${(item.avType === 'video') && (item.compositionTime !== 0) ? `(cmp=${item.timestamp+item.compositionTime})` : ''}`).join(','));
+          logger.info(`send RTMP agg msg: ${buf.length} bytes; time=${filteredMsgs.map((item) => `${(item.avType != null ? item.avType[0] : undefined) != null ? (item.avType != null ? item.avType[0] : undefined) : 'other'}${(item.avType === 'video') && item.isKeyFrame ? '(key)' : ''}:${item.timestamp}${(item.avType === 'video') && (item.compositionTime !== 0) ? `(cmp=${item.timestamp + item.compositionTime})` : ''}`).join(',')}`);
         }
         session.sendData(buf);
       } else {
@@ -610,28 +636,27 @@ var flushRTMPMessages = function(stream, params) {
         }
         buf = Buffer.concat(bufs);
         if (DEBUG_OUTGOING_RTMP_PACKETS) {
-          logger.info(`send RTMP msg: ${buf.length} bytes; time=` + filteredMsgs.map(item => `${(item.avType != null ? item.avType[0] : undefined) != null ? (item.avType != null ? item.avType[0] : undefined) : 'other'}:${item.timestamp}`).join(','));
+          logger.info(`send RTMP msg: ${buf.length} bytes; time=${filteredMsgs.map((item) => `${(item.avType != null ? item.avType[0] : undefined) != null ? (item.avType != null ? item.avType[0] : undefined) : 'other'}:${item.timestamp}`).join(',')}`);
         }
         session.sendData(buf);
       }
 
-      session.lastSentTimestamp = filteredMsgs[filteredMsgs.length-1].timestamp;
+      session.lastSentTimestamp = filteredMsgs[filteredMsgs.length - 1].timestamp;
     }
   }
-
 };
 
 // RTMP Message Header used in Aggregate Message
-const createMessageHeader = function(params) {
+const createMessageHeader = function (params) {
   const payloadLength = params.body.length;
   if ((params.messageTypeID == null)) {
-    logger.warn("[rtmp] warning: createMessageHeader(): messageTypeID is not set");
+    logger.warn('[rtmp] warning: createMessageHeader(): messageTypeID is not set');
   }
   if ((params.timestamp == null)) {
-    logger.warn("[rtmp] warning: createMessageHeader(): timestamp is not set");
+    logger.warn('[rtmp] warning: createMessageHeader(): timestamp is not set');
   }
   if ((params.messageStreamID == null)) {
-    logger.warn("[rtmp] warning: createMessageHeader(): messageStreamID is not set");
+    logger.warn('[rtmp] warning: createMessageHeader(): messageStreamID is not set');
   }
   // 6.1.1.  Message Header
   return new Buffer([
@@ -653,11 +678,11 @@ const createMessageHeader = function(params) {
 };
 
 // All sub-messages must have the same chunk stream ID
-var createRTMPAggregateMessage = function(rtmpMessages, chunkSize) {
+var createRTMPAggregateMessage = function (rtmpMessages, chunkSize) {
   const bufs = [];
   let totalLength = 0;
   let aggregateTimestamp = null;
-  for (let rtmpMessage of Array.from(rtmpMessages)) {
+  for (const rtmpMessage of Array.from(rtmpMessages)) {
     if ((aggregateTimestamp == null)) {
       aggregateTimestamp = rtmpMessage.timestamp;
     }
@@ -669,7 +694,7 @@ var createRTMPAggregateMessage = function(rtmpMessages, chunkSize) {
       (len >>> 24) & 0xff,
       (len >>> 16) & 0xff,
       (len >>> 8) & 0xff,
-      len & 0xff
+      len & 0xff,
     ]));
     totalLength += len + 4;
   }
@@ -678,33 +703,33 @@ var createRTMPAggregateMessage = function(rtmpMessages, chunkSize) {
   return createRTMPMessage({
     chunkStreamID: 4,
     timestamp: aggregateTimestamp,
-    messageTypeID: 22,  // Aggregate Message
+    messageTypeID: 22, // Aggregate Message
     messageStreamID: 1,
-    body: aggregateBody
+    body: aggregateBody,
   }
-  , chunkSize);
+    , chunkSize);
 };
 
-const createRTMPType1Message = function(params) {
+const createRTMPType1Message = function (params) {
   let ordinaryTimestampBytes;
   const bodyLength = params.body.length;
   const formatTypeID = 1;
   if ((params.body == null)) {
-    logger.warn("[rtmp] warning: createRTMPType1Message(): body is not set for RTMP message");
+    logger.warn('[rtmp] warning: createRTMPType1Message(): body is not set for RTMP message');
   }
   if ((params.chunkStreamID == null)) {
-    logger.warn("[rtmp] warning: createRTMPType1Message(): chunkStreamID is not set for RTMP message");
+    logger.warn('[rtmp] warning: createRTMPType1Message(): chunkStreamID is not set for RTMP message');
   }
   if ((params.timestampDelta == null)) {
-    logger.warn("[rtmp] warning: createRTMPType1Message(): timestampDelta is not set for RTMP message");
+    logger.warn('[rtmp] warning: createRTMPType1Message(): timestampDelta is not set for RTMP message');
   }
   if ((params.messageStreamID == null)) {
-    logger.warn("[rtmp] warning: createRTMPType1Message(): messageStreamID is not set for RTMP message");
+    logger.warn('[rtmp] warning: createRTMPType1Message(): messageStreamID is not set for RTMP message');
   }
   let useExtendedTimestamp = false;
   if (params.timestampDelta >= 0xffffff) {
     useExtendedTimestamp = true;
-    ordinaryTimestampBytes = [ 0xff, 0xff, 0xff ];
+    ordinaryTimestampBytes = [0xff, 0xff, 0xff];
   } else {
     ordinaryTimestampBytes = [
       (params.timestampDelta >> 16) & 0xff,
@@ -736,35 +761,35 @@ const createRTMPType1Message = function(params) {
       params.timestampDelta & 0xff,
     ]);
     header = Buffer.concat([
-      header, extendedTimestamp
+      header, extendedTimestamp,
     ], 12);
   }
   const { body } = params;
   return Buffer.concat([header, body], 8 + bodyLength);
 };
 
-var createRTMPMessage = function(params, chunkSize) {
+var createRTMPMessage = function (params, chunkSize) {
   let timestamp;
   if (chunkSize == null) { chunkSize = 128; }
   let bodyLength = params.body.length;
   // TODO: Use format type ID 1 and 2
   const formatTypeID = 0;
   if ((params.body == null)) {
-    logger.warn("[rtmp] warning: createRTMPMessage(): body is not set for RTMP message");
+    logger.warn('[rtmp] warning: createRTMPMessage(): body is not set for RTMP message');
   }
   if ((params.chunkStreamID == null)) {
-    logger.warn("[rtmp] warning: createRTMPMessage(): chunkStreamID is not set for RTMP message");
+    logger.warn('[rtmp] warning: createRTMPMessage(): chunkStreamID is not set for RTMP message');
   }
   if ((params.timestamp == null)) {
-    logger.warn("[rtmp] warning: createRTMPMessage(): timestamp is not set for RTMP message");
+    logger.warn('[rtmp] warning: createRTMPMessage(): timestamp is not set for RTMP message');
   }
   if ((params.messageStreamID == null)) {
-    logger.warn("[rtmp] warning: createRTMPMessage(): messageStreamID is not set for RTMP message");
+    logger.warn('[rtmp] warning: createRTMPMessage(): messageStreamID is not set for RTMP message');
   }
   let useExtendedTimestamp = false;
   if (params.timestamp >= 0xffffff) {
     useExtendedTimestamp = true;
-    timestamp = [ 0xff, 0xff, 0xff ];
+    timestamp = [0xff, 0xff, 0xff];
   } else {
     timestamp = [
       (params.timestamp >> 16) & 0xff,
@@ -793,7 +818,7 @@ var createRTMPMessage = function(params, chunkSize) {
       (params.messageStreamID >>> 8) & 0xff,
       (params.messageStreamID >>> 16) & 0xff,
       (params.messageStreamID >>> 24) & 0xff,
-    ])
+    ]),
   ];
   let totalLength = 12;
   if (useExtendedTimestamp) {
@@ -814,7 +839,7 @@ var createRTMPMessage = function(params, chunkSize) {
 
     // Use Format Type 3 for remaining chunks
     const type3Header = new Buffer([
-      (3 << 6) | params.chunkStreamID
+      (3 << 6) | params.chunkStreamID,
     ]);
     while (true) {
       const bodyChunk = body.slice(0, chunkSize);
@@ -837,43 +862,43 @@ var createRTMPMessage = function(params, chunkSize) {
 
 const createAMF0DataMessage = (params, chunkSize) => createRTMPMessage(createAMF0DataMessageParams(params), chunkSize);
 
-var createAMF0DataMessageParams = function(params) {
+var createAMF0DataMessageParams = function (params) {
   let len = 0;
-  for (let obj of Array.from(params.objects)) {
+  for (const obj of Array.from(params.objects)) {
     len += obj.length;
   }
   const amf0Bytes = Buffer.concat(params.objects, len);
   return {
     chunkStreamID: params.chunkStreamID,
     timestamp: params.timestamp,
-    messageTypeID: 0x12,  // AMF0 Data
+    messageTypeID: 0x12, // AMF0 Data
     messageStreamID: params.messageStreamID,
-    body: amf0Bytes
+    body: amf0Bytes,
   };
 };
 
 const createAMF0CommandMessage = (params, chunkSize) => createRTMPMessage(createAMF0CommandMessageParams(params), chunkSize);
 
-var createAMF0CommandMessageParams = function(params) {
+var createAMF0CommandMessageParams = function (params) {
   const commandBuf = createAMF0Data(params.command);
   const transactionIDBuf = createAMF0Data(params.transactionID);
   let len = commandBuf.length + transactionIDBuf.length;
-  for (let obj of Array.from(params.objects)) {
+  for (const obj of Array.from(params.objects)) {
     len += obj.length;
   }
   const amf0Bytes = Buffer.concat([commandBuf, transactionIDBuf, ...Array.from(params.objects)], len);
   return {
     chunkStreamID: params.chunkStreamID,
     timestamp: params.timestamp,
-    messageTypeID: 0x14,  // AMF0 Command
+    messageTypeID: 0x14, // AMF0 Command
     messageStreamID: params.messageStreamID,
-    body: amf0Bytes
+    body: amf0Bytes,
   };
 };
 
 class RTMPSession {
   constructor(socket) {
-    logger.debug("[rtmp] created a new session");
+    logger.debug('[rtmp] created a new session');
     this.listeners = {};
     this.state = SESSION_STATE_NEW;
     this.socket = socket;
@@ -925,7 +950,7 @@ class RTMPSession {
         break;
       case flv.AVC_PACKET_TYPE_NALU:
         if ((this.avcInfo == null)) {
-          throw new Error("[rtmp:publish] malformed video data: avcInfo is missing");
+          throw new Error('[rtmp:publish] malformed video data: avcInfo is missing');
         }
         // TODO: This must be too heavy and needs better alternative.
         var nalUnits = flv.splitNALUnits(info.nalUnits, this.avcInfo.nalUnitLengthSize);
@@ -940,7 +965,7 @@ class RTMPSession {
     return {
       info,
       nalUnitGlob,
-      isEOS
+      isEOS,
     };
   }
 
@@ -949,34 +974,34 @@ class RTMPSession {
     let adtsFrame = null;
     const { stream } = this;
     if ((stream == null)) {
-      throw new Error("[rtmp] Stream not set for this session");
+      throw new Error('[rtmp] Stream not set for this session');
     }
     switch (info.audioDataTag.aacPacketType) {
       case flv.AAC_PACKET_TYPE_SEQUENCE_HEADER:
         if (info.audioSpecificConfig != null) {
           stream.updateConfig({
             audioSpecificConfig: info.audioSpecificConfig,
-            audioASCInfo: info.ascInfo
+            audioASCInfo: info.ascInfo,
           });
         } else {
-          logger.warn("[rtmp] skipping empty AudioSpecificConfig");
+          logger.warn('[rtmp] skipping empty AudioSpecificConfig');
         }
         break;
       case flv.AAC_PACKET_TYPE_RAW:
         if ((stream.audioASCInfo == null)) {
-          logger.error("[rtmp:publish] malformed audio data: AudioSpecificConfig is missing");
+          logger.error('[rtmp:publish] malformed audio data: AudioSpecificConfig is missing');
         }
 
         // TODO: This must be a little heavy and needs better alternative.
         var adtsHeader = new Buffer(aac.createADTSHeader(stream.audioASCInfo, info.rawDataBlock.length));
-        adtsFrame = Buffer.concat([ adtsHeader, info.rawDataBlock ]);
+        adtsFrame = Buffer.concat([adtsHeader, info.rawDataBlock]);
         break;
       default:
         throw new Error(`[rtmp:publish] unknown AAC_PACKET_TYPE: ${info.audioDataTag.aacPacketType}`);
     }
     return {
       info,
-      adtsFrame
+      adtsFrame,
     };
   }
 
@@ -1006,7 +1031,7 @@ class RTMPSession {
       logger.info(`[rtmp:client=${this.clientid}] session timeout`);
       return this.teardown();
     }
-    , config.rtmpSessionTimeoutMs);
+      , config.rtmpSessionTimeoutMs);
   }
 
   schedulePing() {
@@ -1016,11 +1041,11 @@ class RTMPSession {
     }
     return this.pingTimer = setTimeout(() => {
       if ((Date.now() - this.lastPingScheduledTime) < config.rtmpPingTimeoutMs) {
-        logger.debug("[rtmp] ping timeout canceled");
+        logger.debug('[rtmp] ping timeout canceled');
       }
       return this.ping();
     }
-    , config.rtmpPingTimeoutMs);
+      , config.rtmpPingTimeoutMs);
   }
 
   ping() {
@@ -1028,7 +1053,7 @@ class RTMPSession {
     const pingRequest = createRTMPMessage({
       chunkStreamID: 2,
       timestamp: currentTimestamp,
-      messageTypeID: 0x04,  // User Control Message
+      messageTypeID: 0x04, // User Control Message
       messageStreamID: 0,
       body: new Buffer([
         // Event Type: 6=PingRequest
@@ -1037,8 +1062,8 @@ class RTMPSession {
         (currentTimestamp >> 24) & 0xff,
         (currentTimestamp >> 16) & 0xff,
         (currentTimestamp >> 8) & 0xff,
-        currentTimestamp & 0xff
-      ])});
+        currentTimestamp & 0xff,
+      ]) });
 
     return this.sendData(pingRequest);
   }
@@ -1050,7 +1075,7 @@ class RTMPSession {
 
   teardown() {
     if (this.isTearedDown) {
-      logger.debug("[rtmp] already teared down");
+      logger.debug('[rtmp] already teared down');
       return;
     }
     this.isTearedDown = true;
@@ -1091,14 +1116,14 @@ class RTMPSession {
 
   createVideoMessage(params) {
     params.chunkStreamID = 4;
-    params.messageTypeID = 0x09;  // Video Data
+    params.messageTypeID = 0x09; // Video Data
     params.messageStreamID = 1;
     return this.createAVMessage(params);
   }
 
   createAudioMessage(params) {
     params.chunkStreamID = 4;
-    params.messageTypeID = 0x08;  // Audio Data
+    params.messageTypeID = 0x08; // Audio Data
     params.messageStreamID = 1;
     return this.createAVMessage(params);
   }
@@ -1144,7 +1169,7 @@ class RTMPSession {
     if ((this.listeners[event] == null)) {
       return;
     }
-    for (let listener of Array.from(this.listeners[event])) {
+    for (const listener of Array.from(this.listeners[event])) {
       listener(...Array.from(args || []));
     }
   }
@@ -1168,7 +1193,7 @@ class RTMPSession {
       if (_listener === listener) {
         logger.debug(`[rtmp] removed listener for ${event}`);
         const actualIndex = i - removedCount;
-        listeners.splice(actualIndex, actualIndex - actualIndex + 1, ...[].concat([]));  // Remove element
+        listeners.splice(actualIndex, actualIndex - actualIndex + 1, ...[].concat([])); // Remove element
         removedCount++;
       }
     }
@@ -1183,7 +1208,7 @@ class RTMPSession {
       buf = arr;
     } else {
       let len = 0;
-      for (let item of Array.from(arr)) {
+      for (const item of Array.from(arr)) {
         len += item.length;
       }
       buf = Buffer.concat(arr, len);
@@ -1198,14 +1223,14 @@ class RTMPSession {
     const streamBegin0 = createRTMPMessage({
       chunkStreamID: 2,
       timestamp: 0,
-      messageTypeID: 0x04,  // User Control Message
+      messageTypeID: 0x04, // User Control Message
       messageStreamID: 0,
       body: new Buffer([
         // Stream Begin (see 7.1.7. User Control Message Events)
         0, 0,
         // Stream ID of the stream that became functional
-        0, 0, 0, 0
-      ])});
+        0, 0, 0, 0,
+      ]) });
 
     const _error = createAMF0CommandMessage({
       chunkStreamID: 3,
@@ -1218,9 +1243,9 @@ class RTMPSession {
         createAMF0Object({
           level: 'error',
           code: 'NetConnection.Connect.Rejected',
-          description: `[ Server.Reject ] : (_defaultRoot_, ) : Invalid application name(/${this.app}).`
-        })
-      ]});
+          description: `[ Server.Reject ] : (_defaultRoot_, ) : Invalid application name(/${this.app}).`,
+        }),
+      ] });
 
     const close = createAMF0CommandMessage({
       chunkStreamID: 3,
@@ -1229,15 +1254,15 @@ class RTMPSession {
       command: 'close',
       transactionID: 0,
       objects: [
-        createAMF0Data(null)
-      ]});
+        createAMF0Data(null),
+      ] });
 
-    return callback(null, this.concatenate([ streamBegin0, _error, close ]));
+    return callback(null, this.concatenate([streamBegin0, _error, close]));
   }
 
   respondConnect(commandMessage, callback) {
     let { app } = commandMessage.objects[0].value;
-    app = app.replace(/\/$/, '');  // JW Player adds / at the end
+    app = app.replace(/\/$/, ''); // JW Player adds / at the end
     this.app = app;
 
     if ((app !== config.liveApplicationName) && (app !== config.recordedApplicationName)) {
@@ -1251,39 +1276,39 @@ class RTMPSession {
     const windowAck = createRTMPMessage({
       chunkStreamID: 2,
       timestamp: 0,
-      messageTypeID: 0x05,  // Window Acknowledgement Size
+      messageTypeID: 0x05, // Window Acknowledgement Size
       messageStreamID: 0,
       // 0x140000 == 1310720
       // 0x2625a0 == 2500000
       body: new Buffer([
         // Acknowledgement Window Size (4 bytes)
-//        0, 0x14, 0, 0
-        0, 0x26, 0x25, 0xa0
-      ])});
+        //        0, 0x14, 0, 0
+        0, 0x26, 0x25, 0xa0,
+      ]) });
 
     const setPeerBandwidth = createRTMPMessage({
       chunkStreamID: 2,
       timestamp: 0,
-      messageTypeID: 0x06,  // Set Peer Bandwidth
+      messageTypeID: 0x06, // Set Peer Bandwidth
       messageStreamID: 0,
       body: new Buffer([
         // Window acknowledgement size (4 bytes)
         0, 0x26, 0x25, 0xa0,
         // Limit Type
-        0x02
-      ])});
+        0x02,
+      ]) });
 
     const streamBegin0 = createRTMPMessage({
       chunkStreamID: 2,
       timestamp: 0,
-      messageTypeID: 0x04,  // User Control Message
+      messageTypeID: 0x04, // User Control Message
       messageStreamID: 0,
       body: new Buffer([
         // Stream Begin (see 7.1.7. User Control Message Events)
         0, 0,
         // Stream ID of the stream that became functional
-        0, 0, 0, 0
-      ])});
+        0, 0, 0, 0,
+      ]) });
 
     // 7.2.1.1.  connect
     const connectResult = createAMF0CommandMessage({
@@ -1291,19 +1316,19 @@ class RTMPSession {
       timestamp: 0,
       messageStreamID: 0,
       command: '_result',
-      transactionID: 1,  // Always 1
+      transactionID: 1, // Always 1
       objects: [
         createAMF0Object({
           fmsVer: 'FMS/3,0,4,423',
-          capabilities: 31
+          capabilities: 31,
         }),
         createAMF0Object({
           level: 'status',
           code: 'NetConnection.Connect.Success',
           description: 'Connection succeeded.',
-          objectEncoding: this.objectEncoding != null ? this.objectEncoding : 0
-        })
-      ]});
+          objectEncoding: this.objectEncoding != null ? this.objectEncoding : 0,
+        }),
+      ] });
 
     const onBWDone = createAMF0CommandMessage({
       chunkStreamID: 3,
@@ -1311,38 +1336,36 @@ class RTMPSession {
       messageStreamID: 0,
       command: 'onBWDone',
       transactionID: 0,
-      objects: [ createAMF0Data(null) ]});
+      objects: [createAMF0Data(null)] });
 
     return callback(null, this.concatenate([
       windowAck, setPeerBandwidth, streamBegin0, connectResult,
-      onBWDone
+      onBWDone,
     ]));
   }
 
   encrypt(data) {
-    const isSingleByte = typeof(data) === 'number';
+    const isSingleByte = typeof (data) === 'number';
     if (isSingleByte) {
-      data = new Buffer([ data ]);
+      data = new Buffer([data]);
     }
     const result = this.cipherIn.update(data);
     if (isSingleByte) {
       return result[0];
-    } else {
-      return result;
     }
+    return result;
   }
 
   decrypt(data) {
-    const isSingleByte = typeof(data) === 'number';
+    const isSingleByte = typeof (data) === 'number';
     if (isSingleByte) {
-      data = new Buffer([ data ]);
+      data = new Buffer([data]);
     }
     const result = this.cipherOut.update(data);
     if (isSingleByte) {
       return result[0];
-    } else {
-      return result;
     }
+    return result;
   }
 
   respondHandshake(c0c1, callback) {
@@ -1352,14 +1375,14 @@ class RTMPSession {
         this.useEncryption = true;
         logger.info(`[rtmp:client=${this.clientid}] enabled encryption`);
 
-        this.clientPublicKey  = keys.clientPublicKey;
+        this.clientPublicKey = keys.clientPublicKey;
         this.dh = keys.dh;
         this.sharedSecret = this.dh.computeSecret(this.clientPublicKey);
         this.keyOut = codec_utils.calcHmac(this.dh.getPublicKey(), this.sharedSecret).slice(0, 16);
         this.keyIn = codec_utils.calcHmac(this.clientPublicKey, this.sharedSecret).slice(0, 16);
 
         this.cipherOut = crypto.createCipheriv('rc4', this.keyOut, '');
-        this.cipherIn  = crypto.createCipheriv('rc4', this.keyIn, '');
+        this.cipherIn = crypto.createCipheriv('rc4', this.keyIn, '');
         const zeroBytes = new Buffer(1536);
         zeroBytes.fill(0);
         this.encrypt(zeroBytes);
@@ -1375,7 +1398,10 @@ class RTMPSession {
     let consumedLen = 0;
 
     while (rtmpMessage.length > 1) {
-      var chunkBody, chunkMessageHeader, previousChunk, remainingMessageLen;
+      var chunkBody,
+        chunkMessageHeader,
+        previousChunk,
+        remainingMessageLen;
       let headerLen = 0;
       const message = {};
 
@@ -1418,21 +1444,21 @@ class RTMPSession {
       const chunkBasicHeader = rtmpMessage[0];
       message.formatType = chunkBasicHeader >> 6;
       message.chunkStreamID = chunkBasicHeader & 0b111111;
-      if (message.chunkStreamID === 0) {  // Chunk basic header 2
-        if (rtmpMessage.length < 2) {  // buffer is incomplete
+      if (message.chunkStreamID === 0) { // Chunk basic header 2
+        if (rtmpMessage.length < 2) { // buffer is incomplete
           break;
         }
         message.chunkStreamID = rtmpMessage[1] + 64;
         chunkMessageHeader = rtmpMessage.slice(2);
         headerLen += 2;
-      } else if (message.chunkStreamID === 1) {  // Chunk basic header 3
-        if (rtmpMessage.length < 3) {  // buffer is incomplete
+      } else if (message.chunkStreamID === 1) { // Chunk basic header 3
+        if (rtmpMessage.length < 3) { // buffer is incomplete
           break;
         }
         message.chunkStreamID = (rtmpMessage[1] << 8) + rtmpMessage[2] + 64;
         chunkMessageHeader = rtmpMessage.slice(3);
         headerLen += 3;
-      } else {  // Chunk basic header 1
+      } else { // Chunk basic header 1
         chunkMessageHeader = rtmpMessage.slice(1);
         headerLen += 1;
       }
@@ -1471,8 +1497,8 @@ class RTMPSession {
       // ---------------
       // ---------------
 
-      if (message.formatType === 0) {  // Type 0 (11 bytes)
-        if (chunkMessageHeader.length < 11) {  // buffer is incomplete
+      if (message.formatType === 0) { // Type 0 (11 bytes)
+        if (chunkMessageHeader.length < 11) { // buffer is incomplete
           break;
         }
         message.timestamp = (chunkMessageHeader[0] << 16) +
@@ -1488,11 +1514,11 @@ class RTMPSession {
         message.messageLength = (chunkMessageHeader[3] << 16) +
           (chunkMessageHeader[4] << 8) + chunkMessageHeader[5];
         message.messageTypeID = chunkMessageHeader[6];
-        message.messageStreamID = chunkMessageHeader.readUInt32LE(7);  // TODO: signed or unsigned?
+        message.messageStreamID = chunkMessageHeader.readUInt32LE(7); // TODO: signed or unsigned?
         chunkBody = chunkMessageHeader.slice(11);
         headerLen += 11;
-      } else if (message.formatType === 1) {  // Type 1 (7 bytes)
-        if (chunkMessageHeader.length < 7) {  // buffer is incomplete
+      } else if (message.formatType === 1) { // Type 1 (7 bytes)
+        if (chunkMessageHeader.length < 7) { // buffer is incomplete
           break;
         }
         message.timestampDelta = (chunkMessageHeader[0] << 16) +
@@ -1516,8 +1542,8 @@ class RTMPSession {
         }
         chunkBody = chunkMessageHeader.slice(7);
         headerLen += 7;
-      } else if (message.formatType === 2) {  // Type 2 (3 bytes)
-        if (chunkMessageHeader.length < 3) {  // buffer is incomplete
+      } else if (message.formatType === 2) { // Type 2 (3 bytes)
+        if (chunkMessageHeader.length < 3) { // buffer is incomplete
           break;
         }
         message.timestampDelta = (chunkMessageHeader[0] << 16) +
@@ -1540,7 +1566,7 @@ class RTMPSession {
         }
         chunkBody = chunkMessageHeader.slice(3);
         headerLen += 3;
-      } else if (message.formatType === 3) {  // Type 3 (0 byte)
+      } else if (message.formatType === 3) { // Type 3 (0 byte)
         previousChunk = this.previousChunkMessage[message.chunkStreamID];
         if (previousChunk != null) {
           message.timestamp = previousChunk.timestamp;
@@ -1559,7 +1585,7 @@ class RTMPSession {
 
       // 5.3.1.3. Extended Timestamp
       if (message.extendedTimestampType === EXTENDED_TIMESTAMP_TYPE_ABSOLUTE) {
-        if (chunkBody.length < 4) {  // buffer is incomplete
+        if (chunkBody.length < 4) { // buffer is incomplete
           break;
         }
         message.timestamp = (chunkBody[0] * Math.pow(256, 3)) +
@@ -1567,7 +1593,7 @@ class RTMPSession {
         chunkBody = chunkBody.slice(4);
         headerLen += 4;
       } else if (message.extendedTimestampType === EXTENDED_TIMESTAMP_TYPE_DELTA) {
-        if (chunkBody.length < 4) {  // buffer is incomplete
+        if (chunkBody.length < 4) { // buffer is incomplete
           break;
         }
         message.timestampDelta = (chunkBody[0] * Math.pow(256, 3)) +
@@ -1584,7 +1610,7 @@ class RTMPSession {
       }
       const chunkPayloadSize = Math.min(this.receiveChunkSize, remainingMessageLen);
 
-      if (chunkBody.length < chunkPayloadSize) {  // buffer is incomplete
+      if (chunkBody.length < chunkPayloadSize) { // buffer is incomplete
         break;
       }
 
@@ -1596,14 +1622,14 @@ class RTMPSession {
 
       if ((previousChunk != null) && previousChunk.isIncomplete) {
         // Do not count timestampDelta
-        message.body = Buffer.concat([ previousChunk.body, chunkBody ]);
+        message.body = Buffer.concat([previousChunk.body, chunkBody]);
       } else {
         message.body = chunkBody;
 
         // Calculate timestamp for this message
         if (message.timestampDelta != null) {
           if ((message.timestamp == null)) {
-            throw new Error("timestamp delta is given, but base timestamp is not known");
+            throw new Error('timestamp delta is given, but base timestamp is not known');
           }
           message.timestamp += message.timestampDelta;
 
@@ -1618,7 +1644,7 @@ class RTMPSession {
         // TODO: Is this check redundant?
         if (message.body.length !== message.messageLength) {
           logger.warn("[rtmp] warning: message lengths don't match: " +
-            `got=${message.body.length} expected=${message.messageLength}`
+            `got=${message.body.length} expected=${message.messageLength}`,
           );
         }
 
@@ -1634,7 +1660,7 @@ class RTMPSession {
 
     return {
       consumedLen,
-      rtmpMessages: messages
+      rtmpMessages: messages,
     };
   }
 
@@ -1653,18 +1679,17 @@ class RTMPSession {
       transactionID: requestCommand.transactionID,
       objects: [
         createAMF0Data(null),
-        createAMF0Data(null)
-      ]});
+        createAMF0Data(null),
+      ] });
     return callback(null, _result);
   }
 
   // @setDataFrame
   receiveSetDataFrame(requestData) {
     if (requestData.objects[1].value === 'onMetaData') {
-      return logger.debug("[rtmp:receive] received @setDataFrame onMetaData");
-    } else {
-      throw new Error(`Unknown @setDataFrame: ${requestData.objects[1].value}`);
+      return logger.debug('[rtmp:receive] received @setDataFrame onMetaData');
     }
+    throw new Error(`Unknown @setDataFrame: ${requestData.objects[1].value}`);
   }
 
   respondFCUnpublish(requestCommand, callback) {
@@ -1678,8 +1703,8 @@ class RTMPSession {
       transactionID: requestCommand.transactionID,
       objects: [
         createAMF0Data(null),
-        createAMF0Data(null)
-      ]});
+        createAMF0Data(null),
+      ] });
 
     const unpublishSuccess = createAMF0CommandMessage({
       chunkStreamID: 4,
@@ -1694,21 +1719,23 @@ class RTMPSession {
           code: 'NetStream.Unpublish.Success',
           description: '',
           details: streamName,
-          clientid: this.clientid
-        })
-      ]
+          clientid: this.clientid,
+        }),
+      ],
     }
-    , this.chunkSize);
+      , this.chunkSize);
 
     return callback(null, this.concatenate([
       _result,
-      unpublishSuccess
+      unpublishSuccess,
     ]));
   }
 
   // 7.2.2.6. publish
   respondPublish(requestCommand, callback) {
-    let match, publishStart, streamName;
+    let match,
+      publishStart,
+      streamName;
     this.receiveTimestamp = null;
     let publishingName = requestCommand.objects[1] != null ? requestCommand.objects[1].value : undefined;
 
@@ -1726,11 +1753,11 @@ class RTMPSession {
             code: 'NetStream.Publish.Start',
             description: 'Publishing Name parameter is invalid.',
             details: this.app,
-            clientid: this.clientid
-          })
-        ]
+            clientid: this.clientid,
+          }),
+        ],
       }
-      , this.chunkSize);
+        , this.chunkSize);
       return callback(null, publishStart);
     }
 
@@ -1740,16 +1767,16 @@ class RTMPSession {
     if (urlInfo.query != null) {
       const pairs = urlInfo.query.split('&');
       const params = {};
-      for (let pair of Array.from(pairs)) {
+      for (const pair of Array.from(pairs)) {
         const kv = pair.split('=');
-        params[ kv[0] ] = kv[1];
+        params[kv[0]] = kv[1];
       }
       // TODO: Use this information for something
       // totalDatarate: Total kbps for video + audio
       logger.info(JSON.stringify(params));
     }
 
-    publishingName = this.app + '/' + urlInfo.pathname;
+    publishingName = `${this.app}/${urlInfo.pathname}`;
     this.streamId = publishingName;
     let stream = avstreams.get(this.streamId);
     if (stream != null) {
@@ -1789,11 +1816,11 @@ class RTMPSession {
           code: 'NetStream.Publish.Start',
           description: '',
           details: streamName,
-          clientid: this.clientid
-        })
-      ]
+          clientid: this.clientid,
+        }),
+      ],
     }
-    , this.chunkSize);
+      , this.chunkSize);
     return callback(null, publishStart);
   }
 
@@ -1811,9 +1838,9 @@ class RTMPSession {
           code: '',
           description: 'Request failed.',
           details: this.app,
-          clientid: this.clientid
-        })
-      ]});
+          clientid: this.clientid,
+        }),
+      ] });
     return callback(null, _error);
   }
 
@@ -1829,8 +1856,8 @@ class RTMPSession {
       transactionID: requestCommand.transactionID,
       objects: [
         createAMF0Data(null),
-        createAMF0Data(null)
-      ]});
+        createAMF0Data(null),
+      ] });
     return callback(null, _result);
   }
 
@@ -1840,18 +1867,19 @@ class RTMPSession {
       timestamp: 0,
       messageStreamID: 0,
       command: '_result',
-      transactionID: requestCommand.transactionID,  // may be 2
+      transactionID: requestCommand.transactionID, // may be 2
       objects: [
         createAMF0Data(null),
-        createAMF0Data(1)  // stream id
-      ]});
+        createAMF0Data(1), // stream id
+      ] });
     return callback(null, _result);
   }
 
-  respondPlay(commandMessage, callback, streamId=null) {
-    let stream, streamIsRecorded;
+  respondPlay(commandMessage, callback, streamId = null) {
+    let stream,
+      streamIsRecorded;
     if ((streamId == null)) {
-      streamId = this.app + '/' + (commandMessage.objects[1] != null ? commandMessage.objects[1].value : undefined);
+      streamId = `${this.app}/${commandMessage.objects[1] != null ? commandMessage.objects[1].value : undefined}`;
     }
     logger.info(`[rtmp:client=${this.clientid}] requested stream ${streamId}`);
     this.chunkSize = config.rtmpPlayChunkSize;
@@ -1871,9 +1899,9 @@ class RTMPSession {
             code: 'NetStream.Play.StreamNotFound',
             description: '',
             details: streamId,
-            clientid: this.clientid
-          })
-        ]});
+            clientid: this.clientid,
+          }),
+        ] });
 
       const close = createAMF0CommandMessage({
         chunkStreamID: 3,
@@ -1882,10 +1910,10 @@ class RTMPSession {
         command: 'close',
         transactionID: 0,
         objects: [
-          createAMF0Data(null)
-        ]});
+          createAMF0Data(null),
+        ] });
 
-      callback(null, this.concatenate([ _error, close ]));
+      callback(null, this.concatenate([_error, close]));
       return;
     }
 
@@ -1893,45 +1921,45 @@ class RTMPSession {
     const setChunkSize = createRTMPMessage({
       chunkStreamID: 2,
       timestamp: 0,
-      messageTypeID: 0x01,  // Set Chunk Size
+      messageTypeID: 0x01, // Set Chunk Size
       messageStreamID: 0,
       body: new Buffer([
-        (this.chunkSize >>> 24) & 0x7f,  // top bit must be zero
+        (this.chunkSize >>> 24) & 0x7f, // top bit must be zero
         (this.chunkSize >>> 16) & 0xff,
         (this.chunkSize >>> 8) & 0xff,
-        this.chunkSize & 0xff
-      ])});
+        this.chunkSize & 0xff,
+      ]) });
 
     logger.debug(`[rtmp:client=${this.clientid}] stream type: ${this.stream.type}`);
     if (this.stream.isRecorded()) {
       streamIsRecorded = createRTMPMessage({
         chunkStreamID: 2,
         timestamp: 0,
-        messageTypeID: 0x04,  // User Control Message
+        messageTypeID: 0x04, // User Control Message
         messageStreamID: 0,
         body: new Buffer([
           // StreamIsRecorded (see 7.1.7. User Control Message Events)
           0, 4,
           // Stream ID of the recorded stream
-          0, 0, 0, 1
-        ])
+          0, 0, 0, 1,
+        ]),
       }
-      , this.chunkSize);
+        , this.chunkSize);
     }
 
     const streamBegin1 = createRTMPMessage({
       chunkStreamID: 2,
       timestamp: 0,
-      messageTypeID: 0x04,  // User Control Message
+      messageTypeID: 0x04, // User Control Message
       messageStreamID: 0,
       body: new Buffer([
         // Stream Begin (see 7.1.7. User Control Message Events)
         0, 0,
         // Stream ID of the stream that became functional
-        0, 0, 0, 1
-      ])
+        0, 0, 0, 1,
+      ]),
     }
-    , this.chunkSize);
+      , this.chunkSize);
 
     const playReset = createAMF0CommandMessage({
       chunkStreamID: 4,
@@ -1946,11 +1974,11 @@ class RTMPSession {
           code: 'NetStream.Play.Reset',
           description: `Playing and resetting ${streamId}.`,
           details: streamId,
-          clientid: this.clientid
-        })
-      ]
+          clientid: this.clientid,
+        }),
+      ],
     }
-    , this.chunkSize);
+      , this.chunkSize);
 
     const playStart = createAMF0CommandMessage({
       chunkStreamID: 4,
@@ -1965,11 +1993,11 @@ class RTMPSession {
           code: 'NetStream.Play.Start',
           description: `Started playing ${streamId}.`,
           details: streamId,
-          clientid: this.clientid
-        })
-      ]
+          clientid: this.clientid,
+        }),
+      ],
     }
-    , this.chunkSize);
+      , this.chunkSize);
 
     const rtmpSampleAccess = createAMF0DataMessage({
       chunkStreamID: 4,
@@ -1978,10 +2006,10 @@ class RTMPSession {
       objects: [
         createAMF0Data('|RtmpSampleAccess'),
         createAMF0Data(false),
-        createAMF0Data(false)
-      ]
+        createAMF0Data(false),
+      ],
     }
-    , this.chunkSize);
+      , this.chunkSize);
 
     const dataStart = createAMF0DataMessage({
       chunkStreamID: 4,
@@ -1990,17 +2018,17 @@ class RTMPSession {
       objects: [
         createAMF0Data('onStatus'),
         createAMF0Object({
-          code: 'NetStream.Data.Start'
-        })
-      ]
+          code: 'NetStream.Data.Start',
+        }),
+      ],
     }
-    , this.chunkSize);
+      , this.chunkSize);
 
     const metadata = {
       canSeekToEnd: false,
-      cuePoints   : [],
-      hasMetadata : true,
-      hasCuePoints: false
+      cuePoints: [],
+      hasMetadata: true,
+      hasCuePoints: false,
     };
 
     if (this.stream != null) {
@@ -2008,25 +2036,25 @@ class RTMPSession {
 
       if (stream != null) {
         if (stream.isVideoStarted) {
-          metadata.hasVideo      = true;
-          metadata.framerate     = stream.videoFrameRate;
-          metadata.height        = stream.videoHeight;
-          metadata.videocodecid  = config.flv.videocodecid; // TODO
+          metadata.hasVideo = true;
+          metadata.framerate = stream.videoFrameRate;
+          metadata.height = stream.videoHeight;
+          metadata.videocodecid = config.flv.videocodecid; // TODO
           metadata.videodatarate = config.videoBitrateKbps; // TODO
-          metadata.width         = stream.videoWidth;
-          metadata.avclevel      = stream.videoAVCLevel;
-          metadata.avcprofile    = stream.videoAVCProfile;
+          metadata.width = stream.videoWidth;
+          metadata.avclevel = stream.videoAVCLevel;
+          metadata.avcprofile = stream.videoAVCProfile;
         }
 
         if (stream.isAudioStarted) {
-          metadata.hasAudio        = true;
-          metadata.audiocodecid    = config.flv.audiocodecid; // TODO
-          metadata.audiodatarate   = config.audioBitrateKbps; // TODO
-          metadata.audiodelay      = 0;
+          metadata.hasAudio = true;
+          metadata.audiocodecid = config.flv.audiocodecid; // TODO
+          metadata.audiodatarate = config.audioBitrateKbps; // TODO
+          metadata.audiodelay = 0;
           metadata.audiosamplerate = stream.audioSampleRate;
-          metadata.stereo          = stream.audioChannels > 1;
-          metadata.audiochannels   = stream.audioChannels;
-          metadata.aacaot          = stream.audioObjectType;
+          metadata.stereo = stream.audioChannels > 1;
+          metadata.audiochannels = stream.audioChannels;
+          metadata.aacaot = stream.audioObjectType;
         }
 
         if (stream.isRecorded()) {
@@ -2038,10 +2066,10 @@ class RTMPSession {
         logger.error(`[rtmp] error: respondPlay: no such stream: ${stream.id}`);
       }
     } else {
-      logger.error("[rtmp] error: respondPlay: stream not set for this session");
+      logger.error('[rtmp] error: respondPlay: stream not set for this session');
     }
 
-    logger.debug("[rtmp] metadata:");
+    logger.debug('[rtmp] metadata:');
     logger.debug(metadata);
 
     const onMetaData = createAMF0DataMessage({
@@ -2050,14 +2078,14 @@ class RTMPSession {
       messageStreamID: 1,
       objects: [
         createAMF0Data('onMetaData'),
-        createAMF0Data(metadata)
-      ]
+        createAMF0Data(metadata),
+      ],
     }
-    , this.chunkSize);
+      , this.chunkSize);
 
     const codecConfigs = this.getCodecConfigs(0);
 
-    const messages = [ setChunkSize ];
+    const messages = [setChunkSize];
     if (this.stream.isRecorded()) {
       messages.push(streamIsRecorded);
     }
@@ -2085,13 +2113,13 @@ class RTMPSession {
 
     const { stream } = this;
     if ((stream == null)) {
-      logger.error("[rtmp] error: getCodecConfigs: stream not set for this session");
+      logger.error('[rtmp] error: getCodecConfigs: stream not set for this session');
       return new Buffer([]);
     }
 
     if (stream.isVideoStarted) {
       if ((stream.spsNALUnit == null) || (stream.ppsNALUnit == null)) {
-        logger.error("[rtmp] error: getCodecConfigs: SPS or PPS is not present");
+        logger.error('[rtmp] error: getCodecConfigs: SPS or PPS is not present');
         return new Buffer([]);
       }
 
@@ -2101,13 +2129,13 @@ class RTMPSession {
       buf = new Buffer([
         // VIDEODATA tag (Appeared in Adobe's Video File Format Spec v10.1 E.4.3.1 VIDEODATA
         (1 << 4) | config.flv.videocodecid, // 1=key frame
-        0x00,  // 0=AVC sequence header (configuration data)
-        0x00,  // composition time
-        0x00,  // composition time
-        0x00,  // composition time
+        0x00, // 0=AVC sequence header (configuration data)
+        0x00, // composition time
+        0x00, // composition time
+        0x00, // composition time
 
         // AVC decoder configuration: described in ISO 14496-15 5.2.4.1.1 Syntax
-        0x01,  // version
+        0x01, // version
         ...Array.from(stream.spsNALUnit.slice(1, 4)),
         0xff, // 6 bits reserved (0b111111) + 2 bits nal size length - 1 (0b11)
         0xe1, // 3 bits reserved (0b111) + 5 bits number of sps (0b00001)
@@ -2116,16 +2144,16 @@ class RTMPSession {
         spsLen & 0xff,
         ...Array.from(stream.spsNALUnit),
 
-        0x01,  // number of PPS (1)
+        0x01, // number of PPS (1)
 
         (ppsLen >> 8) & 0xff,
         ppsLen & 0xff,
-        ...Array.from(stream.ppsNALUnit)
+        ...Array.from(stream.ppsNALUnit),
       ]);
       const videoConfigMessage = createVideoMessage({
         body: buf,
         timestamp,
-        chunkSize: this.chunkSize
+        chunkSize: this.chunkSize,
       });
       configMessages.push(videoConfigMessage);
     }
@@ -2134,22 +2162,22 @@ class RTMPSession {
       // audio
       // TODO: support other than AAC too?
       buf = flv.createAACAudioDataTag({
-        aacPacketType: flv.AAC_PACKET_TYPE_SEQUENCE_HEADER});
+        aacPacketType: flv.AAC_PACKET_TYPE_SEQUENCE_HEADER });
       const ascInfo = stream.audioASCInfo;
       if (ascInfo != null) {
         // Flash Player won't play audio if explicit hierarchical
         // signaling of SBR is used
         if (ascInfo.explicitHierarchicalSBR && config.rtmpDisableHierarchicalSBR) {
-          logger.debug("[rtmp] converting hierarchical signaling of SBR" +
+          logger.debug('[rtmp] converting hierarchical signaling of SBR' +
             ` (AudioSpecificConfig=0x${stream.audioSpecificConfig.toString('hex')})` +
-            " to backward compatible signaling"
+            ' to backward compatible signaling',
           );
           buf = buf.concat(aac.createAudioSpecificConfig(ascInfo));
           buf = new Buffer(buf);
         } else {
           buf = Buffer.concat([
             new Buffer(buf),
-            stream.audioSpecificConfig
+            stream.audioSpecificConfig,
           ]);
         }
         logger.debug(`[rtmp] sending AudioSpecificConfig: 0x${buf.toString('hex')}`);
@@ -2158,9 +2186,9 @@ class RTMPSession {
           audioObjectType: stream.audioObjectType,
           samplingFrequency: stream.audioSampleRate,
           channels: stream.audioChannels,
-          frameLength: 1024
-        })
-        );  // TODO: How to detect 960?
+          frameLength: 1024,
+        }),
+        ); // TODO: How to detect 960?
         // Convert buf from array to Buffer
         buf = new Buffer(buf);
       }
@@ -2168,7 +2196,7 @@ class RTMPSession {
       const audioConfigMessage = createAudioMessage({
         body: buf,
         timestamp,
-        chunkSize: this.chunkSize
+        chunkSize: this.chunkSize,
       });
       configMessages.push(audioConfigMessage);
     }
@@ -2176,21 +2204,21 @@ class RTMPSession {
     return this.concatenate(configMessages);
   }
 
-//  respondPauseRaw: (requestCommand, callback) ->
-//    lastTimestamp = @stream.rtmpLastTimestamp ? 0
-//
-//    _result = createAMF0CommandMessage
-//      chunkStreamID: 3
-//      timestamp: lastTimestamp
-//      messageStreamID: 0
-//      command: '_result'
-//      transactionID: requestCommand.transactionID
-//      objects: [
-//        createAMF0Data(null)
-//        createAMF0Data(null)
-//      ]
-//
-//    callback null, _result
+  //  respondPauseRaw: (requestCommand, callback) ->
+  //    lastTimestamp = @stream.rtmpLastTimestamp ? 0
+  //
+  //    _result = createAMF0CommandMessage
+  //      chunkStreamID: 3
+  //      timestamp: lastTimestamp
+  //      messageStreamID: 0
+  //      command: '_result'
+  //      transactionID: requestCommand.transactionID
+  //      objects: [
+  //        createAMF0Data(null)
+  //        createAMF0Data(null)
+  //      ]
+  //
+  //    callback null, _result
 
   respondSeek(requestCommand, callback) {
     let msec = requestCommand.objects[1].value;
@@ -2216,7 +2244,7 @@ class RTMPSession {
         // restore the value of @isPlaying
         this.isPlaying = _isPlaying;
 
-        const seq = new Sequent;
+        const seq = new Sequent();
 
         // If the stream had not been paused, start playing
         if (!_isPaused) {
@@ -2234,55 +2262,55 @@ class RTMPSession {
           const streamEOF1 = createRTMPMessage({
             chunkStreamID: 2,
             timestamp: 0,
-            messageTypeID: 0x04,  // User Control Message
+            messageTypeID: 0x04, // User Control Message
             messageStreamID: 0,
             body: new Buffer([
               // Stream EOF (see 7.1.7. User Control Message Events)
               0, 1,
               // Stream ID of the stream that reaches EOF
-              0, 0, 0, 1
-            ])});
+              0, 0, 0, 1,
+            ]) });
 
           // 5.4.1.  Set Chunk Size (1)
           const setChunkSize = createRTMPMessage({
             chunkStreamID: 2,
             timestamp: 0,
-            messageTypeID: 0x01,  // Set Chunk Size
+            messageTypeID: 0x01, // Set Chunk Size
             messageStreamID: 0,
             body: new Buffer([
-              (this.chunkSize >>> 24) & 0x7f,  // top bit must be zero
+              (this.chunkSize >>> 24) & 0x7f, // top bit must be zero
               (this.chunkSize >>> 16) & 0xff,
               (this.chunkSize >>> 8) & 0xff,
-              this.chunkSize & 0xff
-            ])});
+              this.chunkSize & 0xff,
+            ]) });
 
           const streamIsRecorded = createRTMPMessage({
             chunkStreamID: 2,
             timestamp: 0,
-            messageTypeID: 0x04,  // User Control Message
+            messageTypeID: 0x04, // User Control Message
             messageStreamID: 0,
             body: new Buffer([
               // StreamIsRecorded (see 7.1.7. User Control Message Events)
               0, 4,
               // Stream ID of the recorded stream
-              0, 0, 0, 1
-            ])
+              0, 0, 0, 1,
+            ]),
           }
-          , this.chunkSize);
+            , this.chunkSize);
 
           const streamBegin1 = createRTMPMessage({
             chunkStreamID: 2,
             timestamp: 0,
-            messageTypeID: 0x04,  // User Control Message
+            messageTypeID: 0x04, // User Control Message
             messageStreamID: 0,
             body: new Buffer([
               // Stream Begin (see 7.1.7. User Control Message Events)
               0, 0,
               // Stream ID of the stream that became functional
-              0, 0, 0, 1
-            ])
+              0, 0, 0, 1,
+            ]),
           }
-          , this.chunkSize);
+            , this.chunkSize);
 
           const seekNotify = createAMF0CommandMessage({
             chunkStreamID: 4,
@@ -2297,11 +2325,11 @@ class RTMPSession {
                 code: 'NetStream.Seek.Notify',
                 description: `Seeking ${msec} (stream ID: 1).`,
                 details: this.stream.id,
-                clientid: this.clientid
-              })
-            ]
+                clientid: this.clientid,
+              }),
+            ],
           }
-          , this.chunkSize);
+            , this.chunkSize);
 
           const playStart = createAMF0CommandMessage({
             chunkStreamID: 4,
@@ -2316,11 +2344,11 @@ class RTMPSession {
                 code: 'NetStream.Play.Start',
                 description: `Started playing ${this.stream.id}.`,
                 details: this.stream.id,
-                clientid: this.clientid
-              })
-            ]
+                clientid: this.clientid,
+              }),
+            ],
           }
-          , this.chunkSize);
+            , this.chunkSize);
 
           const rtmpSampleAccess = createAMF0DataMessage({
             chunkStreamID: 4,
@@ -2329,10 +2357,10 @@ class RTMPSession {
             objects: [
               createAMF0Data('|RtmpSampleAccess'),
               createAMF0Data(false),
-              createAMF0Data(false)
-            ]
+              createAMF0Data(false),
+            ],
           }
-          , this.chunkSize);
+            , this.chunkSize);
 
           // TODO: onStatus('NetStream.Data.Start')
           const dataStart = createAMF0DataMessage({
@@ -2342,41 +2370,41 @@ class RTMPSession {
             objects: [
               createAMF0Data('onStatus'),
               createAMF0Object({
-                code: 'NetStream.Data.Start'
-              })
-            ]
+                code: 'NetStream.Data.Start',
+              }),
+            ],
           }
-          , this.chunkSize);
+            , this.chunkSize);
 
           const metadata = {
             canSeekToEnd: false,
-            cuePoints   : [],
-            hasMetadata : true,
-            hasCuePoints: false
+            cuePoints: [],
+            hasMetadata: true,
+            hasCuePoints: false,
           };
 
           const { stream } = this;
 
           if (stream.isVideoStarted) {
-            metadata.hasVideo      = true;
-            metadata.framerate     = stream.videoFrameRate;
-            metadata.height        = stream.videoHeight;
-            metadata.videocodecid  = config.flv.videocodecid; // TODO
+            metadata.hasVideo = true;
+            metadata.framerate = stream.videoFrameRate;
+            metadata.height = stream.videoHeight;
+            metadata.videocodecid = config.flv.videocodecid; // TODO
             metadata.videodatarate = config.videoBitrateKbps; // TODO
-            metadata.width         = stream.videoWidth;
-            metadata.avclevel      = stream.videoAVCLevel;
-            metadata.avcprofile    = stream.videoAVCProfile;
+            metadata.width = stream.videoWidth;
+            metadata.avclevel = stream.videoAVCLevel;
+            metadata.avcprofile = stream.videoAVCProfile;
           }
 
           if (stream.isAudioStarted) {
-            metadata.hasAudio        = true;
-            metadata.audiocodecid    = config.flv.audiocodecid; // TODO
-            metadata.audiodatarate   = config.audioBitrateKbps; // TODO
-            metadata.audiodelay      = 0;
+            metadata.hasAudio = true;
+            metadata.audiocodecid = config.flv.audiocodecid; // TODO
+            metadata.audiodatarate = config.audioBitrateKbps; // TODO
+            metadata.audiodelay = 0;
             metadata.audiosamplerate = stream.audioSampleRate;
-            metadata.stereo          = stream.audioChannels > 1;
-            metadata.audiochannels   = stream.audioChannels;
-            metadata.aacaot          = stream.audioObjectType;
+            metadata.stereo = stream.audioChannels > 1;
+            metadata.audiochannels = stream.audioChannels;
+            metadata.aacaot = stream.audioObjectType;
           }
 
           metadata.duration = stream.durationSeconds;
@@ -2384,7 +2412,7 @@ class RTMPSession {
           metadata.lasttimestamp = stream.lastTagTimestamp;
           // timestamp of the last video key frame
 
-          logger.debug("[rtmp] metadata:");
+          logger.debug('[rtmp] metadata:');
           logger.debug(metadata);
 
           const onMetaData = createAMF0DataMessage({
@@ -2393,10 +2421,10 @@ class RTMPSession {
             messageStreamID: 1,
             objects: [
               createAMF0Data('onMetaData'),
-              createAMF0Data(metadata)
-            ]
+              createAMF0Data(metadata),
+            ],
           }
-          , this.chunkSize);
+            , this.chunkSize);
 
           const codecConfigs = this.getCodecConfigs(msec);
 
@@ -2406,13 +2434,12 @@ class RTMPSession {
           return callback(null, this.concatenate([
             streamEOF1, setChunkSize, streamIsRecorded,
             streamBegin1, seekNotify, playStart,
-            rtmpSampleAccess, dataStart, onMetaData, codecConfigs
+            rtmpSampleAccess, dataStart, onMetaData, codecConfigs,
           ]));
+        });
       });
-    });
-    } else { // live
-      return this.respondPlay(requestCommand, callback);
-    }
+    } // live
+    return this.respondPlay(requestCommand, callback);
   }
 
   respondPause(requestCommand, callback) {
@@ -2431,14 +2458,14 @@ class RTMPSession {
         const streamEOF1 = createRTMPMessage({
           chunkStreamID: 2,
           timestamp: 0,
-          messageTypeID: 0x04,  // User Control Message
+          messageTypeID: 0x04, // User Control Message
           messageStreamID: 0,
           body: new Buffer([
             // Stream EOF (see 7.1.7. User Control Message Events)
             0, 1,
             // Stream ID of the stream that reaches EOF
-            0, 0, 0, 1
-          ])});
+            0, 0, 0, 1,
+          ]) });
 
         const pauseNotify = createAMF0CommandMessage({
           chunkStreamID: 4,
@@ -2453,228 +2480,221 @@ class RTMPSession {
               code: 'NetStream.Pause.Notify',
               description: `Pausing ${this.stream.id}.`,
               details: this.stream.id,
-              clientid: this.clientid
-            })
-          ]
+              clientid: this.clientid,
+            }),
+          ],
         }
-        , this.chunkSize);
+          , this.chunkSize);
 
-        return callback(null, this.concatenate([ streamEOF1, pauseNotify ]));
-      } else { // live stream
-        return callback(null);
+        return callback(null, this.concatenate([streamEOF1, pauseNotify]));
+      } // live stream
+      return callback(null);
+    } // pausing -> resume
+    if ((this.stream != null ? this.stream.type : undefined) === avstreams.STREAM_TYPE_RECORDED) {
+      let seekMsec;
+      clearQueuedRTMPMessages(this.stream);
+      // RTMP 1.0 spec says that the server only sends messages with timestamps
+      // greater than the specified msec, but it appears that Flash Player expects
+      // to include the specified msec when msec is 0.
+      if (msec === 0) {
+        seekMsec = 0;
+      } else {
+        seekMsec = msec + 1;
       }
-    } else { // pausing -> resume
-      if ((this.stream != null ? this.stream.type : undefined) === avstreams.STREAM_TYPE_RECORDED) {
-        let seekMsec;
-        clearQueuedRTMPMessages(this.stream);
-        // RTMP 1.0 spec says that the server only sends messages with timestamps
-        // greater than the specified msec, but it appears that Flash Player expects
-        // to include the specified msec when msec is 0.
-        if (msec === 0) {
-          seekMsec = 0;
-        } else {
-          seekMsec = msec + 1;
+      return this.stream.seek(seekMsec / 1000, (err, actualStartTime) => {
+        let streamIsRecorded;
+        if (err) {
+          logger.error(`[rtmp] seek failed: ${err}`);
+          return;
         }
-        return this.stream.seek(seekMsec / 1000, (err, actualStartTime) => {
-          let streamIsRecorded;
-          if (err) {
-            logger.error(`[rtmp] seek failed: ${err}`);
-            return;
-          }
 
-          // 5.4.1.  Set Chunk Size (1)
-          const setChunkSize = createRTMPMessage({
+        // 5.4.1.  Set Chunk Size (1)
+        const setChunkSize = createRTMPMessage({
+          chunkStreamID: 2,
+          timestamp: 0,
+          messageTypeID: 0x01, // Set Chunk Size
+          messageStreamID: 0,
+          body: new Buffer([
+            (this.chunkSize >>> 24) & 0x7f, // top bit must be zero
+            (this.chunkSize >>> 16) & 0xff,
+            (this.chunkSize >>> 8) & 0xff,
+            this.chunkSize & 0xff,
+          ]) });
+
+        if (this.stream.isRecorded()) {
+          streamIsRecorded = createRTMPMessage({
             chunkStreamID: 2,
             timestamp: 0,
-            messageTypeID: 0x01,  // Set Chunk Size
+            messageTypeID: 0x04, // User Control Message
             messageStreamID: 0,
             body: new Buffer([
-              (this.chunkSize >>> 24) & 0x7f,  // top bit must be zero
-              (this.chunkSize >>> 16) & 0xff,
-              (this.chunkSize >>> 8) & 0xff,
-              this.chunkSize & 0xff
-            ])});
-
-          if (this.stream.isRecorded()) {
-            streamIsRecorded = createRTMPMessage({
-              chunkStreamID: 2,
-              timestamp: 0,
-              messageTypeID: 0x04,  // User Control Message
-              messageStreamID: 0,
-              body: new Buffer([
-                // StreamIsRecorded (see 7.1.7. User Control Message Events)
-                0, 4,
-                // Stream ID of the recorded stream
-                0, 0, 0, 1
-              ])
-            }
+              // StreamIsRecorded (see 7.1.7. User Control Message Events)
+              0, 4,
+              // Stream ID of the recorded stream
+              0, 0, 0, 1,
+            ]),
+          }
             , this.chunkSize);
-          }
+        }
 
-          const streamBegin1 = createRTMPMessage({
-            chunkStreamID: 2,
-            timestamp: 0,
-            messageTypeID: 0x04,  // User Control Message
-            messageStreamID: 0,
-            body: new Buffer([
-              // Stream Begin (see 7.1.7. User Control Message Events)
-              0, 0,
-              // Stream ID of the stream that became functional
-              0, 0, 0, 1
-            ])
-          }
+        const streamBegin1 = createRTMPMessage({
+          chunkStreamID: 2,
+          timestamp: 0,
+          messageTypeID: 0x04, // User Control Message
+          messageStreamID: 0,
+          body: new Buffer([
+            // Stream Begin (see 7.1.7. User Control Message Events)
+            0, 0,
+            // Stream ID of the stream that became functional
+            0, 0, 0, 1,
+          ]),
+        }
           , this.chunkSize);
 
-          const unpauseNotify = createAMF0CommandMessage({
-            chunkStreamID: 4,
-            timestamp: msec,
-            messageStreamID: 1,
-            command: 'onStatus',
-            transactionID: requestCommand.transactionID,
-            objects: [
-              createAMF0Data(null),
-              createAMF0Object({
-                level: 'status',
-                code: 'NetStream.Unpause.Notify',
-                description: `Unpausing ${this.stream.id}.`,
-                details: this.stream.id,
-                clientid: this.clientid
-              })
-            ]
-          }
+        const unpauseNotify = createAMF0CommandMessage({
+          chunkStreamID: 4,
+          timestamp: msec,
+          messageStreamID: 1,
+          command: 'onStatus',
+          transactionID: requestCommand.transactionID,
+          objects: [
+            createAMF0Data(null),
+            createAMF0Object({
+              level: 'status',
+              code: 'NetStream.Unpause.Notify',
+              description: `Unpausing ${this.stream.id}.`,
+              details: this.stream.id,
+              clientid: this.clientid,
+            }),
+          ],
+        }
           , this.chunkSize);
 
-          const playStart = createAMF0CommandMessage({
-            chunkStreamID: 4,
-            timestamp: msec,
-            messageStreamID: 1,
-            command: 'onStatus',
-            transactionID: 0,
-            objects: [
-              createAMF0Data(null),
-              createAMF0Object({
-                level: 'status',
-                code: 'NetStream.Play.Start',
-                description: `Started playing ${this.stream.id}.`,
-                details: this.stream.id,
-                clientid: this.clientid
-              })
-            ]
-          }
+        const playStart = createAMF0CommandMessage({
+          chunkStreamID: 4,
+          timestamp: msec,
+          messageStreamID: 1,
+          command: 'onStatus',
+          transactionID: 0,
+          objects: [
+            createAMF0Data(null),
+            createAMF0Object({
+              level: 'status',
+              code: 'NetStream.Play.Start',
+              description: `Started playing ${this.stream.id}.`,
+              details: this.stream.id,
+              clientid: this.clientid,
+            }),
+          ],
+        }
           , this.chunkSize);
 
-          const rtmpSampleAccess = createAMF0DataMessage({
-            chunkStreamID: 4,
-            timestamp: msec,
-            messageStreamID: 1,
-            objects: [
-              createAMF0Data('|RtmpSampleAccess'),
-              createAMF0Data(false),
-              createAMF0Data(false)
-            ]
-          }
+        const rtmpSampleAccess = createAMF0DataMessage({
+          chunkStreamID: 4,
+          timestamp: msec,
+          messageStreamID: 1,
+          objects: [
+            createAMF0Data('|RtmpSampleAccess'),
+            createAMF0Data(false),
+            createAMF0Data(false),
+          ],
+        }
           , this.chunkSize);
 
           // TODO: onStatus('NetStream.Data.Start')
-          const dataStart = createAMF0DataMessage({
-            chunkStreamID: 4,
-            timestamp: msec,
-            messageStreamID: 1,
-            objects: [
-              createAMF0Data('onStatus'),
-              createAMF0Object({
-                code: 'NetStream.Data.Start'
-              })
-            ]
-          }
+        const dataStart = createAMF0DataMessage({
+          chunkStreamID: 4,
+          timestamp: msec,
+          messageStreamID: 1,
+          objects: [
+            createAMF0Data('onStatus'),
+            createAMF0Object({
+              code: 'NetStream.Data.Start',
+            }),
+          ],
+        }
           , this.chunkSize);
 
-          const metadata = {
-            canSeekToEnd: false,
-            cuePoints   : [],
-            hasMetadata : true,
-            hasCuePoints: false
-          };
+        const metadata = {
+          canSeekToEnd: false,
+          cuePoints: [],
+          hasMetadata: true,
+          hasCuePoints: false,
+        };
 
-          const { stream } = this;
+        const { stream } = this;
 
-          if (stream.isVideoStarted) {
-            metadata.hasVideo      = true;
-            metadata.framerate     = stream.videoFrameRate;
-            metadata.height        = stream.videoHeight;
-            metadata.videocodecid  = config.flv.videocodecid; // TODO
-            metadata.videodatarate = config.videoBitrateKbps; // TODO
-            metadata.width         = stream.videoWidth;
-            metadata.avclevel      = stream.videoAVCLevel;
-            metadata.avcprofile    = stream.videoAVCProfile;
-          }
+        if (stream.isVideoStarted) {
+          metadata.hasVideo = true;
+          metadata.framerate = stream.videoFrameRate;
+          metadata.height = stream.videoHeight;
+          metadata.videocodecid = config.flv.videocodecid; // TODO
+          metadata.videodatarate = config.videoBitrateKbps; // TODO
+          metadata.width = stream.videoWidth;
+          metadata.avclevel = stream.videoAVCLevel;
+          metadata.avcprofile = stream.videoAVCProfile;
+        }
 
-          if (stream.isAudioStarted) {
-            metadata.hasAudio        = true;
-            metadata.audiocodecid    = config.flv.audiocodecid; // TODO
-            metadata.audiodatarate   = config.audioBitrateKbps; // TODO
-            metadata.audiodelay      = 0;
-            metadata.audiosamplerate = stream.audioSampleRate;
-            metadata.stereo          = stream.audioChannels > 1;
-            metadata.audiochannels   = stream.audioChannels;
-            metadata.aacaot          = stream.audioObjectType;
-          }
+        if (stream.isAudioStarted) {
+          metadata.hasAudio = true;
+          metadata.audiocodecid = config.flv.audiocodecid; // TODO
+          metadata.audiodatarate = config.audioBitrateKbps; // TODO
+          metadata.audiodelay = 0;
+          metadata.audiosamplerate = stream.audioSampleRate;
+          metadata.stereo = stream.audioChannels > 1;
+          metadata.audiochannels = stream.audioChannels;
+          metadata.aacaot = stream.audioObjectType;
+        }
 
-          metadata.duration = stream.durationSeconds;
-          // timestamp of the last tag in the recorded file
-          metadata.lasttimestamp = stream.lastTagTimestamp;
-          // timestamp of the last video key frame
+        metadata.duration = stream.durationSeconds;
+        // timestamp of the last tag in the recorded file
+        metadata.lasttimestamp = stream.lastTagTimestamp;
+        // timestamp of the last video key frame
 
-          logger.debug("[rtmp] metadata:");
-          logger.debug(metadata);
+        logger.debug('[rtmp] metadata:');
+        logger.debug(metadata);
 
-          const onMetaData = createAMF0DataMessage({
-            chunkStreamID: 4,
-            timestamp: msec,
-            messageStreamID: 1,
-            objects: [
-              createAMF0Data('onMetaData'),
-              createAMF0Data(metadata)
-            ]
-          }
+        const onMetaData = createAMF0DataMessage({
+          chunkStreamID: 4,
+          timestamp: msec,
+          messageStreamID: 1,
+          objects: [
+            createAMF0Data('onMetaData'),
+            createAMF0Data(metadata),
+          ],
+        }
           , this.chunkSize);
 
-          const codecConfigs = this.getCodecConfigs(msec);
+        const codecConfigs = this.getCodecConfigs(msec);
 
-          callback(null, this.concatenate([
-            setChunkSize, streamIsRecorded, streamBegin1,
-            unpauseNotify, playStart, rtmpSampleAccess,
-            dataStart, onMetaData, codecConfigs
-          ]));
+        callback(null, this.concatenate([
+          setChunkSize, streamIsRecorded, streamBegin1,
+          unpauseNotify, playStart, rtmpSampleAccess,
+          dataStart, onMetaData, codecConfigs,
+        ]));
 
-          const seq = new Sequent;
-          this.startPlaying();
-          if (this.seekedDuringPause) {
-            this.stream.sendVideoPacketsSinceLastKeyFrame(seekMsec / 1000, () => {
-              return seq.done();
-            });
-          } else {
-            this.isResuming = true;
-            seq.done();
-          }
-
-          return seq.wait(1, () => {
-            const isResumed = this.stream.resume();
-            this.seekedDuringPause = false;
-
-            if (!isResumed) {
-              return logger.debug(`[rtmp:client=${this.clientid}] cannot resume (EOF reached)`);
-            } else {
-              return logger.info(`[rtmp:client=${this.clientid}] resumed at ${msec / 1000} sec (client player time)`);
-            }
-          });
-        });
-
-      } else { // live
+        const seq = new Sequent();
         this.startPlaying();
-        return this.respondPlay(requestCommand, callback, this.stream != null ? this.stream.id : undefined);
-      }
-    }
+        if (this.seekedDuringPause) {
+          this.stream.sendVideoPacketsSinceLastKeyFrame(seekMsec / 1000, () => seq.done());
+        } else {
+          this.isResuming = true;
+          seq.done();
+        }
+
+        return seq.wait(1, () => {
+          const isResumed = this.stream.resume();
+          this.seekedDuringPause = false;
+
+          if (!isResumed) {
+            return logger.debug(`[rtmp:client=${this.clientid}] cannot resume (EOF reached)`);
+          }
+          return logger.info(`[rtmp:client=${this.clientid}] resumed at ${msec / 1000} sec (client player time)`);
+        });
+      });
+    } // live
+    this.startPlaying();
+    return this.respondPlay(requestCommand, callback, this.stream != null ? this.stream.id : undefined);
   }
 
   closeStream(callback) {
@@ -2695,15 +2715,15 @@ class RTMPSession {
       transactionID: requestCommand.transactionID,
       objects: [
         createAMF0Data(null),
-        createAMF0Data(null)
-      ]});
+        createAMF0Data(null),
+      ] });
     return callback(null, _result);
   }
 
   handleAMFDataMessage(dataMessage, callback) {
     callback(null);
     if (dataMessage.objects.length === 0) {
-      logger.warn("[rtmp:receive] empty AMF data");
+      logger.warn('[rtmp:receive] empty AMF data');
     }
     switch (dataMessage.objects[0].value) {
       case '@setDataFrame':
@@ -2720,7 +2740,7 @@ class RTMPSession {
       case 'connect':
         // Retain objectEncoding for later use
         //   3=AMF3, 0=AMF0
-        this.objectEncoding = __guard__(commandMessage.objects[0] != null ? commandMessage.objects[0].value : undefined, x => x.objectEncoding);
+        this.objectEncoding = __guard__(commandMessage.objects[0] != null ? commandMessage.objects[0].value : undefined, (x) => x.objectEncoding);
 
         return this.respondConnect(commandMessage, callback);
       case 'createStream':
@@ -2735,9 +2755,9 @@ class RTMPSession {
       case 'pause':
         return this.respondPause(commandMessage, callback);
       case 'pauseRaw':
-        logger.debug("[rtmp] ignoring pauseRaw");
+        logger.debug('[rtmp] ignoring pauseRaw');
         return callback(null);
-//        @respondPauseRaw commandMessage, callback
+        //        @respondPauseRaw commandMessage, callback
       // Methods used for publishing from the client
       case 'seek':
         return this.respondSeek(commandMessage, callback);
@@ -2752,34 +2772,34 @@ class RTMPSession {
       default:
         logger.warn(`[rtmp:receive] unknown (not implemented) AMF command: ${commandMessage.command}`);
         logger.debug(commandMessage);
-//        @respondWithError commandMessage, callback
-        return callback(null);  // ignore
+        //        @respondWithError commandMessage, callback
+        return callback(null); // ignore
     }
   }
 
   createAck() {
     if (DEBUG_OUTGOING_RTMP_PACKETS) {
-      logger.info("createAck");
+      logger.info('createAck');
     }
     return createRTMPMessage({
       chunkStreamID: 2,
-      timestamp: 0,  // TODO: Is zero OK?
-      messageTypeID: 3,  // Acknowledgement
+      timestamp: 0, // TODO: Is zero OK?
+      messageTypeID: 3, // Acknowledgement
       messageStreamID: 0,
       body: new Buffer([
         // number of bytes received so far (4 bytes)
         (this.receivedBytes >>> 24) & 0xff,
         (this.receivedBytes >>> 16) & 0xff,
         (this.receivedBytes >>> 8) & 0xff,
-        this.receivedBytes & 0xff
-      ])});
+        this.receivedBytes & 0xff,
+      ]) });
   }
 
   handleData(buf, callback) {
     this.scheduleTimeout();
 
     const outputs = [];
-    const seq = new Sequent;
+    const seq = new Sequent();
 
     if (this.windowAckSize != null) {
       this.receivedBytes += buf.length;
@@ -2795,7 +2815,7 @@ class RTMPSession {
         this.tmpBuf = null;
       }
       if (buf.length < 1537) {
-        logger.debug("[rtmp] waiting for C0+C1");
+        logger.debug('[rtmp] waiting for C0+C1');
         this.tmpBuf = buf;
         return;
       }
@@ -2809,17 +2829,17 @@ class RTMPSession {
         this.tmpBuf = null;
       }
       if (buf.length < 1536) {
-        logger.debug("[rtmp] waiting for C2");
+        logger.debug('[rtmp] waiting for C2');
         this.tmpBuf = buf;
         return;
       }
       this.tmpBuf = null;
 
       // TODO: should we validate C2?
-//      c2Message = buf[0..1535]
+      //      c2Message = buf[0..1535]
 
       this.state = SESSION_STATE_HANDSHAKE_DONE;
-      logger.debug("[rtmp] handshake success");
+      logger.debug('[rtmp] handshake success');
 
       if (buf.length <= 1536) {
         callback(null);
@@ -2831,206 +2851,176 @@ class RTMPSession {
 
     if (this.state !== SESSION_STATE_HANDSHAKE_DONE) {
       logger.error(`[rtmp:receive] unknown session state: ${this.state}`);
-      return callback(new Error("Unknown session state"));
-    } else {
+      return callback(new Error('Unknown session state'));
+    }
+    if (this.useEncryption) {
+      buf = this.decrypt(buf);
+    }
+
+    if (this.tmpBuf != null) {
+      buf = Buffer.concat([this.tmpBuf, buf], this.tmpBuf.length + buf.length);
+      this.tmpBuf = null;
+    }
+
+    const onConsumeAllPackets = () => {
+      let outbuf = this.concatenate(outputs);
       if (this.useEncryption) {
-        buf = this.decrypt(buf);
+        outbuf = this.encrypt(outbuf);
+      }
+      return callback(null, outbuf);
+    };
+
+    var consumeNextRTMPMessage = () => {
+      if ((buf == null)) {
+        onConsumeAllPackets();
+        return;
+      }
+      const parseResult = this.parseRTMPMessages(buf);
+      if (parseResult.consumedLen === 0) { // not consumed at all
+        this.tmpBuf = buf;
+        // no message to process
+        onConsumeAllPackets();
+        return;
+      } else if (parseResult.consumedLen < buf.length) { // consumed a part of buffer
+        buf = buf.slice(parseResult.consumedLen);
+      } else { // consumed all buffers
+        buf = null;
       }
 
-      if (this.tmpBuf != null) {
-        buf = Buffer.concat([this.tmpBuf, buf], this.tmpBuf.length + buf.length);
-        this.tmpBuf = null;
-      }
+      seq.reset();
 
-      const onConsumeAllPackets = () => {
-        let outbuf = this.concatenate(outputs);
-        if (this.useEncryption) {
-          outbuf = this.encrypt(outbuf);
+      seq.wait(parseResult.rtmpMessages.length, (err, output) => {
+        if (err != null) {
+          logger.error(`[rtmp:receive] ignoring invalid packet (${err})`);
         }
-        return callback(null, outbuf);
-      };
-
-      var consumeNextRTMPMessage = () => {
-        if ((buf == null)) {
-          onConsumeAllPackets();
-          return;
+        if (output != null) {
+          outputs.push(output);
         }
-        const parseResult = this.parseRTMPMessages(buf);
-        if (parseResult.consumedLen === 0) {  // not consumed at all
-          this.tmpBuf = buf;
-          // no message to process
-          onConsumeAllPackets();
-          return;
-        } else if (parseResult.consumedLen < buf.length) {  // consumed a part of buffer
-          buf = buf.slice(parseResult.consumedLen);
-        } else {  // consumed all buffers
-          buf = null;
-        }
+        return consumeNextRTMPMessage();
+      });
 
-        seq.reset();
-
-        seq.wait(parseResult.rtmpMessages.length, function(err, output) {
-          if (err != null) {
-            logger.error(`[rtmp:receive] ignoring invalid packet (${err})`);
-          }
-          if (output != null) {
-            outputs.push(output);
-          }
-          return consumeNextRTMPMessage();
-        });
-
-        return (() => {
-          const result = [];
-          for (let rtmpMessage of Array.from(parseResult.rtmpMessages)) {
-            var dataMessage, dts, e, pts, timestamp;
-            switch (rtmpMessage.messageTypeID) {
-              case 1:  // Set Chunk Size
-                var newChunkSize = (rtmpMessage.body[0] * Math.pow(256, 3)) +
+      return (() => {
+        const result = [];
+        for (const rtmpMessage of Array.from(parseResult.rtmpMessages)) {
+          var dataMessage,
+            dts,
+            e,
+            pts,
+            timestamp;
+          switch (rtmpMessage.messageTypeID) {
+            case 1: // Set Chunk Size
+              var newChunkSize = (rtmpMessage.body[0] * Math.pow(256, 3)) +
                   (rtmpMessage.body[1] << 16) +
                   (rtmpMessage.body[2] << 8) +
                   rtmpMessage.body[3];
-                if (DEBUG_INCOMING_RTMP_PACKETS) {
-                  logger.info(`[rtmp:receive] Set Chunk Size: ${newChunkSize}`);
-                }
-                this.receiveChunkSize = newChunkSize;
-                result.push(seq.done());
-                break;
-              case 3:  // Acknowledgement
-                var acknowledgementMessage = parseAcknowledgementMessage(rtmpMessage.body);
-                if (DEBUG_INCOMING_RTMP_PACKETS) {
-                  logger.info(`[rtmp:receive] Ack: ${acknowledgementMessage.sequenceNumber}`);
-                }
-                result.push(seq.done());
-                break;
-              case 4:  // User Control Message
-                var userControlMessage = parseUserControlMessage(rtmpMessage.body);
-                if (userControlMessage.eventType === 3) {  // SetBufferLength
-                  const streamID = (userControlMessage.eventData[0] << 24) +
+              if (DEBUG_INCOMING_RTMP_PACKETS) {
+                logger.info(`[rtmp:receive] Set Chunk Size: ${newChunkSize}`);
+              }
+              this.receiveChunkSize = newChunkSize;
+              result.push(seq.done());
+              break;
+            case 3: // Acknowledgement
+              var acknowledgementMessage = parseAcknowledgementMessage(rtmpMessage.body);
+              if (DEBUG_INCOMING_RTMP_PACKETS) {
+                logger.info(`[rtmp:receive] Ack: ${acknowledgementMessage.sequenceNumber}`);
+              }
+              result.push(seq.done());
+              break;
+            case 4: // User Control Message
+              var userControlMessage = parseUserControlMessage(rtmpMessage.body);
+              if (userControlMessage.eventType === 3) { // SetBufferLength
+                const streamID = (userControlMessage.eventData[0] << 24) +
                     (userControlMessage.eventData[1] << 16) +
                     (userControlMessage.eventData[2] << 8) +
                     userControlMessage.eventData[3];
-                  const bufferLength = (userControlMessage.eventData[4] << 24) +
+                const bufferLength = (userControlMessage.eventData[4] << 24) +
                     (userControlMessage.eventData[5] << 16) +
                     (userControlMessage.eventData[6] << 8) +
                     userControlMessage.eventData[7];
-                  if (DEBUG_INCOMING_RTMP_PACKETS) {
-                    logger.info(`[rtmp:receive] SetBufferLength: streamID=${streamID} bufferLength=${bufferLength}`);
-                  }
-                } else if (userControlMessage.eventType === 7) {
-                  timestamp = (userControlMessage.eventData[0] << 24) +
+                if (DEBUG_INCOMING_RTMP_PACKETS) {
+                  logger.info(`[rtmp:receive] SetBufferLength: streamID=${streamID} bufferLength=${bufferLength}`);
+                }
+              } else if (userControlMessage.eventType === 7) {
+                timestamp = (userControlMessage.eventData[0] << 24) +
                     (userControlMessage.eventData[1] << 16) +
                     (userControlMessage.eventData[2] << 8) +
                     userControlMessage.eventData[3];
-                  if (DEBUG_INCOMING_RTMP_PACKETS) {
-                    logger.info(`[rtmp:receive] PingResponse: timestamp=${timestamp}`);
-                  }
-                } else {
-                  if (DEBUG_INCOMING_RTMP_PACKETS) {
-                    logger.info("[rtmp:receive] User Control Message");
-                    logger.info(userControlMessage);
-                  }
+                if (DEBUG_INCOMING_RTMP_PACKETS) {
+                  logger.info(`[rtmp:receive] PingResponse: timestamp=${timestamp}`);
                 }
-                result.push(seq.done());
-                break;
-              case 5:  // Window Acknowledgement Size
-                this.windowAckSize = (rtmpMessage.body[0] << 24) +
+              } else if (DEBUG_INCOMING_RTMP_PACKETS) {
+                logger.info('[rtmp:receive] User Control Message');
+                logger.info(userControlMessage);
+              }
+              result.push(seq.done());
+              break;
+            case 5: // Window Acknowledgement Size
+              this.windowAckSize = (rtmpMessage.body[0] << 24) +
                   (rtmpMessage.body[1] << 16) +
                   (rtmpMessage.body[2] << 8) +
                   rtmpMessage.body[3];
+              if (DEBUG_INCOMING_RTMP_PACKETS) {
+                logger.info(`[rtmp:receive] WindowAck: ${this.windowAckSize}`);
+              }
+              result.push(seq.done());
+              break;
+            case 8: // Audio Message (incoming)
+              if (DEBUG_INCOMING_RTMP_PACKETS) {
+                logger.info('[rtmp:receive] Audio Message');
+              }
+              var audioData = this.parseAudioMessage(rtmpMessage.body);
+              if (audioData.adtsFrame != null) {
+                if (!this.isFirstAudioReceived) {
+                  this.emit('audio_start', this.stream.id);
+                  this.isFirstAudioReceived = true;
+                }
+                pts = (dts = flv.convertMsToPTS(rtmpMessage.timestamp));
+                this.emit('audio_data', this.stream.id, pts, dts, audioData.adtsFrame);
+              }
+              result.push(seq.done());
+              break;
+            case 9: // Video Message (incoming)
+              if (DEBUG_INCOMING_RTMP_PACKETS) {
+                logger.info('[rtmp:receive] Video Message');
+              }
+              var videoData = this.parseVideoMessage(rtmpMessage.body);
+              if (videoData.nalUnitGlob != null) {
+                if (!this.isFirstVideoReceived) {
+                  this.emit('video_start', this.stream.id);
+                  this.isFirstVideoReceived = true;
+                }
+                dts = rtmpMessage.timestamp;
+                pts = dts + videoData.info.videoDataTag.compositionTime;
+                pts = flv.convertMsToPTS(pts);
+                dts = flv.convertMsToPTS(dts);
+                this.emit('video_data', this.stream.id, pts, dts, videoData.nalUnitGlob); // TODO pts, dts
+              }
+              if (videoData.isEOS) {
+                logger.info(`[rtmp:client=${this.clientid}] received EOS for stream: ${this.stream.id}`);
+                const stream = avstreams.get(this.stream.id);
+                if ((stream == null)) {
+                  logger.error(`[rtmp:client=${this.clientid}] error: unknown stream: ${this.stream.id}`);
+                }
+                stream.emit('end');
+              }
+              result.push(seq.done());
+              break;
+            case 15: // AMF3 data message
+              try {
+                dataMessage = parseAMF0DataMessage(rtmpMessage.body.slice(1));
+              } catch (error) {
+                e = error;
+                logger.error(`[rtmp] error: failed to parse AMF0 data message: ${e.stack}`);
+                logger.error(`messageTypeID=${rtmpMessage.messageTypeID} body:`);
+                Bits.hexdump(rtmpMessage.body);
+                seq.done(e);
+              }
+              if (dataMessage != null) {
                 if (DEBUG_INCOMING_RTMP_PACKETS) {
-                  logger.info(`[rtmp:receive] WindowAck: ${this.windowAckSize}`);
+                  logger.info('[rtmp:receive] AMF3 data:');
+                  logger.info(dataMessage);
                 }
-                result.push(seq.done());
-                break;
-              case 8:  // Audio Message (incoming)
-                if (DEBUG_INCOMING_RTMP_PACKETS) {
-                  logger.info("[rtmp:receive] Audio Message");
-                }
-                var audioData = this.parseAudioMessage(rtmpMessage.body);
-                if (audioData.adtsFrame != null) {
-                  if (!this.isFirstAudioReceived) {
-                    this.emit('audio_start', this.stream.id);
-                    this.isFirstAudioReceived = true;
-                  }
-                  pts = (dts = flv.convertMsToPTS(rtmpMessage.timestamp));
-                  this.emit('audio_data', this.stream.id, pts, dts, audioData.adtsFrame);
-                }
-                result.push(seq.done());
-                break;
-              case 9:  // Video Message (incoming)
-                if (DEBUG_INCOMING_RTMP_PACKETS) {
-                  logger.info("[rtmp:receive] Video Message");
-                }
-                var videoData = this.parseVideoMessage(rtmpMessage.body);
-                if (videoData.nalUnitGlob != null) {
-                  if (!this.isFirstVideoReceived) {
-                    this.emit('video_start', this.stream.id);
-                    this.isFirstVideoReceived = true;
-                  }
-                  dts = rtmpMessage.timestamp;
-                  pts = dts + videoData.info.videoDataTag.compositionTime;
-                  pts = flv.convertMsToPTS(pts);
-                  dts = flv.convertMsToPTS(dts);
-                  this.emit('video_data', this.stream.id, pts, dts, videoData.nalUnitGlob);  // TODO pts, dts
-                }
-                if (videoData.isEOS) {
-                  logger.info(`[rtmp:client=${this.clientid}] received EOS for stream: ${this.stream.id}`);
-                  const stream = avstreams.get(this.stream.id);
-                  if ((stream == null)) {
-                    logger.error(`[rtmp:client=${this.clientid}] error: unknown stream: ${this.stream.id}`);
-                  }
-                  stream.emit('end');
-                }
-                result.push(seq.done());
-                break;
-              case 15:  // AMF3 data message
-                try {
-                  dataMessage = parseAMF0DataMessage(rtmpMessage.body.slice(1));
-                } catch (error) {
-                  e = error;
-                  logger.error(`[rtmp] error: failed to parse AMF0 data message: ${e.stack}`);
-                  logger.error(`messageTypeID=${rtmpMessage.messageTypeID} body:`);
-                  Bits.hexdump(rtmpMessage.body);
-                  seq.done(e);
-                }
-                if (dataMessage != null) {
-                  if (DEBUG_INCOMING_RTMP_PACKETS) {
-                    logger.info("[rtmp:receive] AMF3 data:");
-                    logger.info(dataMessage);
-                  }
-                  result.push(this.handleAMFDataMessage(dataMessage, function(err, output) {
-                    if (err != null) {
-                      logger.error(`[rtmp:receive] packet error: ${err}`);
-                    }
-                    if (output != null) {
-                      outputs.push(output);
-                    }
-                    return seq.done();
-                  }));
-                } else {
-                  result.push(undefined);
-                }
-                break;
-              case 17:  // AMF3 command (0x11)
-                // Does the first byte == 0x00 mean AMF0?
-                var commandMessage = parseAMF0CommandMessage(rtmpMessage.body.slice(1));
-                if (DEBUG_INCOMING_RTMP_PACKETS) {
-                  var msec;
-                  let debugMsg = `[rtmp:receive] AMF3 command: ${commandMessage.command}`;
-                  if (commandMessage.command === 'pause') {
-                    msec = commandMessage.objects[2].value;
-                    if (commandMessage.objects[1].value === true) {
-                      debugMsg += ` (doPause=true msec=${msec})`;
-                    } else {
-                      debugMsg += ` (doPause=false msec=${msec})`;
-                    }
-                  } else if (commandMessage.command === 'seek') {
-                    msec = commandMessage.objects[1].value;
-                    debugMsg += ` (msec=${msec})`;
-                  }
-                  logger.debug(debugMsg);
-                }
-                result.push(this.handleAMFCommandMessage(commandMessage, function(err, output) {
+                result.push(this.handleAMFDataMessage(dataMessage, (err, output) => {
                   if (err != null) {
                     logger.error(`[rtmp:receive] packet error: ${err}`);
                   }
@@ -3039,41 +3029,55 @@ class RTMPSession {
                   }
                   return seq.done();
                 }));
-                break;
-              case 18:  // AMF0 data message
-                try {
-                  dataMessage = parseAMF0DataMessage(rtmpMessage.body);
-                } catch (error1) {
-                  e = error1;
-                  logger.error(`[rtmp] error: failed to parse AMF0 data message: ${e.stack}`);
-                  logger.error(`messageTypeID=${rtmpMessage.messageTypeID} body:`);
-                  Bits.hexdump(rtmpMessage.body);
-                  seq.done(e);
-                }
-                if (dataMessage != null) {
-                  if (DEBUG_INCOMING_RTMP_PACKETS) {
-                    logger.info("[rtmp:receive] AMF0 data:");
-                    logger.info(dataMessage);
+              } else {
+                result.push(undefined);
+              }
+              break;
+            case 17: // AMF3 command (0x11)
+              // Does the first byte == 0x00 mean AMF0?
+              var commandMessage = parseAMF0CommandMessage(rtmpMessage.body.slice(1));
+              if (DEBUG_INCOMING_RTMP_PACKETS) {
+                var msec;
+                let debugMsg = `[rtmp:receive] AMF3 command: ${commandMessage.command}`;
+                if (commandMessage.command === 'pause') {
+                  msec = commandMessage.objects[2].value;
+                  if (commandMessage.objects[1].value === true) {
+                    debugMsg += ` (doPause=true msec=${msec})`;
+                  } else {
+                    debugMsg += ` (doPause=false msec=${msec})`;
                   }
-                  result.push(this.handleAMFDataMessage(dataMessage, function(err, output) {
-                    if (err != null) {
-                      logger.error(`[rtmp:receive] packet error: ${err}`);
-                    }
-                    if (output != null) {
-                      outputs.push(output);
-                    }
-                    return seq.done();
-                  }));
-                } else {
-                  result.push(undefined);
+                } else if (commandMessage.command === 'seek') {
+                  msec = commandMessage.objects[1].value;
+                  debugMsg += ` (msec=${msec})`;
                 }
-                break;
-              case 20:  // AMF0 command
-                commandMessage = parseAMF0CommandMessage(rtmpMessage.body);
+                logger.debug(debugMsg);
+              }
+              result.push(this.handleAMFCommandMessage(commandMessage, (err, output) => {
+                if (err != null) {
+                  logger.error(`[rtmp:receive] packet error: ${err}`);
+                }
+                if (output != null) {
+                  outputs.push(output);
+                }
+                return seq.done();
+              }));
+              break;
+            case 18: // AMF0 data message
+              try {
+                dataMessage = parseAMF0DataMessage(rtmpMessage.body);
+              } catch (error1) {
+                e = error1;
+                logger.error(`[rtmp] error: failed to parse AMF0 data message: ${e.stack}`);
+                logger.error(`messageTypeID=${rtmpMessage.messageTypeID} body:`);
+                Bits.hexdump(rtmpMessage.body);
+                seq.done(e);
+              }
+              if (dataMessage != null) {
                 if (DEBUG_INCOMING_RTMP_PACKETS) {
-                  logger.info(`[rtmp:receive] AMF0 command: ${commandMessage.command}`);
+                  logger.info('[rtmp:receive] AMF0 data:');
+                  logger.info(dataMessage);
                 }
-                result.push(this.handleAMFCommandMessage(commandMessage, function(err, output) {
+                result.push(this.handleAMFDataMessage(dataMessage, (err, output) => {
                   if (err != null) {
                     logger.error(`[rtmp:receive] packet error: ${err}`);
                   }
@@ -3082,26 +3086,43 @@ class RTMPSession {
                   }
                   return seq.done();
                 }));
-                break;
-              default:
-                logger.error("----- BUG -----");
-                logger.error(`[rtmp:receive] received unknown (not implemented) message type ID: ${rtmpMessage.messageTypeID}`);
-                logger.error(rtmpMessage);
-                var packageJson = require('./package.json');
-                logger.error(`server version: ${packageJson.version}`);
-                logger.error("Please report this bug along with the video file or relevant part of");
-                logger.error("pcap file, and the full (uncut) output of node-rtsp-rtsp-server. Thanks.");
-                logger.error("https://github.com/iizukanao/node-rtsp-rtmp-server/issues");
-                logger.error("---------------");
-                result.push(seq.done());
-            }
+              } else {
+                result.push(undefined);
+              }
+              break;
+            case 20: // AMF0 command
+              commandMessage = parseAMF0CommandMessage(rtmpMessage.body);
+              if (DEBUG_INCOMING_RTMP_PACKETS) {
+                logger.info(`[rtmp:receive] AMF0 command: ${commandMessage.command}`);
+              }
+              result.push(this.handleAMFCommandMessage(commandMessage, (err, output) => {
+                if (err != null) {
+                  logger.error(`[rtmp:receive] packet error: ${err}`);
+                }
+                if (output != null) {
+                  outputs.push(output);
+                }
+                return seq.done();
+              }));
+              break;
+            default:
+              logger.error('----- BUG -----');
+              logger.error(`[rtmp:receive] received unknown (not implemented) message type ID: ${rtmpMessage.messageTypeID}`);
+              logger.error(rtmpMessage);
+              var packageJson = require('./package.json');
+              logger.error(`server version: ${packageJson.version}`);
+              logger.error('Please report this bug along with the video file or relevant part of');
+              logger.error('pcap file, and the full (uncut) output of node-rtsp-rtsp-server. Thanks.');
+              logger.error('https://github.com/iizukanao/node-rtsp-rtmp-server/issues');
+              logger.error('---------------');
+              result.push(seq.done());
           }
-          return result;
-        })();
-      };
+        }
+        return result;
+      })();
+    };
 
-      return consumeNextRTMPMessage();
-    }
+    return consumeNextRTMPMessage();
   }
 }
 
@@ -3109,30 +3130,22 @@ class RTMPServer {
   constructor(opts) {
     this.eventListeners = {};
     this.port = (opts != null ? opts.rtmpServerPort : undefined) != null ? (opts != null ? opts.rtmpServerPort : undefined) : 1935;
-    this.server = net.createServer(c => {
+    this.server = net.createServer((c) => {
       c.clientId = ++clientMaxId;
       const sess = new RTMPSession(c);
       logger.info(`[rtmp:client=${sess.clientid}] connected`);
       sessions[c.clientId] = sess;
       sessionsCount++;
       c.rtmpSession = sess;
-      sess.on('data', function(data) {
+      sess.on('data', (data) => {
         if ((data != null) && (data.length > 0)) {
           return c.write(data);
         }
       });
-      sess.on('video_start', (...args) => {
-        return this.emit('video_start', ...Array.from(args));
-      });
-      sess.on('audio_start', (...args) => {
-        return this.emit('audio_start', ...Array.from(args));
-      });
-      sess.on('video_data', (...args) => {
-        return this.emit('video_data', ...Array.from(args));
-      });
-      sess.on('audio_data', (...args) => {
-        return this.emit('audio_data', ...Array.from(args));
-      });
+      sess.on('video_start', (...args) => this.emit('video_start', ...Array.from(args)));
+      sess.on('audio_start', (...args) => this.emit('audio_start', ...Array.from(args)));
+      sess.on('video_data', (...args) => this.emit('video_data', ...Array.from(args)));
+      sess.on('audio_data', (...args) => this.emit('audio_data', ...Array.from(args)));
       c.on('close', () => {
         logger.info(`[rtmp:client=${sess.clientid}] disconnected`);
         if (sessions[c.clientId] != null) {
@@ -3142,21 +3155,19 @@ class RTMPServer {
         }
         return this.dumpSessions();
       });
-      c.on('error', function(err) {
+      c.on('error', (err) => {
         logger.error(`[rtmp:client=${sess.clientid}] socket error: ${err}`);
         return c.destroy();
       });
-      c.on('data', data => {
-        return c.rtmpSession.handleData(data, function(err, output) {
-          if (err) {
-            return logger.error(`[rtmp] error: ${err}`);
-          } else if (output != null) {
-            if (output.length > 0) {
-              return c.write(output);
-            }
+      c.on('data', (data) => c.rtmpSession.handleData(data, (err, output) => {
+        if (err) {
+          return logger.error(`[rtmp] error: ${err}`);
+        } else if (output != null) {
+          if (output.length > 0) {
+            return c.write(output);
           }
-        });
-      });
+        }
+      }));
       return this.dumpSessions();
     });
   }
@@ -3179,13 +3190,13 @@ class RTMPServer {
     if (this.eventListeners[event] != null) {
       this.eventListeners[event].push(listener);
     } else {
-      this.eventListeners[event] = [ listener ];
+      this.eventListeners[event] = [listener];
     }
   }
 
   emit(event, ...args) {
     if (this.eventListeners[event] != null) {
-      for (let listener of Array.from(this.eventListeners[event])) {
+      for (const listener of Array.from(this.eventListeners[event])) {
         listener(...Array.from(args || []));
       }
     }
@@ -3227,13 +3238,14 @@ class RTMPServer {
 
   // Packets must be come in DTS ascending order
   sendVideoPacket(stream, nalUnits, pts, dts) {
-    let firstByte, nalUnit;
+    let firstByte,
+      nalUnit;
     if (DEBUG_INCOMING_STREAM_DATA) {
       let totalBytes = 0;
       for (nalUnit of Array.from(nalUnits)) {
         totalBytes += nalUnit.length;
       }
-      logger.info(`received video: stream=${stream.id} ${totalBytes} bytes; ${nalUnits.length} NAL units (${nalUnits.map(nalu => nalu[0] & 0x1f).join(',')}); pts=${pts}`);
+      logger.info(`received video: stream=${stream.id} ${totalBytes} bytes; ${nalUnits.length} NAL units (${nalUnits.map((nalu) => nalu[0] & 0x1f).join(',')}); pts=${pts}`);
     }
     if (dts > pts) {
       throw new Error(`pts must be >= dts (pts=${pts} dts=${dts})`);
@@ -3255,7 +3267,7 @@ class RTMPServer {
         // ignore access unit delimiters
         continue;
       }
-      if (nalUnitType === h264.NAL_UNIT_TYPE_IDR_PICTURE) {  // 5
+      if (nalUnitType === h264.NAL_UNIT_TYPE_IDR_PICTURE) { // 5
         hasKeyFrame = true;
       }
       const payloadLen = nalUnit.length;
@@ -3276,14 +3288,14 @@ class RTMPServer {
     }
 
     // Add VIDEODATA tag
-    if (hasKeyFrame) {  // IDR picture (key frame)
+    if (hasKeyFrame) { // IDR picture (key frame)
       firstByte = (1 << 4) | config.flv.videocodecid;
-    } else {  // non-IDR picture (inter frame)
+    } else { // non-IDR picture (inter frame)
       firstByte = (2 << 4) | config.flv.videocodecid;
     }
     // Composition time offset: composition time (PTS) - decoding time (DTS)
-    let compositionTimeMs = Math.floor((pts - dts) / 90);  // convert to milliseconds
-    if (compositionTimeMs > 0x7fffff) {  // composition time is signed 24-bit integer
+    let compositionTimeMs = Math.floor((pts - dts) / 90); // convert to milliseconds
+    if (compositionTimeMs > 0x7fffff) { // composition time is signed 24-bit integer
       compositionTimeMs = 0x7fffff;
     }
     message.unshift(new Buffer([
@@ -3303,12 +3315,11 @@ class RTMPServer {
       body: buf,
       timestamp,
       isKeyFrame: hasKeyFrame,
-      compositionTime: compositionTimeMs
-    }
+      compositionTime: compositionTimeMs,
+    },
     );
 
     stream.rtmpLastTimestamp = timestamp;
-
   }
 
   sendAudioPacket(stream, rawDataBlock, timestamp) {
@@ -3323,19 +3334,18 @@ class RTMPServer {
 
     // TODO: support other than AAC too?
     const headerBytes = new Buffer(flv.createAACAudioDataTag({
-      aacPacketType: flv.AAC_PACKET_TYPE_RAW})
+      aacPacketType: flv.AAC_PACKET_TYPE_RAW }),
     );
 
     const buf = Buffer.concat([headerBytes, rawDataBlock], rawDataBlock.length + 2);
 
     queueAudioMessage(stream, {
       body: buf,
-      timestamp
-    }
+      timestamp,
+    },
     );
 
     stream.rtmpLastTimestamp = timestamp;
-
   }
 
   sendEOS(stream) {
@@ -3352,12 +3362,12 @@ class RTMPServer {
           level: 'status',
           code: 'NetStream.Play.Complete',
           duration: 0,
-          bytes: 0
+          bytes: 0,
         }),
-      ]});
+      ] });
 
     const playStop = createAMF0CommandMessageParams({
-      chunkStreamID: 4,  // 5?
+      chunkStreamID: 4, // 5?
       timestamp: lastTimestamp,
       messageStreamID: 1,
       command: 'onStatus',
@@ -3370,27 +3380,27 @@ class RTMPServer {
           description: `Stopped playing ${stream.id}.`,
           clientid: this.clientid,
           reason: '',
-          details: stream.id
-        })
-      ]});
+          details: stream.id,
+        }),
+      ] });
 
     const streamEOF1 = {
       chunkStreamID: 2,
       timestamp: 0,
-      messageTypeID: 0x04,  // User Control Message
+      messageTypeID: 0x04, // User Control Message
       messageStreamID: 0,
       body: new Buffer([
         // Stream EOF (see 7.1.7. User Control Message Events)
         0, 1,
         // Stream ID of the stream that reaches EOF
-        0, 0, 0, 1
-      ])
+        0, 0, 0, 1,
+      ]),
     };
 
-    return queueRTMPMessages(stream, [ playComplete, playStop, streamEOF1 ], {
+    return queueRTMPMessages(stream, [playComplete, playStop, streamEOF1], {
       forceFlush: true,
-      hasControlMessage: true
-    }
+      hasControlMessage: true,
+    },
     );
   }
 
@@ -3423,18 +3433,10 @@ Connection: keep-alive
           session.respondOpen(req, callback);
           return this.dumpSessions();
         });
-        session.on('video_start', (...args) => {
-          return this.emit('video_start', ...Array.from(args));
-        });
-        session.on('audio_start', (...args) => {
-          return this.emit('audio_start', ...Array.from(args));
-        });
-        session.on('video_data', (...args) => {
-          return this.emit('video_data', ...Array.from(args));
-        });
-        return session.on('audio_data', (...args) => {
-          return this.emit('audio_data', ...Array.from(args));
-        });
+        session.on('video_start', (...args) => this.emit('video_start', ...Array.from(args)));
+        session.on('audio_start', (...args) => this.emit('audio_start', ...Array.from(args)));
+        session.on('video_data', (...args) => this.emit('video_data', ...Array.from(args)));
+        return session.on('audio_data', (...args) => this.emit('audio_data', ...Array.from(args)));
       } else if (command === 'idle') {
         session = rtmptSessions[client];
         if (session != null) {
@@ -3443,15 +3445,13 @@ Connection: keep-alive
           session.respondIdle(req, callback);
           if (session.requestBuffer != null) {
             return session.requestBuffer.nextIndex = index + 1;
-          } else {
-            return session.requestBuffer = {
-              nextIndex: index + 1,
-              reqs: []
-            };
           }
-        } else {
-          return callback(new Error("No such session"));
+          return session.requestBuffer = {
+            nextIndex: index + 1,
+            reqs: [],
+          };
         }
+        return callback(new Error('No such session'));
       } else if (command === 'send') {
         session = rtmptSessions[client];
         if (session != null) {
@@ -3465,7 +3465,7 @@ Connection: keep-alive
               session.requestBuffer.reqs.push({
                 req,
                 index,
-                callback
+                callback,
               });
               session.requestBuffer.reqs.sort((a, b) => a.index - b.index);
             } else if (index === session.requestBuffer.nextIndex) {
@@ -3478,14 +3478,14 @@ Connection: keep-alive
             // Discard old requests
             if ((session.requestBuffer.reqs.length > 0) &&
             ((index - session.requestBuffer.reqs[0].index) > RTMPT_SEND_REQUEST_BUFFER_SIZE)) {
-                info = session.requestBuffer.reqs[0];
-                if (info.index === (session.requestBuffer.nextIndex + 1)) {
-                  logger.warn(`[rtmpt] discarded lost request: ${session.requestBuffer.nextIndex}`);
-                } else {
-                  logger.warn(`[rtmpt] discarded lost requests: ${session.requestBuffer.nextIndex}-${info.index-1}`);
-                }
-                session.requestBuffer.nextIndex = info.index;
+              info = session.requestBuffer.reqs[0];
+              if (info.index === (session.requestBuffer.nextIndex + 1)) {
+                logger.warn(`[rtmpt] discarded lost request: ${session.requestBuffer.nextIndex}`);
+              } else {
+                logger.warn(`[rtmpt] discarded lost requests: ${session.requestBuffer.nextIndex}-${info.index - 1}`);
               }
+              session.requestBuffer.nextIndex = info.index;
+            }
 
             // Consume buffered requests
             return (() => {
@@ -3499,86 +3499,71 @@ Connection: keep-alive
               }
               return result;
             })();
-          } else {
-            // TODO: Does index start at zero?
-            session.requestBuffer = {
-              nextIndex: index + 1,
-              reqs: []
-            };
-            return session.respondSend(req, callback);
           }
-        } else {
-          return callback(new Error("No such session"));
+          // TODO: Does index start at zero?
+          session.requestBuffer = {
+            nextIndex: index + 1,
+            reqs: [],
+          };
+          return session.respondSend(req, callback);
         }
+        return callback(new Error('No such session'));
       } else if (command === 'close') {
         session = rtmptSessions[client];
         if (session != null) {
           return session.respondClose(req, callback);
-        } else {
-          return callback(new Error("No such session"));
         }
-      } else {
-        return callback(new Error(`Unknown command: ${command}`));
+        return callback(new Error('No such session'));
       }
-    } else {
-      return callback(new Error(`Unknown URI: ${req.uri}`));
+      return callback(new Error(`Unknown command: ${command}`));
     }
+    return callback(new Error(`Unknown URI: ${req.uri}`));
   }
 }
 
 // Generate a new sessionID without collision
-var generateNewSessionID = callback =>
-  generateSessionID(function(err, sid) {
+var generateNewSessionID = (callback) =>
+  generateSessionID((err, sid) => {
     if (err) {
       callback(err);
       return;
     }
     if (rtmptSessions[sid] != null) {
       return generateNewSessionID(callback);
-    } else {
-      return callback(null, sid);
     }
+    return callback(null, sid);
   })
 ;
 
 // Generate a new random session ID
 // NOTE: Session ID must be 31 characters or less
-var generateSessionID = callback =>
-  crypto.randomBytes(16, function(err, buf) {
+var generateSessionID = (callback) =>
+  crypto.randomBytes(16, (err, buf) => {
     if (err) {
       return callback(err);
-    } else {
-      const sid = buf.toString('hex').slice(0, 31);
-      return callback(null, sid);
     }
+    const sid = buf.toString('hex').slice(0, 31);
+    return callback(null, sid);
   })
 ;
 
 class RTMPTSession {
   constructor(socket, callback) {
-    this.creationDate = new Date;  // for debug
+    this.creationDate = new Date(); // for debug
     this.eventListeners = {};
     this.socket = socket;
     this.pollingDelay = 1;
     this.pendingResponses = [];
     this.requestBuffer = null;
     this.rtmpSession = new RTMPSession(socket);
-    this.rtmpSession.on('data', data => {
+    this.rtmpSession.on('data', (data) => {
       this.scheduleTimeout();
       return this.pendingResponses.push(data);
     });
-    this.rtmpSession.on('video_start', (...args) => {
-      return this.emit('video_start', ...Array.from(args));
-    });
-    this.rtmpSession.on('audio_start', (...args) => {
-      return this.emit('audio_start', ...Array.from(args));
-    });
-    this.rtmpSession.on('video_data', (...args) => {
-      return this.emit('video_data', ...Array.from(args));
-    });
-    this.rtmpSession.on('audio_data', (...args) => {
-      return this.emit('audio_data', ...Array.from(args));
-    });
+    this.rtmpSession.on('video_start', (...args) => this.emit('video_start', ...Array.from(args)));
+    this.rtmpSession.on('audio_start', (...args) => this.emit('audio_start', ...Array.from(args)));
+    this.rtmpSession.on('video_data', (...args) => this.emit('video_data', ...Array.from(args)));
+    this.rtmpSession.on('audio_data', (...args) => this.emit('audio_data', ...Array.from(args)));
     this.rtmpSession.on('teardown', () => {
       logger.info(`[rtmpt:${this.rtmpSession.clientid}] received teardown`);
       return this.close();
@@ -3586,12 +3571,11 @@ class RTMPTSession {
     generateNewSessionID((err, sid) => {
       if (err) {
         return callback(err);
-      } else {
-        this.id = sid;
-        this.socket.rtmptClientID = this.id;
-        this.scheduleTimeout();
-        return (typeof callback === 'function' ? callback(null) : undefined);
       }
+      this.id = sid;
+      this.socket.rtmptClientID = this.id;
+      this.scheduleTimeout();
+      return (typeof callback === 'function' ? callback(null) : undefined);
     });
   }
 
@@ -3603,13 +3587,13 @@ class RTMPTSession {
     if (this.eventListeners[event] != null) {
       this.eventListeners[event].push(listener);
     } else {
-      this.eventListeners[event] = [ listener ];
+      this.eventListeners[event] = [listener];
     }
   }
 
   emit(event, ...args) {
     if (this.eventListeners[event] != null) {
-      for (let listener of Array.from(this.eventListeners[event])) {
+      for (const listener of Array.from(this.eventListeners[event])) {
         listener(...Array.from(args || []));
       }
     }
@@ -3641,7 +3625,7 @@ class RTMPTSession {
       logger.info(`[rtmpt] session timeout: ${this.id}`);
       return this.close();
     }
-    , config.rtmptSessionTimeoutMs);
+      , config.rtmptSessionTimeoutMs);
   }
 
   close() {
@@ -3688,7 +3672,7 @@ Content-Type: application/x-fcs
 
   respondOpen(req, callback) {
     this.scheduleTimeout();
-    const body = this.id + '\n';
+    const body = `${this.id}\n`;
     const bodyBytes = new Buffer(body, 'utf8');
     return callback(null, this.createHTTPResponse(bodyBytes));
   }
@@ -3696,10 +3680,10 @@ Content-Type: application/x-fcs
   respondIdle(req, callback) {
     this.scheduleTimeout();
     const bufs = [
-      new Buffer([ this.pollingDelay ])
+      new Buffer([this.pollingDelay]),
     ];
     let totalLength = 1;
-    for (let resp of Array.from(this.pendingResponses)) {
+    for (const resp of Array.from(this.pendingResponses)) {
       bufs.push(resp);
       totalLength += resp.length;
     }
@@ -3716,26 +3700,25 @@ Content-Type: application/x-fcs
         logger.error(`[rtmpt:send-resp] Error: ${err}`);
         return callback(err);
       } else if (output != null) {
-        const interval = new Buffer([ this.pollingDelay ]);
+        const interval = new Buffer([this.pollingDelay]);
         allBytes = Buffer.concat([interval, output], 1 + output.length);
         return callback(null, this.createHTTPResponse(allBytes));
-      } else {
-        // No response from me
-        allBytes = new Buffer([ this.pollingDelay ]);
-        return callback(null, this.createHTTPResponse(allBytes));
       }
+      // No response from me
+      allBytes = new Buffer([this.pollingDelay]);
+      return callback(null, this.createHTTPResponse(allBytes));
     });
   }
 
   respondClose(req, callback) {
-    const allBytes = new Buffer([ this.pollingDelay ]);
+    const allBytes = new Buffer([this.pollingDelay]);
     this.close();
     return callback(null, this.createHTTPResponse(allBytes));
   }
 }
 
 const api =
-  {RTMPServer};
+  { RTMPServer };
 
 module.exports = api;
 

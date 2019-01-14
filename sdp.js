@@ -1,3 +1,12 @@
+/* eslint-disable
+    no-cond-assign,
+    no-var,
+    one-var,
+    radix,
+    vars-on-top,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -46,23 +55,23 @@ const api = {
       'sessionID',
       'sessionVersion',
       'addressType',
-      'unicastAddress'
+      'unicastAddress',
     ];
     if (opts.hasAudio) {
       mandatoryOpts = mandatoryOpts.concat([
         'audioPayloadType',
         'audioEncodingName',
-        'audioClockRate'
+        'audioClockRate',
       ]);
     }
     if (opts.hasVideo) {
       mandatoryOpts = mandatoryOpts.concat([
         'videoPayloadType',
         'videoEncodingName',
-        'videoClockRate'
+        'videoClockRate',
       ]);
     }
-    for (let prop of Array.from(mandatoryOpts)) {
+    for (const prop of Array.from(mandatoryOpts)) {
       if (((opts != null ? opts[prop] : undefined) == null)) {
         throw new Error(`createSDP: property ${prop} is required`);
       }
@@ -102,12 +111,12 @@ a=control:*
           audioObjectType: opts.audioObjectType,
           samplingFrequency: opts.audioSampleRate,
           channels: opts.audioChannels,
-          frameLength: 1024
-        })
-        );  // TODO: How to detect 960?
+          frameLength: 1024,
+        }),
+        ); // TODO: How to detect 960?
         configspec = configspec.toString('hex');
       } else {
-        logger.warn("[sdp] warn: audio configspec is not available");
+        logger.warn('[sdp] warn: audio configspec is not available');
         configspec = null;
       }
 
@@ -116,7 +125,7 @@ a=control:*
         rtpmap += `/${opts.audioChannels}`;
       }
 
-      const profileLevelId = 1;  // TODO: Set this value according to audio config
+      const profileLevelId = 1; // TODO: Set this value according to audio config
       fmtp = `${opts.audioPayloadType} profile-level-id=${profileLevelId};mode=AAC-hbr;sizeLength=13;indexLength=3;indexDeltaLength=3`;
       if (configspec != null) {
         fmtp += `;config=${configspec}`;
@@ -160,7 +169,7 @@ a=control:trackID=2
 \
 `;
     }
-    return sdpBody.replace(/\n/g, "\r\n");
+    return sdpBody.replace(/\n/g, '\r\n');
   },
 
   // Turn an SDP string like this...
@@ -238,9 +247,11 @@ a=control:trackID=2
     const session = {};
     const origParams = [];
     let currentMedia = null;
-    for (let line of Array.from(str.split(/\r?\n/))) {
+    for (const line of Array.from(str.split(/\r?\n/))) {
       if (line !== '') {
-        var key, match, value;
+        var key,
+          match,
+          value;
         if ((match = /^(.*?)=(.*)$/.exec(line)) != null) {
           key = match[1];
           value = match[2];
@@ -248,14 +259,14 @@ a=control:trackID=2
           throw new Error(`Invalid SDP line: ${line}`);
         }
         const obj = {};
-        obj[ key ] = value;
+        obj[key] = value;
         origParams.push(obj);
 
         switch (key) {
-          case 'v':  // Version
+          case 'v': // Version
             session.version = value;
             break;
-          case 'o':  // Origin
+          case 'o': // Origin
             var params = value.split(/\s+/);
             if (params.length > 6) {
               logger.warn(`SDP: Origin has too many parameters: ${line}`);
@@ -266,13 +277,13 @@ a=control:trackID=2
               sessVersion: params[2],
               nettype: params[3],
               addrtype: params[4],
-              unicastAddress: params[5]
+              unicastAddress: params[5],
             };
             break;
-          case 's':  // Session Name
+          case 's': // Session Name
             session.sessionName = value;
             break;
-          case 'c':  // Connection Data
+          case 'c': // Connection Data
             params = value.split(/\s+/);
             if (params.length > 3) {
               logger.warn(`SDP: Connection Data has too many parameters: ${line}`);
@@ -280,25 +291,25 @@ a=control:trackID=2
             session.connectionData = {
               nettype: params[0],
               addrtype: params[1],
-              connectionAddress: params[2]
+              connectionAddress: params[2],
             };
             break;
-          case 't':  // Timing
+          case 't': // Timing
             params = value.split(/\s+/);
             if (params.length > 2) {
               logger.warn(`SDP: Timing has too many parameters: ${line}`);
             }
             session.timing = {
               startTime: params[0],
-              stopTime: params[1]
+              stopTime: params[1],
             };
             break;
-          case 'a':  // Attributes
+          case 'a': // Attributes
             var target = currentMedia != null ? currentMedia : session;
             if ((target.attributes == null)) {
               target.attributes = {};
             }
-            if ((match = /^(.*?):(.*)$/.exec(value)) != null) {  // a=<attribute>:<value>
+            if ((match = /^(.*?):(.*)$/.exec(value)) != null) { // a=<attribute>:<value>
               const attrKey = match[1];
               const attrValue = match[2];
               target.attributes[attrKey] = attrValue;
@@ -312,24 +323,24 @@ a=control:trackID=2
               } else if (attrKey === 'fmtp') {
                 if ((match = /^\d+\s+(.*)$/.exec(attrValue)) != null) {
                   target.fmtpParams = {};
-                  for (let pair of Array.from(match[1].split(/;\s*/))) {
+                  for (const pair of Array.from(match[1].split(/;\s*/))) {
                     if ((match = /^(.*?)=(.*)$/.exec(pair)) != null) {
-                      target.fmtpParams[ match[1].toLowerCase() ] = match[2];
+                      target.fmtpParams[match[1].toLowerCase()] = match[2];
                     }
                   }
                 }
               }
-            } else {  // a=<flag>
-              target.attributes[ value ] = true;
+            } else { // a=<flag>
+              target.attributes[value] = true;
             }
             break;
-          case 'm':  // Media Descriptions
+          case 'm': // Media Descriptions
             params = value.split(/\s+/);
             currentMedia = {
               media: params[0],
               port: params[1],
               proto: params[2],
-              fmt: params[3]
+              fmt: params[3],
             };
             if ((currentMedia.proto === 'RTP/AVP') || (currentMedia.proto === 'RTP/SAVP')) {
               currentMedia.fmt = parseInt(currentMedia.fmt);
@@ -342,7 +353,7 @@ a=control:trackID=2
             }
             session.media.push(currentMedia);
             break;
-          case 'b':  // Bandwidth
+          case 'b': // Bandwidth
             params = value.split(':');
             if (params.length > 2) {
               logger.warn(`SDP: Bandwidth has too many parameters: ${line}`);
@@ -350,7 +361,7 @@ a=control:trackID=2
             target = currentMedia != null ? currentMedia : session;
             target.bandwidth = {
               bwtype: params[0],
-              bandwidth: params[1]
+              bandwidth: params[1],
             };
             break;
           default:
@@ -360,7 +371,7 @@ a=control:trackID=2
     }
 
     return session;
-  }
+  },
 };
 
 module.exports = api;

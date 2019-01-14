@@ -1,3 +1,10 @@
+/* eslint-disable
+    consistent-return,
+    no-console,
+    no-unused-vars,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS209: Avoid top-level return
@@ -5,13 +12,13 @@
  */
 const mp4 = require('../mp4');
 
-const getCurrentTime = function() {
+const getCurrentTime = function () {
   const time = process.hrtime();
   return time[0] + (time[1] / 1e9);
 };
 
 if (process.argv.length < 3) {
-  console.log("Error: specify an mp4 filename");
+  console.log('Error: specify an mp4 filename');
   return 1;
 }
 

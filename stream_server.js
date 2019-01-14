@@ -1,3 +1,12 @@
+/* eslint-disable
+    consistent-return,
+    no-param-reassign,
+    no-return-assign,
+    no-unused-vars,
+    one-var,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -34,7 +43,7 @@ const DEBUG_INCOMING_PACKET_DATA = false;
 // If true, hash value of each incoming video/audio access unit is printed to the console
 const DEBUG_INCOMING_PACKET_HASH = false;
 
-//# Default server name for RTSP and HTTP responses
+// # Default server name for RTSP and HTTP responses
 const DEFAULT_SERVER_NAME = `node-rtsp-rtmp-server/${packageJson.version}`;
 
 const serverName = config.serverName != null ? config.serverName : DEFAULT_SERVER_NAME;
@@ -45,8 +54,8 @@ class StreamServer {
 
     if (config.enableRTMP || config.enableRTMPT) {
       // Create RTMP server
-      this.rtmpServer = new rtmp.RTMPServer;
-      this.rtmpServer.on('video_start', streamId => {
+      this.rtmpServer = new rtmp.RTMPServer();
+      this.rtmpServer.on('video_start', (streamId) => {
         const stream = avstreams.getOrCreate(streamId);
         return this.onReceiveVideoControlBuffer(stream);
       });
@@ -54,11 +63,10 @@ class StreamServer {
         const stream = avstreams.get(streamId);
         if (stream != null) {
           return this.onReceiveVideoPacket(stream, nalUnits, pts, dts);
-        } else {
-          return logger.warn(`warn: Received invalid streamId from rtmp: ${streamId}`);
         }
+        return logger.warn(`warn: Received invalid streamId from rtmp: ${streamId}`);
       });
-      this.rtmpServer.on('audio_start', streamId => {
+      this.rtmpServer.on('audio_start', (streamId) => {
         const stream = avstreams.getOrCreate(streamId);
         return this.onReceiveAudioControlBuffer(stream);
       });
@@ -66,28 +74,19 @@ class StreamServer {
         const stream = avstreams.get(streamId);
         if (stream != null) {
           return this.onReceiveAudioPacket(stream, adtsFrame, pts, dts);
-        } else {
-          return logger.warn(`warn: Received invalid streamId from rtmp: ${streamId}`);
         }
+        return logger.warn(`warn: Received invalid streamId from rtmp: ${streamId}`);
       });
     }
 
     if (config.enableCustomReceiver) {
       // Setup data receivers for custom protocol
       this.customReceiver = new CustomReceiver(config.receiverType, {
-        videoControl: (...args) => {
-          return this.onReceiveVideoControlBuffer(...Array.from(args || []));
-        },
-        audioControl: (...args) => {
-          return this.onReceiveAudioControlBuffer(...Array.from(args || []));
-        },
-        videoData: (...args) => {
-          return this.onReceiveVideoDataBuffer(...Array.from(args || []));
-        },
-        audioData: (...args) => {
-          return this.onReceiveAudioDataBuffer(...Array.from(args || []));
-        }
-      }
+        videoControl: (...args) => this.onReceiveVideoControlBuffer(...Array.from(args || [])),
+        audioControl: (...args) => this.onReceiveAudioControlBuffer(...Array.from(args || [])),
+        videoData: (...args) => this.onReceiveVideoDataBuffer(...Array.from(args || [])),
+        audioData: (...args) => this.onReceiveAudioDataBuffer(...Array.from(args || [])),
+      },
       );
 
       // Delete old sockets
@@ -97,16 +96,15 @@ class StreamServer {
     if (config.enableHTTP) {
       this.httpHandler = new http.HTTPHandler({
         serverName: this.serverName,
-        documentRoot: (opts != null ? opts.documentRoot : undefined)
+        documentRoot: (opts != null ? opts.documentRoot : undefined),
       });
     }
 
     if (config.enableRTSP || config.enableHTTP || config.enableRTMPT) {
-      let httpHandler, rtmptCallback;
+      let httpHandler,
+        rtmptCallback;
       if (config.enableRTMPT) {
-        rtmptCallback = (...args) => {
-          return this.rtmpServer.handleRTMPTRequest(...Array.from(args || []));
-        };
+        rtmptCallback = (...args) => this.rtmpServer.handleRTMPTRequest(...Array.from(args || []));
       } else {
         rtmptCallback = null;
       }
@@ -116,37 +114,29 @@ class StreamServer {
         httpHandler = null;
       }
       this.rtspServer = new rtsp.RTSPServer({
-        serverName : this.serverName,
+        serverName: this.serverName,
         httpHandler,
-        rtmptCallback
+        rtmptCallback,
       });
-      this.rtspServer.on('video_start', stream => {
-        return this.onReceiveVideoControlBuffer(stream);
-      });
-      this.rtspServer.on('audio_start', stream => {
-        return this.onReceiveAudioControlBuffer(stream);
-      });
-      this.rtspServer.on('video', (stream, nalUnits, pts, dts) => {
-        return this.onReceiveVideoNALUnits(stream, nalUnits, pts, dts);
-      });
-      this.rtspServer.on('audio', (stream, accessUnits, pts, dts) => {
-        return this.onReceiveAudioAccessUnits(stream, accessUnits, pts, dts);
-      });
+      this.rtspServer.on('video_start', (stream) => this.onReceiveVideoControlBuffer(stream));
+      this.rtspServer.on('audio_start', (stream) => this.onReceiveAudioControlBuffer(stream));
+      this.rtspServer.on('video', (stream, nalUnits, pts, dts) => this.onReceiveVideoNALUnits(stream, nalUnits, pts, dts));
+      this.rtspServer.on('audio', (stream, accessUnits, pts, dts) => this.onReceiveAudioAccessUnits(stream, accessUnits, pts, dts));
     }
 
-    avstreams.on('new', function(stream) {
+    avstreams.on('new', (stream) => {
       if (DEBUG_INCOMING_PACKET_HASH) {
         return stream.lastSentVideoTimestamp = 0;
       }
     });
 
-    avstreams.on('reset', function(stream) {
+    avstreams.on('reset', (stream) => {
       if (DEBUG_INCOMING_PACKET_HASH) {
         return stream.lastSentVideoTimestamp = 0;
       }
     });
 
-    avstreams.on('end', stream => {
+    avstreams.on('end', (stream) => {
       if (config.enableRTSP) {
         this.rtspServer.sendEOS(stream);
       }
@@ -156,9 +146,7 @@ class StreamServer {
     });
 
     // for mp4
-    avstreams.on('audio_data', (stream, data, pts) => {
-      return this.onReceiveAudioAccessUnits(stream, [ data ], pts, pts);
-    });
+    avstreams.on('audio_data', (stream, data, pts) => this.onReceiveAudioAccessUnits(stream, [data], pts, pts));
 
     avstreams.on('video_data', (stream, nalUnits, pts, dts) => {
       if ((dts == null)) {
@@ -167,18 +155,14 @@ class StreamServer {
       return this.onReceiveVideoNALUnits(stream, nalUnits, pts, dts);
     });
 
-    avstreams.on('audio_start', stream => {
-      return this.onReceiveAudioControlBuffer(stream);
-    });
+    avstreams.on('audio_start', (stream) => this.onReceiveAudioControlBuffer(stream));
 
-    avstreams.on('video_start', stream => {
-      return this.onReceiveVideoControlBuffer(stream);
-    });
+    avstreams.on('video_start', (stream) => this.onReceiveVideoControlBuffer(stream));
   }
 
-    //# TODO: Do we need to do something for remove_stream event?
-    //avstreams.on 'remove_stream', (stream) ->
-    //  logger.raw "received remove_stream event from stream #{stream.id}"
+  // # TODO: Do we need to do something for remove_stream event?
+  // avstreams.on 'remove_stream', (stream) ->
+  //  logger.raw "received remove_stream event from stream #{stream.id}"
 
   attachRecordedDir(dir) {
     if (config.recordedApplicationName != null) {
@@ -209,16 +193,14 @@ class StreamServer {
 
         mp4Stream.type = avstreams.STREAM_TYPE_RECORDED;
         const audioSpecificConfig = null;
-        mp4File.on('audio_data', (data, pts) => context.onReceiveAudioAccessUnits(mp4Stream, [ data ], pts, pts));
-        mp4File.on('video_data', function(nalUnits, pts, dts) {
+        mp4File.on('audio_data', (data, pts) => context.onReceiveAudioAccessUnits(mp4Stream, [data], pts, pts));
+        mp4File.on('video_data', (nalUnits, pts, dts) => {
           if ((dts == null)) {
             dts = pts;
           }
           return context.onReceiveVideoNALUnits(mp4Stream, nalUnits, pts, dts);
         });
-        mp4File.on('eof', () => {
-          return mp4Stream.emit('end');
-        });
+        mp4File.on('eof', () => mp4Stream.emit('end'));
         mp4File.parse();
         mp4Stream.updateSPS(mp4File.getSPS());
         mp4Stream.updatePPS(mp4File.getPPS());
@@ -231,12 +213,12 @@ class StreamServer {
           audioSampleRate: ascInfo.samplingFrequency,
           audioClockRate: 90000,
           audioChannels: ascInfo.channelConfiguration,
-          audioObjectType: ascInfo.audioObjectType
+          audioObjectType: ascInfo.audioObjectType,
         });
         mp4Stream.durationSeconds = mp4File.getDurationSeconds();
         mp4Stream.lastTagTimestamp = mp4File.getLastTimestamp();
         mp4Stream.mp4File = mp4File;
-        mp4File.fillBuffer(function() {
+        mp4File.fillBuffer(() => {
           context.onReceiveAudioControlBuffer(mp4Stream);
           return context.onReceiveVideoControlBuffer(mp4Stream);
         });
@@ -275,7 +257,7 @@ class StreamServer {
 
       isPaused() {
         return this.mp4File.isPaused();
-      }
+      },
     });
 
     return avstreams.addGenerator(streamName, generator);
@@ -289,14 +271,14 @@ class StreamServer {
   }
 
   start(callback) {
-    const seq = new Sequent;
+    const seq = new Sequent();
     let waitCount = 0;
 
     if (config.enableRTMP) {
       waitCount++;
       this.rtmpServer.start({ port: config.rtmpServerPort }, () => seq.done());
     }
-        // RTMP server is ready
+    // RTMP server is ready
 
     if (config.enableCustomReceiver) {
       // Start data receivers for custom protocol
@@ -308,7 +290,7 @@ class StreamServer {
       this.rtspServer.start({ port: config.serverPort }, () => seq.done());
     }
 
-    return seq.wait(waitCount, () => typeof callback === 'function' ? callback() : undefined);
+    return seq.wait(waitCount, () => (typeof callback === 'function' ? callback() : undefined));
   }
 
   setLivePathConsumer(func) {
@@ -340,11 +322,11 @@ class StreamServer {
   }
 
   onReceiveVideoDataBuffer(stream, buf) {
-    const pts = (buf[1] * 0x010000000000) + 
-          (buf[2] * 0x0100000000)   + 
-          (buf[3] * 0x01000000)     + 
-          (buf[4] * 0x010000)       + 
-          (buf[5] * 0x0100)         + 
+    const pts = (buf[1] * 0x010000000000) +
+          (buf[2] * 0x0100000000) +
+          (buf[3] * 0x01000000) +
+          (buf[4] * 0x010000) +
+          (buf[5] * 0x0100) +
           buf[6];
     // TODO: Support dts
     const dts = pts;
@@ -353,11 +335,11 @@ class StreamServer {
   }
 
   onReceiveAudioDataBuffer(stream, buf) {
-    const pts = (buf[1] * 0x010000000000) + 
-          (buf[2] * 0x0100000000)   + 
-          (buf[3] * 0x01000000)     + 
-          (buf[4] * 0x010000)       + 
-          (buf[5] * 0x0100)         + 
+    const pts = (buf[1] * 0x010000000000) +
+          (buf[2] * 0x0100000000) +
+          (buf[3] * 0x01000000) +
+          (buf[4] * 0x010000) +
+          (buf[5] * 0x0100) +
           buf[6];
     // TODO: Support dts
     const dts = pts;
@@ -384,14 +366,14 @@ class StreamServer {
     }
 
     let hasVideoFrame = false;
-    for (let nalUnit of Array.from(nalUnits)) {
+    for (const nalUnit of Array.from(nalUnits)) {
       const nalUnitType = h264.getNALUnitType(nalUnit);
-      if (nalUnitType === h264.NAL_UNIT_TYPE_SPS) {  // 7
+      if (nalUnitType === h264.NAL_UNIT_TYPE_SPS) { // 7
         stream.updateSPS(nalUnit);
-      } else if (nalUnitType === h264.NAL_UNIT_TYPE_PPS) {  // 8
+      } else if (nalUnitType === h264.NAL_UNIT_TYPE_PPS) { // 8
         stream.updatePPS(nalUnit);
       } else if ((nalUnitType === h264.NAL_UNIT_TYPE_IDR_PICTURE) ||
-      (nalUnitType === h264.NAL_UNIT_TYPE_NON_IDR_PICTURE)) {  // 5 (key frame) or 1 (inter frame)
+      (nalUnitType === h264.NAL_UNIT_TYPE_NON_IDR_PICTURE)) { // 5 (key frame) or 1 (inter frame)
         hasVideoFrame = true;
       }
       if (DEBUG_INCOMING_PACKET_HASH) {
@@ -406,7 +388,6 @@ class StreamServer {
     if (hasVideoFrame) {
       stream.calcFrameRate(pts);
     }
-
   }
 
   // Takes H.264 NAL units separated by start code (0x000001)
@@ -447,7 +428,6 @@ class StreamServer {
           Math.round(dts + (ptsPerFrame * i)));
       }
     }
-
   }
 
   // pts, dts: in 90KHz clock rate
@@ -464,7 +444,7 @@ class StreamServer {
       audioSampleRate: adtsInfo.sampleRate,
       audioClockRate: adtsInfo.sampleRate,
       audioChannels: adtsInfo.channels,
-      audioObjectType: adtsInfo.audioObjectType
+      audioObjectType: adtsInfo.audioObjectType,
     });
 
     const rtpTimePerFrame = 1024;
