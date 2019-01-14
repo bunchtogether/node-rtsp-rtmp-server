@@ -33,10 +33,10 @@ const Sequent = require('sequent');
 const logger = require('./logger');
 
 // Directory to store EJS templates
-const TEMPLATE_DIR = `${__dirname}/template`;
+const TEMPLATE_DIR = path.resolve('template');
 
 // Directory to store static files
-const STATIC_DIR = `${__dirname}/public`;
+const STATIC_DIR = path.resolve('public');
 
 // Filename of default file in static directory
 const DIRECTORY_INDEX_FILENAME = 'index.html';
@@ -471,8 +471,8 @@ var api = {
   getDateHeader() {
     const d = new Date();
     return `${DAY_NAMES[d.getUTCDay()]}, ${d.getUTCDate()} ${MONTH_NAMES[d.getUTCMonth()]}` +
-    ` ${d.getUTCFullYear()} ${zeropad(2, d.getUTCHours())}:${zeropad(2, d.getUTCMinutes())}` +
-    `:${zeropad(2, d.getUTCSeconds())} UTC`;
+      ` ${d.getUTCFullYear()} ${zeropad(2, d.getUTCHours())}:${zeropad(2, d.getUTCMinutes())}` +
+      `:${zeropad(2, d.getUTCSeconds())} UTC`;
   },
 
   parseRequest(str) {
