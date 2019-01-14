@@ -5,9 +5,9 @@
   "repository": "git@github.com:bunchtogether/node-rtsp-rtmp-server.git",
   "author": "Nao Iizuka <iizuka@kyu-mu.net>",
   "license": "MIT",
-  "main": "src/index.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node index.js",
     "lint": "node_modules/.bin/eslint -c .eslintrc --ignore-path .eslintignore --fix --cache ./src"
   },
   "dependencies": {

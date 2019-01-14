@@ -1,5 +1,5 @@
 const { addShutdownHandler, addPostShutdownHandler } = require('@bunchtogether/exit-handler');
-const server = require('./server');
+const server = require('./src/server');
 
 async function init() { // eslint-disable-line no-shadow
   console.log('Starting RTSP server...');
